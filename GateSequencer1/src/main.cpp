@@ -4,11 +4,15 @@
 const PinName ledPin = PC_13;
 DigitalOut ledOut(ledPin);//builtin led as gate indicator
 DigitalOut gateOut(PA_11);//gate output
+DigitalIn clockIn(PA_12);//clock input
 //Serial pc(PA_2, PA_3); // tx, rx
 Serial pc2(PA_9, PA_10); // tx, rx
 
 // step gates / leds output
 BusOut stepOut(PA_12, PA_15, PB_3, PB_4, PB_5, PB_6, PB_7, PB_8);
+
+//CV (analog) inputs
+// TODO AnalogInBank class cfr BusIn
 AnalogIn CV0(PA_0);
 AnalogIn CV1(PA_1);
 AnalogIn CV2(PA_2);
@@ -21,6 +25,61 @@ AnalogIn CV8(PB_0);
 AnalogIn CV9(PB_1);
 
 int counter;
+
+class ClockIn {
+public:
+  ClockIn()
+    : period_(1024)
+    , counter_(0)
+    , prevValue_(false)
+    , value_(false)
+    , periodCount_(0)
+  {}
+
+  void tick(int clock){
+    prevValue_ = value_;
+    value_ = (clock!=0);
+    if(isRising()) {
+      // clock rising => start period
+      period_ = counter_;//TODO smoothing over multiple periods
+      counter_ = 0;
+      ++periodCount_;
+    } else {
+      ++counter_;
+    }
+  }
+
+  float position() const {
+    return period_ ? static_cast<float>(counter_)/period_ : 0;
+  }
+
+  uint32_t period() const {
+    return period_;
+  }
+
+  uint32_t counter() const {
+    return counter_;
+  }
+
+  bool isRising() const {
+    return value_ && !prevValue_;
+  }
+
+  bool isFalling() const {
+    return !value_ && prevValue_;
+  }
+
+  uint32_t count() const {
+    return periodCount_;
+  }
+
+private:
+  uint32_t period_;
+  uint32_t counter_;
+  bool prevValue_;
+  bool value_;
+  uint32_t periodCount_;
+};
 
 struct Sequencer {
   uint32_t counter;
@@ -58,6 +117,8 @@ struct Sequencer {
   }
 
   void tick() {
+    int tmp = clockIn;
+
     ++counter;
     if(clockPeriod<=counter) {
         endStep();
