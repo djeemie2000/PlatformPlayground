@@ -1,5 +1,6 @@
 //#include "stm32f103c8t6.h"
 #include <mbed.h>
+#include "ClockIn.h"
 
 const PinName ledPin = PC_13;
 DigitalOut ledOut(ledPin);//builtin led as gate indicator
@@ -26,60 +27,6 @@ AnalogIn CV9(PB_1);
 
 int counter;
 
-class ClockIn {
-public:
-  ClockIn()
-    : period_(1024)
-    , counter_(0)
-    , prevValue_(false)
-    , value_(false)
-    , periodCount_(0)
-  {}
-
-  void tick(int clock){
-    prevValue_ = value_;
-    value_ = (clock!=0);
-    if(isRising()) {
-      // clock rising => start period
-      period_ = counter_;//TODO smoothing over multiple periods
-      counter_ = 0;
-      ++periodCount_;
-    } else {
-      ++counter_;
-    }
-  }
-
-  float position() const {
-    return period_ ? static_cast<float>(counter_)/period_ : 0;
-  }
-
-  uint32_t period() const {
-    return period_;
-  }
-
-  uint32_t counter() const {
-    return counter_;
-  }
-
-  bool isRising() const {
-    return value_ && !prevValue_;
-  }
-
-  bool isFalling() const {
-    return !value_ && prevValue_;
-  }
-
-  uint32_t count() const {
-    return periodCount_;
-  }
-
-private:
-  uint32_t period_;
-  uint32_t counter_;
-  bool prevValue_;
-  bool value_;
-  uint32_t periodCount_;
-};
 
 struct Sequencer {
   uint32_t counter;
