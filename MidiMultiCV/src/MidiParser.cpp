@@ -27,44 +27,51 @@ int MidiParser::NumBytes(uint8_t commandByte) const
   return numBytes;
 }
 
+bool MidiParser::HandleSystemRealtime(uint8_t byte, MidiHandler& handler)
+{
+  bool handled = false;
+  if(0xF8<=byte)
+  {
+    if(byte==0xF8)
+    {
+      handler.MidiContinue();
+    }
+    else if(byte==0xFA)
+    {
+      handler.MidiStart();
+    }
+    else if(byte==0xFB)
+    {
+      handler.MidiContinue();
+    }
+    else if(byte==0xFC)
+    {
+      handler.MidiStop();
+    }
+    else if(byte==0xFE)
+    {
+      handler.ActiveSense();
+    }
+    else if(byte==0xFF)
+    {
+        handler.SystemReset();
+    }
+    handled = true;
+  }
+  return handled;
+}
+
+
 bool MidiParser::HandleBuffer(MidiHandler& handler) const
 {
   bool handled = false;
   if(m_Cntr == 1)
   {
     // commands without params
-    handled = true;
     if(m_Command==0xF6)
     {
         handler.TuneRequest();
-    }
-    else if(m_Command==0xF8)
-    {
-      handler.MidiContinue();
-    }
-    else if(m_Command==0xFA)
-    {
-      handler.MidiStart();
-    }
-    else if(m_Command==0xFB)
-    {
-      handler.MidiContinue();
-    }
-    else if(m_Command==0xFC)
-    {
-      handler.MidiStop();
-    }
-    else if(m_Command==0xFE)
-    {
-      handler.ActiveSense();
-    }
-    else if(m_Command==0xFF)
-    {
-        handler.SystemReset();
-    }
-    else
-    {
-      handled = false;
+        handled = true;
     }
   }
   else if(m_Cntr == 2)
@@ -151,47 +158,58 @@ bool MidiParser::HandleBuffer(MidiHandler& handler) const
 }
 
 
-bool MidiParser::Parse(uint8_t byte)
+bool MidiParser::Parse(uint8_t byte, MidiHandler& handler)
 {
   //TODO midi system realtime commands (single byte) can come inbetween other midi commands!
   //TODO handle running status for voice commands, system common cancels running status!
   // http://www.gweep.net/~prefect/eng/reference/protocol/midispec.html
-  bool handled = false;
-  if(m_Cntr==0)
+  if(IsCommand(byte))
   {
-    if(IsCommand(byte))
+    if(HandleSystemRealtime(byte, handler))
+    {
+      return false;//done
+    }
+    else
     {
       m_Command = byte;
-      // check if  1 byte buffer => immediate callback
-      if(1==NumBytes(m_Command))
-      {
-        // callback TODO
-        m_Cntr = 0;
-        handled = true;
-      }
-      else
-      {
-        m_Cntr = 1;
-      }
-    }
-    else if(!IsSystemMessage(m_Command))
-    {  // running status?
+      m_Cntr = 1;
 
-      //voice command => assume running status => fill params
-      AddParam1(byte);
+      bool Handled = HandleBuffer(handler);
+      if(handled)
+      {
+        m_Cntr = 0;
+      }
+      return !handled;
     }
-  }
-  else if(m_Cntr == 1)
-  {
-    AddParam1(byte);
   }
   else
   {
-    AddParam2(byte);
+    if(m_Cntr==0 && IsVoiceMessage(byte))
+    {
+      //running status
+      m_Param1 = byte;
+      m_Cntr = 2;
+    }
+    else if(m_Cntr==1)
+    {
+      m_Param1 = byte;
+      m_Cntr = 2;
+    }
+    else if(m_Cntr==2)
+    {
+      m_Param2 = byte;
+      m_Cntr = 3;
+    }
+    bool Handled = HandleBuffer(handler);
+    if(handled)
+    {
+      m_Cntr = 0;
+    }
+    return !handled;
   }
   //true => continue
   // false => done
-  return !handled;
+  return false;
 }
 
 void MidiParser::AddParam1(uint8_t byte)
