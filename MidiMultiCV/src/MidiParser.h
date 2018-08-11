@@ -9,7 +9,7 @@ class MidiParser
 public:
   MidiParser();
 
-  bool Parse(uint8_t byte);
+  bool Parse(uint8_t byte, MidiHandler& handler);
 
 private:
   bool IsCommand(uint8_t byte) const;
@@ -17,6 +17,7 @@ private:
   int NumBytes(uint8_t commandByte) const;
   void AddParam1(uint8_t byte);
   void AddParam2(uint8_t byte);
+  bool HandleSystemRealtime(uint8_t byte, MidiHandler& handler);
   bool HandleBuffer(MidiHandler& handler) const;
 
   uint8_t m_Command{0x00};
