@@ -12,6 +12,14 @@ bool MidiParser::IsSystemMessage(uint8_t byte) const
 {
   return 0 != (0xF0 & byte);
 }
+
+bool MidiParser::IsVoiceMessage(uint8_t byte) const
+{
+  uint8_t command = byte & 0xF0;
+  return  0x80<=command && command<=0xE0;
+}
+
+
 int MidiParser::NumBytes(uint8_t commandByte) const
 {
   uint8_t command = commandByte & 0xF0;
@@ -174,7 +182,7 @@ bool MidiParser::Parse(uint8_t byte, MidiHandler& handler)
       m_Command = byte;
       m_Cntr = 1;
 
-      bool Handled = HandleBuffer(handler);
+      bool handled = HandleBuffer(handler);
       if(handled)
       {
         m_Cntr = 0;
@@ -200,7 +208,7 @@ bool MidiParser::Parse(uint8_t byte, MidiHandler& handler)
       m_Param2 = byte;
       m_Cntr = 3;
     }
-    bool Handled = HandleBuffer(handler);
+    bool handled = HandleBuffer(handler);
     if(handled)
     {
       m_Cntr = 0;

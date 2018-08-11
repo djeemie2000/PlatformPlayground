@@ -9,6 +9,8 @@ Serial pc2(PA_9, PA_10); // tx, rx
 
 Serial pcMidi(PB_10, PB_11); // tx, rx
 
+class MidiHandlerImpl : public MidiHandler
+{};
 
 int main() {
 
@@ -16,6 +18,7 @@ int main() {
     MidiParser parser;
     Timer timer;
     int counter = 0;
+    MidiHandlerImpl midiHandler;
 
 
     while(1) {
@@ -26,7 +29,7 @@ int main() {
         while(pcMidi.readable())
         {
           uint8_t byte = pcMidi.getc();
-          parser.Parse(byte);
+          parser.Parse(byte, midiHandler);
 
           pc2.printf("0x%2x ", byte);
         }
