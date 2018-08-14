@@ -1,5 +1,7 @@
 #include <mbed.h>
 #include "MidiParser.h"
+#include "LogMidiHandler.h"
+#include "MCP4x22.h"
 
 DigitalOut ledOut(PC_13);//builtin led as gate indicator
 DigitalOut gateOut(PA_11);//gate output
@@ -9,17 +11,6 @@ Serial pc2(PA_9, PA_10); // tx, rx
 
 Serial pcMidi(PB_10, PB_11); // tx, rx
 
-class MidiHandlerImpl : public MidiHandler
-{
-  void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override
-  {
-    pc2.printf("NoteOn 0x%2x 0x%2x 0x%2x\r\n", Channel, MidiNote, Velocity);
-  }
- void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override
- {
-   pc2.printf("NoteOff 0x%2x 0x%2x 0x%2x\r\n", Channel, MidiNote, Velocity);   
- }
-};
 
 int main() {
     pc2.baud(115200);
@@ -32,8 +23,7 @@ int main() {
     MidiParser parser;
     Timer timer;
     int counter = 0;
-    MidiHandlerImpl midiHandler;
-
+    LogMidiHandler midiHandler(pc2);
 
     while(1) {
         // put your main code here, to run repeatedly:
@@ -59,7 +49,5 @@ int main() {
 
         timer.stop();
         pc2.printf("The time taken was %f seconds, count=%d \n", timer.read(), counter++);
-
-
     }
 }
