@@ -2,54 +2,12 @@
 #include "MidiParser.h"
 #include "LogMidiHandler.h"
 #include "MCP4x22.h"
+#include "SerialBuffer.h"
 
 Serial* pPcMidi;
 Serial* pPc2;
 MidiHandler* pMidiHandler;
 MidiParser* pMidiParser;
-
-template<int Capacity>
-class SerialBuffer
-{
-public:
-  SerialBuffer()
-  {
-
-  }
-
-  bool Write(uint8_t byte)
-  {
-    m_Buffer[m_WritePos] = byte;
-    IncreasePos(m_WritePos);
-    //it(m_WritePos == m_ReadPos ) => overflow!!!!
-    return true;
-  }
-
-  bool Read(uint8_t& byte)
-  {
-    if(m_ReadPos == m_WritePos)
-    {
-      return false;
-    }
-    byte = m_Buffer[m_ReadPos];
-    IncreasePos(m_ReadPos);
-    return true;
-  }
-
-private:
-  void IncreasePos(int& pos)
-  {
-    ++pos;
-    if(Capacity<=pos)
-    {
-      pos = 0;
-    }
-  }
-
-  uint8_t m_Buffer[Capacity];
-  int m_WritePos{0};
-  int m_ReadPos{0};
-};
 
 SerialBuffer<100> serialBuffer;
 Serial pcMidi(PA_2, PA_3); // tx, rx
