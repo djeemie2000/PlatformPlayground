@@ -3,7 +3,64 @@
 #include "LogMidiHandler.h"
 #include "MCP4x22.h"
 
+Serial* pPcMidi;
+Serial* pPc2;
+MidiHandler* pMidiHandler;
+MidiParser* pMidiParser;
 
+template<int Capacity>
+class SerialBuffer
+{
+public:
+  SerialBuffer()
+  {
+
+  }
+
+  bool Write(uint8_t byte)
+  {
+    m_Buffer[m_WritePos] = byte;
+    IncreasePos(m_WritePos);
+    //it(m_WritePos == m_ReadPos ) => overflow!!!!
+    return true;
+  }
+
+  bool Read(uint8_t& byte)
+  {
+    if(m_ReadPos == m_WritePos)
+    {
+      return false;
+    }
+    byte = m_Buffer[m_ReadPos];
+    IncreasePos(m_ReadPos);
+    return true;
+  }
+
+private:
+  void IncreasePos(int& pos)
+  {
+    ++pos;
+    if(Capacity<=pos)
+    {
+      pos = 0;
+    }
+  }
+
+  uint8_t m_Buffer[Capacity];
+  int m_WritePos{0};
+  int m_ReadPos{0};
+};
+
+SerialBuffer<100> serialBuffer;
+Serial pcMidi(PA_2, PA_3); // tx, rx
+
+void OnCharRecieved()
+{
+  serialBuffer.Write( pcMidi.getc());//getc is blocking!!!
+//  uint8_t byte = pPcMidi->getc();
+  //pPc2->printf("0x%2x ", byte);
+  //pMidiParser->Parse(byte, *pMidiHandler);
+}
 
 int main() {
   DigitalOut ledOut(PC_13);//builtin led as gate indicator
@@ -13,7 +70,6 @@ int main() {
   Serial pc2(PA_9, PA_10); // tx, rx
 
   //Serial pcMidi(PB_10, PB_11); // tx, rx
-  Serial pcMidi(PA_2, PA_3); // tx, rx
 
 
     pc2.baud(115200);
@@ -24,10 +80,16 @@ int main() {
     pcMidi.baud(31250);//midi baudrate
 
     // put your setup code here, to run once:
-    MidiParser parser;
+    MidiParser midiParser;
     Timer timer;
-//    int counter = 0;
+    int counter = 0;
     LogMidiHandler midiHandler(pc2);
+
+    pPcMidi = &pcMidi;
+    pPc2 = &pc2;
+    pMidiHandler = &midiHandler;
+    pMidiParser = &midiParser;
+    pcMidi.attach(&OnCharRecieved, Serial::RxIrq);
 
     while(1) {
         // put your main code here, to run repeatedly:
@@ -35,24 +97,22 @@ int main() {
         timer.start();
 
         int numRead = 0;
-        for(int repeat = 0; repeat<1000; ++repeat)
+        for(int repeat = 0; repeat<3000; ++repeat)
         {
-
-          while(pcMidi.readable())
+          uint8_t byte = 0x00;
+          while(serialBuffer.Read(byte))
           {
             ++numRead;
-            uint8_t byte = pcMidi.getc();
-            pc2.printf("0x%2x ", byte);
-            parser.Parse(byte, midiHandler);
+            midiParser.Parse(byte, midiHandler);
           }
-          //wait_ms(1);
+          // do some timing sensitive stuff
+          wait_ms(1);
         }
         // toggle led
         ledOut = !ledOut;
 
-        //wait_ms(500);
 
         timer.stop();
-        //pc2.printf("The time taken was %f seconds, count=%d numRead=%d \r\n", timer.read(), counter++, numRead);
+        pc2.printf("\r\ntime=%f seconds, count=%d numRead=%d \r\n", timer.read(), counter++, numRead);
     }
 }

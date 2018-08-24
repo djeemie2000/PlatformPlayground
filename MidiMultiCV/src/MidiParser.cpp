@@ -125,7 +125,7 @@ bool MidiParser::HandleBuffer(MidiHandler& handler) const
       bend <<= 7;
       bend |= (m_Param1>>1);
       // range is [0x0000, 0x7FFF[, so subtract offset of 0x4000
-      bend -= 0x4000;
+      bend -= 0x1000;
       handler.PitchWheel(channel, bend);
     }
     else if(m_Command==0xF2)
