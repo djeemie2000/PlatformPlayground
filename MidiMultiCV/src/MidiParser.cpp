@@ -8,31 +8,10 @@ bool MidiParser::IsCommand(uint8_t byte) const
   return 0x00 != (byte & 0x80);
 }
 
-bool MidiParser::IsSystemMessage(uint8_t byte) const
-{
-  return 0 != (0xF0 & byte);
-}
-
 bool MidiParser::IsVoiceMessage(uint8_t byte) const
 {
   uint8_t command = byte & 0xF0;
   return  0x80<=command && command<=0xE0;
-}
-
-
-int MidiParser::NumBytes(uint8_t commandByte) const
-{
-  uint8_t command = commandByte & 0xF0;
-  int numBytes = 3;
-  if(command==0xC0 || command == 0xD0 || commandByte==0xF1 || commandByte==0xF3)
-  {
-    numBytes = 2;
-  }
-  else if(commandByte == 0xF6 ||commandByte == 0xF8 ||commandByte == 0xFA ||commandByte == 0xFA ||commandByte == 0xFC ||commandByte == 0xFE || commandByte == 0xFF)
-  {
-    numBytes = 1;
-  }
-  return numBytes;
 }
 
 bool MidiParser::HandleSystemRealtime(uint8_t byte, MidiHandler& handler)
@@ -142,19 +121,19 @@ bool MidiParser::HandleBuffer(MidiHandler& handler) const
     else if(command==0xE0)
     {
       //TODO function for two uint8_t to int/uint16_t
-      int bend = (m_Param1>>1);
+      int bend = (m_Param2>>1);
       bend <<= 7;
-      bend |= (m_Param2>>1);
-      // range is [0x0000, 0x4000[, so subtract offset of 0x2000
-      bend -= 0x2000;
+      bend |= (m_Param1>>1);
+      // range is [0x0000, 0x7FFF[, so subtract offset of 0x4000
+      bend -= 0x4000;
       handler.PitchWheel(channel, bend);
     }
     else if(m_Command==0xF2)
     {
       //TODO function for two uint8_t to int/uint16_t
-      int position = (m_Param1>>1);
+      int position = (m_Param2>>1);
       position <<= 7;
-      position |= (m_Param2>>1);
+      position |= (m_Param1>>1);
       handler.SongPositionPointer(position);
     }
     else
@@ -168,8 +147,8 @@ bool MidiParser::HandleBuffer(MidiHandler& handler) const
 
 bool MidiParser::Parse(uint8_t byte, MidiHandler& handler)
 {
-  //TODO midi system realtime commands (single byte) can come inbetween other midi commands!
-  //TODO handle running status for voice commands, system common cancels running status!
+  // midi system realtime commands (single byte) can come inbetween other midi commands!
+  // handle running status for voice commands, system common cancels running status!
   // http://www.gweep.net/~prefect/eng/reference/protocol/midispec.html
   if(IsCommand(byte))
   {
@@ -218,38 +197,4 @@ bool MidiParser::Parse(uint8_t byte, MidiHandler& handler)
   //true => continue
   // false => done
   return false;
-}
-
-void MidiParser::AddParam1(uint8_t byte)
-{
-  m_Param1 = byte;
-  // check if buffer is full depending on command
-  if(2==NumBytes(m_Command))
-  {
-    //TODO callbacks
-    // 0xC0 and 0xD0 only have 2 byte, the other voice commands have 3 byte
-    if((m_Command & 0xF0) == 0xD0)
-    {
-
-    }
-    else if(( m_Command & 0xF0) == 0xC0)
-    {
-
-    }
-    m_Cntr = 0;
-  }
-  else
-  {
-    m_Cntr = 2;
-  }
-}
-
-void MidiParser::AddParam2(uint8_t byte)
-{
-  // if we end up here, it means a 3 byte commmand
-  if(3==NumBytes(m_Command))
-  {
-    // callback TODO
-    m_Cntr = 0;
-  }
 }

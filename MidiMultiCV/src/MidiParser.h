@@ -13,11 +13,7 @@ public:
 
 private:
   bool IsCommand(uint8_t byte) const;
-  bool IsSystemMessage(uint8_t byte) const;
   bool IsVoiceMessage(uint8_t byte) const;
-  int NumBytes(uint8_t commandByte) const;
-  void AddParam1(uint8_t byte);
-  void AddParam2(uint8_t byte);
   bool HandleSystemRealtime(uint8_t byte, MidiHandler& handler);
   bool HandleBuffer(MidiHandler& handler) const;
 
