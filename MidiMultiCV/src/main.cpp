@@ -3,14 +3,11 @@
 #include "LogMidiHandler.h"
 #include "MCP4x22.h"
 #include "SerialBuffer.h"
-
-Serial* pPcMidi;
-Serial* pPc2;
-MidiHandler* pMidiHandler;
-MidiParser* pMidiParser;
+#include "VoltageOut.h"
 
 SerialBuffer<100> serialBuffer;
 Serial pcMidi(PA_2, PA_3); // tx, rx
+
 
 void OnCharRecieved()
 {
@@ -22,13 +19,10 @@ void OnCharRecieved()
 
 int main() {
   DigitalOut ledOut(PC_13);//builtin led as gate indicator
-  DigitalOut gateOut(PA_11);//gate output
   DigitalIn clockIn(PA_12);//clock input
-  //Serial pc(PA_2, PA_3); // tx, rx
   Serial pc2(PA_9, PA_10); // tx, rx
-
-  //Serial pcMidi(PB_10, PB_11); // tx, rx
-
+  DigitalOut gateOut(PA_15);//gate output
+  VoltageOut voltageOut(PB_1);//PWM voltage output for 1V/oct
 
     pc2.baud(115200);
     wait_ms(4000);
@@ -43,10 +37,6 @@ int main() {
     int counter = 0;
     LogMidiHandler midiHandler(pc2);
 
-    pPcMidi = &pcMidi;
-    pPc2 = &pc2;
-    pMidiHandler = &midiHandler;
-    pMidiParser = &midiParser;
     pcMidi.attach(&OnCharRecieved, Serial::RxIrq);
 
     while(1) {
@@ -55,9 +45,10 @@ int main() {
         timer.start();
 
         int numRead = 0;
-        for(int repeat = 0; repeat<3000; ++repeat)
+        for(int repeat = 0; repeat<1000; ++repeat)
         {
           uint8_t byte = 0x00;
+          //midi thru (for now)
           while(serialBuffer.Read(byte))
           {
             ++numRead;
@@ -68,6 +59,32 @@ int main() {
         }
         // toggle led
         ledOut = !ledOut;
+
+        if(counter%2)
+        {
+          // note on
+          pcMidi.putc(0x9F);
+          pcMidi.putc(0x45);
+          pcMidi.putc(0x40);
+
+          gateOut = 1;
+          int cv = (counter/2)%4;
+          voltageOut.write(cv);//0,1,2,3 volts
+
+          pc2.printf("Note on %d\r\n", cv);
+        }
+        else
+        {
+          // note off
+          pcMidi.putc(0x8F);
+          pcMidi.putc(0x45);
+          pcMidi.putc(0x40);
+
+          gateOut = 0;
+          voltageOut.write(0);//0,1,2,3 volts
+
+          pc2.printf("Note off\r\n");
+        }
 
 
         timer.stop();
