@@ -45,7 +45,7 @@ int main() {
         timer.start();
 
         int numRead = 0;
-        for(int repeat = 0; repeat<1000; ++repeat)
+        for(int repeat = 0; repeat<500; ++repeat)
         {
           uint8_t byte = 0x00;
           //midi thru (for now)
@@ -68,10 +68,14 @@ int main() {
           pcMidi.putc(0x40);
 
           gateOut = 1;
-          int cv = (counter/2)%4;
-          voltageOut.write(cv);//0,1,2,3 volts
+          // 7/12, 1+ 7/12, 2, 2+7/12, 3
+          int notes[] = {0,2,4,5,7,9,11,12};
+          int tmp = (counter/2)%8;
+          int cv = 12+notes[tmp];
 
-          pc2.printf("Note on %d\r\n", cv);
+          voltageOut.write(cv/12.0f);
+
+          pc2.printf("Note on %d\r\n", tmp);
         }
         else
         {
@@ -81,7 +85,7 @@ int main() {
           pcMidi.putc(0x40);
 
           gateOut = 0;
-          voltageOut.write(0);//0,1,2,3 volts
+          //voltageOut.write(1.0f);//0,1,2,3 volts
 
           pc2.printf("Note off\r\n");
         }
