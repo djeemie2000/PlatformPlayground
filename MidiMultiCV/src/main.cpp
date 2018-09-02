@@ -4,10 +4,12 @@
 #include "MCP4x22.h"
 #include "SerialBuffer.h"
 #include "VoltageOut.h"
+#include "CVMidiHandler.h"
+#include "MultiMidiHandler.h"
 
+// globals because callback OnCharRecieved
 SerialBuffer<100> serialBuffer;
 Serial pcMidi(PA_2, PA_3); // tx, rx
-
 
 void OnCharRecieved()
 {
@@ -22,7 +24,7 @@ int main() {
   DigitalIn clockIn(PA_12);//clock input
   Serial pc2(PA_9, PA_10); // tx, rx
   DigitalOut gateOut(PA_15);//gate output
-  VoltageOut voltageOut(PB_1);//PWM voltage output for 1V/oct
+  PwmVoltageOut voltageOut(PB_1);//PWM voltage output for 1V/oct
 
     pc2.baud(115200);
     wait_ms(4000);
@@ -36,6 +38,9 @@ int main() {
     Timer timer;
     int counter = 0;
     LogMidiHandler midiHandler(pc2);
+    CVMidiHandler midiHandler2(voltageOut, gateOut);
+    MidiHandler dummy;
+    MultiMidiHandler midiMulti(midiHandler, midiHandler2, dummy);
 
     pcMidi.attach(&OnCharRecieved, Serial::RxIrq);
 
@@ -52,7 +57,7 @@ int main() {
           while(serialBuffer.Read(byte))
           {
             ++numRead;
-            midiParser.Parse(byte, midiHandler);
+            midiParser.Parse(byte, midiMulti);
           }
           // do some timing sensitive stuff
           wait_ms(1);
