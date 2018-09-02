@@ -8,12 +8,12 @@ class VoltageOut
 public:
   VoltageOut(PinName pin) : m_Out(pin)
   {
-    m_Out.period_us(50);//20kHz
+    m_Out.period_us(400);//2.5kHz
   }
 
   VoltageOut(PinName pin, float referenceVoltage) : m_Out(pin), m_ReferenceVoltage(referenceVoltage)
   {
-    m_Out.period_us(50);//20kHz
+    m_Out.period_us(400);//2.5kHz
   }
 
   void write(float voltage)
