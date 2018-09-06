@@ -29,6 +29,7 @@ int main() {
     pc2.baud(115200);
     wait_ms(4000);
     pc2.printf("\r\n-\r\n-\r\nMidi multi CV...\r\n-\r\n-\r\n");
+    pc2.printf("version 0.1\r\n");
     //wait_ms(1000);
 
     pcMidi.baud(31250);//midi baudrate
@@ -65,6 +66,7 @@ int main() {
         // toggle led
         ledOut = !ledOut;
 
+  #ifdef UNNNNNN
         if(counter%2)
         {
           // note on
@@ -90,11 +92,10 @@ int main() {
           pcMidi.putc(0x40);
 
           gateOut = 0;
-          //voltageOut.write(1.0f);//0,1,2,3 volts
 
-          pc2.printf("Note off\r\n");
+          pc2.printf("Note  off\r\n");
         }
-
+#endif
 
         timer.stop();
         pc2.printf("\r\ntime=%f seconds, count=%d numRead=%d \r\n", timer.read(), counter++, numRead);
