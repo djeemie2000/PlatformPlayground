@@ -6,6 +6,8 @@
 #include "VoltageOut.h"
 #include "CVMidiHandler.h"
 #include "MultiMidiHandler.h"
+#include "ModeMidiHandler.h"
+#include "SerialMidiHandler.h"
 
 // globals because callback OnCharRecieved
 SerialBuffer<100> serialBuffer;
@@ -22,26 +24,41 @@ void OnCharRecieved()
 int main() {
   DigitalOut ledOut(PC_13);//builtin led as gate indicator
   DigitalIn clockIn(PA_12);//clock input
+  DigitalIn modeToggleIn(PA_11);//mode toggle input
   Serial pc2(PA_9, PA_10); // tx, rx
   DigitalOut gateOut(PA_15);//gate output
   PwmVoltageOut voltageOut(PB_1);//PWM voltage output for 1V/oct
 
     pc2.baud(115200);
+    pcMidi.baud(31250);//midi baudrate
     wait_ms(4000);
+
     pc2.printf("\r\n-\r\n-\r\nMidi multi CV...\r\n-\r\n-\r\n");
     pc2.printf("version 0.1\r\n");
     //wait_ms(1000);
-
-    pcMidi.baud(31250);//midi baudrate
 
     // put your setup code here, to run once:
     MidiParser midiParser;
     Timer timer;
     int counter = 0;
-    LogMidiHandler midiHandler(pc2);
-    CVMidiHandler midiHandler2(voltageOut, gateOut);
     MidiHandler dummy;
-    MultiMidiHandler midiMulti(midiHandler, midiHandler2, dummy);
+    LogMidiHandler logHandlerCommon(pc2, 0);
+
+    // channel 1: live to midi serial
+    LogMidiHandler logHandler1(pc2, 1);
+    SerialMidiHandler midiHandler1(pcMidi);
+    MultiMidiHandler midiMulti1(logHandler1, midiHandler1, dummy);
+    ModeMidiHandler modeHandler1(1, midiMulti1);
+
+    // channel 2: live to CV
+    CVMidiHandler midiHandler2(voltageOut, gateOut);
+    LogMidiHandler logHandler2(pc2, 2);
+    MultiMidiHandler midiMulti2(logHandler2, midiHandler2, dummy);
+    ModeMidiHandler modeHandler2(2, midiMulti2);
+
+    // channel 3: TODO
+
+    MultiMidiHandler midiMulti(logHandlerCommon, modeHandler1, modeHandler2);
 
     pcMidi.attach(&OnCharRecieved, Serial::RxIrq);
 
@@ -61,41 +78,12 @@ int main() {
             midiParser.Parse(byte, midiMulti);
           }
           // do some timing sensitive stuff
+          modeHandler1.Tick(clockIn.read());
+
           wait_ms(1);
         }
         // toggle led
         ledOut = !ledOut;
-
-  #ifdef UNNNNNN
-        if(counter%2)
-        {
-          // note on
-          pcMidi.putc(0x9F);
-          pcMidi.putc(0x45);
-          pcMidi.putc(0x40);
-
-          gateOut = 1;
-          // 7/12, 1+ 7/12, 2, 2+7/12, 3
-          int notes[] = {0,2,4,5,7,9,11,12};
-          int tmp = (counter/2)%8;
-          int cv = 12+notes[tmp];
-
-          voltageOut.write(cv/12.0f);
-
-          pc2.printf("Note on %d\r\n", tmp);
-        }
-        else
-        {
-          // note off
-          pcMidi.putc(0x8F);
-          pcMidi.putc(0x45);
-          pcMidi.putc(0x40);
-
-          gateOut = 0;
-
-          pc2.printf("Note  off\r\n");
-        }
-#endif
 
         timer.stop();
         pc2.printf("\r\ntime=%f seconds, count=%d numRead=%d \r\n", timer.read(), counter++, numRead);
