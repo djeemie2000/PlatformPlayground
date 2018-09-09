@@ -59,6 +59,7 @@ int main() {
   LogMidiHandler logHandler2(pc2, 2);
   MultiMidiHandler midiMulti2(logHandler2, midiHandler2, dummy);
   ModeMidiHandler modeHandler2(1, midiMulti2);
+  modeHandler2.SetMode(ModeMidiHandler::LiveMono);//!!
 
   // channel 3: TODO
 

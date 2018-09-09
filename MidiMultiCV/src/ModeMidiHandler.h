@@ -55,7 +55,7 @@ public:
      if(m_Channel == Channel)
      {
          m_State.NoteOn(MidiNote, Velocity);
-         if(m_Mode==LivePoly)
+         if(m_Mode==LivePoly || m_Mode==LiveMono)
          {
              m_midiOut.NoteOn(Channel, MidiNote, Velocity);
          } 
@@ -84,7 +84,14 @@ public:
          if(m_Mode==LivePoly)
          {
              m_midiOut.NoteOff(Channel, MidiNote, Velocity);
-         } 
+         }
+         else if (m_Mode==LiveMono)
+         {
+             if(0==m_State.NumPressed())
+             {
+                 m_midiOut.NoteOff(Channel, MidiNote, Velocity);
+             }
+         }
          else if(m_Mode==StepperRecord)
          {
               // long press => clear

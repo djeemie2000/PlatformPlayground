@@ -32,7 +32,7 @@ private:
   VoltageOut& m_cvPitch;
   DigitalOut& m_gateOut;
   //TODO voltage out for velocity
-  int m_OctaveOffset{0};
+  int m_OctaveOffset{-4};
 };
 
 #endif /* end of include guard: CVMIDIHANDLER_H_INCLUDE */
