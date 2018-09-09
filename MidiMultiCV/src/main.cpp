@@ -48,13 +48,13 @@ int main() {
     LogMidiHandler logHandler1(pc2, 1);
     SerialMidiHandler midiHandler1(pcMidi);
     MultiMidiHandler midiMulti1(logHandler1, midiHandler1, dummy);
-    ModeMidiHandler modeHandler1(1, midiMulti1);
+    ModeMidiHandler modeHandler1(0, midiMulti1);
 
     // channel 2: live to CV
     CVMidiHandler midiHandler2(voltageOut, gateOut);
     LogMidiHandler logHandler2(pc2, 2);
     MultiMidiHandler midiMulti2(logHandler2, midiHandler2, dummy);
-    ModeMidiHandler modeHandler2(2, midiMulti2);
+    ModeMidiHandler modeHandler2(1, midiMulti2);
 
     // channel 3: TODO
 

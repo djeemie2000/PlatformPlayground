@@ -12,23 +12,23 @@ public:
 
   void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override
   {
-    m_pc.printf("\r\n%d : Ch 0x%2x : On    0x%2x 0x%2x\r\n", m_Id, Channel, MidiNote, Velocity);
+    m_pc.printf("%d : Ch 0x%02X : On    0x%02X 0x%02X\r\n", m_Id, Channel, MidiNote, Velocity);
   }
  void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override
  {
-   m_pc.printf("\r\n%d : Ch 0x%2x : Off   0x%2x 0x%2x\r\n", m_Id, Channel, MidiNote, Velocity);
+    m_pc.printf("%d : Ch 0x%02X : Off   0x%02X 0x%02X\r\n", m_Id, Channel, MidiNote, Velocity);
  }
  void AfterTouch(uint8_t Channel, uint8_t MidiNote, uint8_t Pressure)
  {
-   m_pc.printf("\r\n%d : Ch 0x%2x : After 0x%2x 0x%2x\r\n", m_Id, Channel, MidiNote, Pressure);
+   m_pc.printf("%d : Ch 0x%02X : After 0x%02X 0x%02X\r\n", m_Id, Channel, MidiNote, Pressure);
  }
  void ContinuousController(uint8_t Channel, uint8_t Controller, uint8_t Value)
  {
-   m_pc.printf("\r\n%d : Ch 0x%2x : CC    0x%2x 0x%2x\r\n", m_Id, Channel, Controller, Value);
+   m_pc.printf("%d : Ch 0x%02X : CC    0x%02X 0x%02X\r\n", m_Id, Channel, Controller, Value);
  }
  void PitchWheel(uint8_t Channel, int Bend)
  {
-   m_pc.printf("\r\n%d : Ch 0x%2x : Pitch %d\r\n", m_Id, Channel, Bend);
+   m_pc.printf("%d : Ch 0x%02x : Pitch %d\r\n", m_Id, Channel, Bend);
  }
  void ActiveSense()
  {
