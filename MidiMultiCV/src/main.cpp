@@ -17,19 +17,19 @@ Serial pcMidi(PA_2, PA_3); // tx, rx
 void OnCharRecieved()
 {
   serialBuffer.Write( pcMidi.getc());//getc is blocking!!!
-//  uint8_t byte = pPcMidi->getc();
-  //pPc2->printf("0x%2x ", byte);
-  //pMidiParser->Parse(byte, *pMidiHandler);
 }
 
 int main() {
   DigitalOut ledOut(PC_13);//builtin led as gate indicator
-  DigitalIn clockIn(PA_12);//clock input
+  DigitalIn clockIn(PA_12);//external clock input
   DigitalIn modeToggleIn(PA_11);//mode toggle input
   Serial pc2(PA_9, PA_10); // tx, rx
   DigitalOut gateOut(PA_15);//gate output
   PwmVoltageOut voltageOut(PB_1);//PWM voltage output for 1V/oct
+  PwmVoltageOut voltageOut2(PB_0);//PWM voltage output for velocity
   PeriodicOutState clockState;
+  DigitalOut clockOut(PB_3);//clock output
+
 
   clockState.SetPeriod(500);//approx 2 beat / second = 120 bpm
   clockState.SetDuration(0.5f);
@@ -55,7 +55,7 @@ int main() {
   ModeMidiHandler modeHandler1(0, midiMulti1);
 
   // channel 2: live to CV
-  CVMidiHandler midiHandler2(voltageOut, gateOut);
+  CVMidiHandler midiHandler2(voltageOut, voltageOut2, gateOut);
   LogMidiHandler logHandler2(pc2, 2);
   MultiMidiHandler midiMulti2(logHandler2, midiHandler2, dummy);
   ModeMidiHandler modeHandler2(1, midiMulti2);
@@ -89,6 +89,7 @@ int main() {
         modeHandler2.Tick(clockState.Get());
 
         ledOut = clockState.Get() ? 0:1;//need to invert led??
+        clockOut = clockState.Get() ? 1:0;
 
         wait_ms(1);
       }
