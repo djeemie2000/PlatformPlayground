@@ -48,22 +48,28 @@ int main() {
   MidiHandler dummy;
   LogMidiHandler logHandlerCommon(pc2, 0);
 
-  // channel 1: live to midi serial
+  // channel 1: live (poly) to midi serial
   LogMidiHandler logHandler1(pc2, 1);
   SerialMidiHandler midiHandler1(pcMidi);
-  MultiMidiHandler midiMulti1(logHandler1, midiHandler1, dummy);
+  MultiMidiHandler midiMulti1(logHandler1, midiHandler1, dummy, dummy);
   ModeMidiHandler modeHandler1(0, midiMulti1);
+  modeHandler1.SetMode(ModeMidiHandler::LivePoly);
 
   // channel 2: live to CV
   CVMidiHandler midiHandler2(voltageOut, voltageOut2, gateOut);
   LogMidiHandler logHandler2(pc2, 2);
-  MultiMidiHandler midiMulti2(logHandler2, midiHandler2, dummy);
+  MultiMidiHandler midiMulti2(logHandler2, midiHandler2, dummy, dummy);
   ModeMidiHandler modeHandler2(1, midiMulti2);
   modeHandler2.SetMode(ModeMidiHandler::LiveMono);//!!
 
-  // channel 3: TODO
+  // channel 3: stepper to midi serial
+  LogMidiHandler logHandler3(pc2, 3);
+  SerialMidiHandler midiHandler3(pcMidi);
+  MultiMidiHandler midiMulti3(logHandler3, midiHandler3, dummy, dummy);
+  ModeMidiHandler modeHandler3(0, midiMulti3);
+  modeHandler3.SetMode(ModeMidiHandler::StepperRecord);
 
-  MultiMidiHandler midiMulti(logHandlerCommon, modeHandler1, modeHandler2);
+  MultiMidiHandler midiMulti(logHandlerCommon, modeHandler1, modeHandler2, modeHandler3);
 
   pcMidi.attach(&OnCharRecieved, Serial::RxIrq);
 
