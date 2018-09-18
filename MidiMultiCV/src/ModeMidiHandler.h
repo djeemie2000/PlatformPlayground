@@ -59,6 +59,10 @@ public:
          {
              m_midiOut.NoteOn(Channel, MidiNote, Velocity);
          } 
+         else if(m_Mode==StepperPlay)
+         {
+             m_Stepper.SetBaseNote(MidiNote);
+         }
          else if(m_Mode==StepperRecord)
          {
               // long press => clear

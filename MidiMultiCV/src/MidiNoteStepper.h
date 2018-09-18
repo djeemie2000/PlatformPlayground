@@ -14,12 +14,16 @@ public:
 
     MidiNoteStepper();
 
+    // record:
     void Clear();
     void AddStep(uint8_t MidiNote, uint8_t Velocity);
     void AddSkipStep();
 
+    // play:
     void Tick(int Gate);
+    void SetBaseNote(uint8_t MidiNote);
 
+    // getters:
     int CurrStep() const;
     int NumSteps() const;
     bool Skip() const;
@@ -45,4 +49,7 @@ private:
     Step m_Step[Capacity];
     int m_Gate{0};
     int m_PrevGate{0};
+    //TODO m_BeginNote vs m_PlayNote
+    int m_BaseNote{-1};
+    int m_PlayBaseNote{-1};
 };
