@@ -27,16 +27,25 @@ public:
  }
  void ContinuousController(uint8_t Channel, uint8_t Controller, uint8_t Value)
  {
-   //assume all CC is voltage offset change
-   m_OctaveOffset = (Value>>3);//[0,15]
-   m_OctaveOffset -= 8;
+   // learn
+   if(m_Controller==128)
+   {
+     m_Controller = Controller;
+   }
+   if(m_Controller == Controller)
+   {
+      //assume all CC is voltage offset change
+      m_OctaveOffset = (Value>>3);//[0,15]
+      m_OctaveOffset -= 8;//[-8, +7]
+   }
  }
 
 private:
   VoltageOut& m_cvPitch;
   VoltageOut& m_cvVelocity;
   DigitalOut& m_gateOut;
-  //TODO voltage out for velocity
+  // octave offset
+  uint8_t m_Controller{128};
   int m_OctaveOffset{-4};
 };
 

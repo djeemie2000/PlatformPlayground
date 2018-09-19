@@ -93,6 +93,7 @@ int main() {
         clockState.Tick(false);
         modeHandler1.Tick(clockState.Get());
         modeHandler2.Tick(clockState.Get());
+        modeHandler3.Tick(clockState.Get());
 
         ledOut = clockState.Get() ? 0:1;//need to invert led??
         clockOut = clockState.Get() ? 1:0;
