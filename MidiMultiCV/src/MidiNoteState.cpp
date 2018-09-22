@@ -8,6 +8,10 @@ MidiNoteState::MidiNoteState(){}
     }
     void MidiNoteState::NoteOn(uint8_t MidiNote, uint8_t Velocity)
     {
+        NoteOn(MidiNote, Velocity, 0);
+    }
+    void MidiNoteState::NoteOn(uint8_t MidiNote, uint8_t Velocity, int Transpose)
+    {
         // no check on note in range
         if(!m_State[MidiNote].Pressed)
         {
@@ -16,6 +20,7 @@ MidiNoteState::MidiNoteState(){}
             m_State[MidiNote].Pressed = true;
         }
         m_State[MidiNote].Velocity = Velocity;
+        m_State[MidiNote].Transpose = Transpose;
     }
     void MidiNoteState::NoteOff(uint8_t MidiNote, uint8_t Velocity)
     {
@@ -33,12 +38,12 @@ MidiNoteState::MidiNoteState(){}
     {
         return m_NumPressed;
     }
-    bool MidiNoteState::NotePressed(int MidiNote)
+    bool MidiNoteState::NotePressed(int MidiNote) const
     {
         // no check on note in range
         return m_State[MidiNote].Pressed;
     }
-    uint8_t MidiNoteState::Velocity(int MidiNote)
+    uint8_t MidiNoteState::Velocity(int MidiNote) const
     {
         // no check on note in range
         return m_State[MidiNote].Velocity;
@@ -47,3 +52,9 @@ MidiNoteState::MidiNoteState(){}
     {
         return !m_State[MidiNote].Pressed ? m_State[MidiNote].TickOff- m_State[MidiNote].TickOn :  m_Tick-m_State[MidiNote].TickOn;
     }
+    int MidiNoteState::Transpose(int MidiNote) const
+    {
+        // no check on note in range
+        return m_State[MidiNote].Transpose;
+    }
+
