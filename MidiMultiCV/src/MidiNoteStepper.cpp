@@ -6,6 +6,19 @@ void MidiNoteStepper::Tick(int Gate)
 {
     m_PrevGate=m_Gate;
     m_Gate = Gate;
+    if(!m_PrevGate && m_Gate)
+    {
+        Advance();
+    }
+}
+
+void MidiNoteStepper::Advance()
+{
+    ++m_CurrStep;
+    if(m_NumSteps<=m_CurrStep)
+    {
+        m_CurrStep = 0;
+    }    
 }
 
 void MidiNoteStepper::SetBaseNote(uint8_t MidiNote)
@@ -18,16 +31,17 @@ void MidiNoteStepper::Clear()
     m_NumSteps = 0;
     m_BaseNote = -1;
     m_PlayBaseNote = -1;
+    m_CurrStep = 0;
 }
 
 void MidiNoteStepper::AddStep(uint8_t MidiNote, uint8_t Velocity)
 {
     if(m_NumSteps<Capacity)
     {
-        ++m_NumSteps;
         m_Step[m_NumSteps].Gate = true;
         m_Step[m_NumSteps].MidiNote = MidiNote;
         m_Step[m_NumSteps].Velocity= Velocity;
+        ++m_NumSteps;
 
         if(-1==m_BaseNote)
         {
@@ -41,13 +55,13 @@ void MidiNoteStepper::AddSkipStep()
 {
     if(m_NumSteps<Capacity)
     {
-        ++m_NumSteps;
         m_Step[m_NumSteps].Gate = false;
         if(0<m_NumSteps)
         {
             m_Step[m_NumSteps].MidiNote = m_Step[m_NumSteps-1].MidiNote;
             m_Step[m_NumSteps].Velocity= m_Step[m_NumSteps-1].Velocity;
         }
+        ++m_NumSteps;
     }
 }
 
@@ -87,7 +101,7 @@ uint8_t MidiNoteStepper::MidiNote() const
 
 bool MidiNoteStepper::Gate() const
 {
-    return m_Step[m_CurrStep].Gate && m_Gate;
+    return m_NumSteps && m_Step[m_CurrStep].Gate && m_Gate;
 }
 
 MidiNoteStepper::EState MidiNoteStepper::CurrState() const

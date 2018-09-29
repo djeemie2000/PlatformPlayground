@@ -66,7 +66,7 @@ int main() {
   LogMidiHandler logHandler3(pc2, 3);
   SerialMidiHandler midiHandler3(pcMidi);
   MultiMidiHandler midiMulti3(logHandler3, midiHandler3, dummy, dummy);
-  ModeMidiHandler modeHandler3(0, midiMulti3);
+  ModeMidiHandler modeHandler3(2, midiMulti3);
   modeHandler3.SetMode(ModeMidiHandler::StepperRecord);
 
   MultiMidiHandler midiMulti(logHandlerCommon, modeHandler1, modeHandler2, modeHandler3);

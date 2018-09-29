@@ -47,7 +47,13 @@ public:
       }
   }
 
-  void SetMode(Mode mode){m_Mode = mode;}
+  void SetMode(Mode mode)
+  {
+      m_Mode = mode;
+      //TODO chen switching mode, make sure no notes get stuck
+      // e.g. live -> sequencer, sequencer -> live
+      // Note: a real note stack (highest note, latest note order, ...) would be usefull
+  }
 
 
   void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override
@@ -104,6 +110,11 @@ public:
               // alternative: act in tick???  
               if(1024<m_State.PressDuration(MidiNote))
               {
+                  // current note off if a note is on
+                  if(m_Stepper.Gate())
+                  {
+                      m_midiOut.NoteOff(m_Channel, m_Stepper.MidiNote(), m_Stepper.Velocity());
+                  }
                   m_Stepper.Clear();
               }
          }
@@ -113,6 +124,7 @@ public:
  {
      if(m_Channel == Channel)
      {
+         //TODO learn controller for gate length
          m_midiOut.ContinuousController(Channel, Controller, Value);
      }
  }
