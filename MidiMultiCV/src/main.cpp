@@ -9,6 +9,7 @@
 #include "ModeMidiHandler.h"
 #include "SerialMidiHandler.h"
 #include "PeriodicOut.h"
+#include "MonophonicMidiHandler.h"
 
 // globals because callback OnCharRecieved
 SerialBuffer<100> serialBuffer;
@@ -30,8 +31,9 @@ int main() {
   PeriodicOutState clockState;
   DigitalOut clockOut(PB_3);//clock output
 
+//TODO NOTE STACK LAST NOTE PRIORITY
 
-  clockState.SetPeriod(500);//approx 2 beat / second = 120 bpm
+  clockState.SetPeriod(300);//approx 3.3 beat / second = 198 bpm
   clockState.SetDuration(0.5f);
   pc2.baud(115200);
   pcMidi.baud(31250);//midi baudrate
@@ -55,12 +57,13 @@ int main() {
   ModeMidiHandler modeHandler1(0, midiMulti1);
   modeHandler1.SetMode(ModeMidiHandler::LivePoly);
 
-  // channel 2: live to CV
-  CVMidiHandler midiHandler2(voltageOut, voltageOut2, gateOut);
+  // channel 2: live to (mono)  CV
   LogMidiHandler logHandler2(pc2, 2);
-  MultiMidiHandler midiMulti2(logHandler2, midiHandler2, dummy, dummy);
+  CVMidiHandler midiHandler2(voltageOut, voltageOut2, gateOut);
+  MonophonicMidiHandler midiMono2(midiHandler2);
+  MultiMidiHandler midiMulti2(logHandler2, midiMono2, dummy, dummy);
   ModeMidiHandler modeHandler2(1, midiMulti2);
-  modeHandler2.SetMode(ModeMidiHandler::LiveMono);//!!
+  modeHandler2.SetMode(ModeMidiHandler::LivePoly);//!!TODO remove mono vs poly in mode
 
   // channel 3: stepper to midi serial
   LogMidiHandler logHandler3(pc2, 3);
