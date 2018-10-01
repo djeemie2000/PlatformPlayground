@@ -5,19 +5,7 @@
 #include "VoltageOut.h"
 #include "MidiNoteState.h"
 
-uint8_t Transpose(uint8_t MidiNote, int transp)
-{
-    int note  = MidiNote + 12*m_OctaveOffset;
-    if(note<0)
-    {
-        note= 0;
-    }
-    else if(127<note)
-    {
-        note = 127;
-    }
-    return note;
-}
+uint8_t Transpose(uint8_t MidiNote, int transp);
 
 class OctaveMidiHandler : public MidiHandler
 {
@@ -34,10 +22,10 @@ public:
     void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override
     {
         // problem : what if octave is changed between note on and note off?
-        // solution: rememeber in note state
+        // solution: remember in note state
         uint8_t note = Transpose(MidiNote, m_NoteState.Transpose(MidiNote));
         m_NoteState.NoteOff(MidiNote, Velocity);
-        m_Handler.NoteOff(note, Velocity);
+        m_Handler.NoteOff(Channel, note, Velocity);
     }
     void ContinuousController(uint8_t Channel, uint8_t Controller, uint8_t Value)
     {
