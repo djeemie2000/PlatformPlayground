@@ -17,8 +17,8 @@ public:
   void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override
   {
     int cv = MidiNote + 12*m_OctaveOffset;
-    m_cvPitch.write(cv/12.0f);
-    m_cvVelocity.write(Velocity/40.0f);//[0,128[ to [0.0,3.2[
+    m_cvPitch.WriteVoltage(cv/12.0f);
+    m_cvVelocity.WriteVoltage(Velocity/40.0f);//[0,128[ to [0.0,3.2[
     m_gateOut = 1;
   }
  void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override

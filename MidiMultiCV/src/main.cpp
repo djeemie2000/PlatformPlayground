@@ -3,7 +3,7 @@
 #include "LogMidiHandler.h"
 #include "MCP4x22.h"
 #include "SerialBuffer.h"
-#include "VoltageOut.h"
+#include "PwmVoltageOut.h"
 #include "CVMidiHandler.h"
 #include "MultiMidiHandler.h"
 #include "ModeMidiHandler.h"
