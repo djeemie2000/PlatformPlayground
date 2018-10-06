@@ -10,6 +10,7 @@
 #include "SerialMidiHandler.h"
 #include "PeriodicOut.h"
 #include "MonophonicMidiHandler.h"
+#include "GateMidiHandler.h"
 
 // globals because callback OnCharRecieved
 SerialBuffer<100> serialBuffer;
@@ -20,18 +21,24 @@ void OnCharRecieved()
   serialBuffer.Write( pcMidi.getc());//getc is blocking!!!
 }
 
-int main() {
+int main() 
+{
   DigitalOut ledOut(PC_13);//builtin led as gate indicator
   DigitalIn clockIn(PA_12);//external clock input
-  DigitalIn modeToggleIn(PA_11);//mode toggle input
   Serial pc2(PA_9, PA_10); // tx, rx
-  DigitalOut gateOut(PA_15);//gate output
+
+  DigitalOut gateOut(PA_15);//gate output TODO PB10 next to pwm's
   PwmVoltageOut voltageOut(PB_1);//PWM voltage output for 1V/oct
   PwmVoltageOut voltageOut2(PB_0);//PWM voltage output for velocity
+
   PeriodicOutState clockState;
   DigitalOut clockOut(PB_3);//clock output
-
-//TODO NOTE STACK LAST NOTE PRIORITY
+  DigitalOut gateLed1(PB_6);
+  DigitalOut gateLed2(PB_7);
+  DigitalOut gateLed3(PB_8);
+  
+  DigitalIn modeToggleIn(PA_11);//mode toggle input 
+  //TODO analog in for 3 way switch??
 
   clockState.SetPeriod(300);//approx 3.3 beat / second = 198 bpm
   clockState.SetDuration(0.5f);
@@ -40,20 +47,21 @@ int main() {
   wait_ms(4000);
 
   pc2.printf("\r\n-\r\n-\r\nMidi multi CV...\r\n-\r\n-\r\n");
-  pc2.printf("version 0.1\r\n");
+  pc2.printf("version 0.2\r\n");
   //wait_ms(1000);
 
   // put your setup code here, to run once:
   MidiParser midiParser;
   Timer timer;
   int counter = 0;
-  MidiHandler dummy;
+  MidiHandler midiDummy;
   LogMidiHandler logHandlerCommon(pc2, 0);
 
   // channel 1: live (poly) to midi serial
   LogMidiHandler logHandler1(pc2, 1);
   SerialMidiHandler midiHandler1(pcMidi);
-  MultiMidiHandler midiMulti1(logHandler1, midiHandler1, dummy, dummy);
+  GateMidiHandler midiGate1(gateLed1);
+  MultiMidiHandler midiMulti1(logHandler1, midiHandler1, midiGate1, midiDummy);
   ModeMidiHandler modeHandler1(0, midiMulti1);
   modeHandler1.SetMode(ModeMidiHandler::LivePoly);
 
@@ -61,16 +69,20 @@ int main() {
   LogMidiHandler logHandler2(pc2, 2);
   CVMidiHandler midiHandler2(voltageOut, voltageOut2, gateOut);
   MonophonicMidiHandler midiMono2(midiHandler2);
-  MultiMidiHandler midiMulti2(logHandler2, midiMono2, dummy, dummy);
+  GateMidiHandler midiGate2(gateLed2);
+  MultiMidiHandler midiMulti2(logHandler2, midiMono2, midiGate2, midiDummy);
   ModeMidiHandler modeHandler2(1, midiMulti2);
-  modeHandler2.SetMode(ModeMidiHandler::LivePoly);//!!TODO remove mono vs poly in mode
+  modeHandler2.SetMode(ModeMidiHandler::LivePoly);
 
   // channel 3: stepper to midi serial
   LogMidiHandler logHandler3(pc2, 3);
   SerialMidiHandler midiHandler3(pcMidi);
-  MultiMidiHandler midiMulti3(logHandler3, midiHandler3, dummy, dummy);
+  GateMidiHandler midiGate3(gateLed3);
+  MultiMidiHandler midiMulti3(logHandler3, midiHandler3, midiGate3, midiDummy);
   ModeMidiHandler modeHandler3(2, midiMulti3);
   modeHandler3.SetMode(ModeMidiHandler::StepperRecord);
+
+  // channel 4 : todo
 
   MultiMidiHandler midiMulti(logHandlerCommon, modeHandler1, modeHandler2, modeHandler3);
 
