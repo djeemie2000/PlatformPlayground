@@ -49,7 +49,7 @@ private:
     Step m_Step[Capacity];
     int m_Gate{0};
     int m_PrevGate{0};
-    //TODO m_BeginNote vs m_PlayNote
+
     int m_BaseNote{-1};
     int m_PlayBaseNote{-1};
 };

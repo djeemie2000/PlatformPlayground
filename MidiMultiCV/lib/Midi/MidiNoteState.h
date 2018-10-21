@@ -2,6 +2,7 @@
 
 #include <mbed.h>
 
+//TODO full state vs only pressed state
 class MidiNoteState
 {
 public:
@@ -21,7 +22,7 @@ public:
 private:
     struct State 
     {
-        uint8_t MidiNote{0};
+        //uint8_t MidiNote{0};
         bool Pressed{false};
         uint8_t Velocity{0};
         uint32_t TickOn{0};

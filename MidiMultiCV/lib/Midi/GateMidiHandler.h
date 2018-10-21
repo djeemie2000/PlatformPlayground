@@ -14,8 +14,9 @@ public:
   void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override;
 
 private:
-  DigitalOut& m_gateOut;
-  MidiNoteState m_State;
+  DigitalOut& m_GateOut;
+  //MidiNoteState m_State;
+  int m_NoteOnCount{0};
 };
 
 #endif

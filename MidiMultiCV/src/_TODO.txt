@@ -1,0 +1,25 @@
+DONE
+remove live mono from mode handler
+gate led per channel -> add digital out in mode handler, depends on num notes on in state 
+mode input switch using voltage divider -> analogin -> N-position switch in : int selected = 1 + (1+N)*analogValue; return selected/2;
+
+DONOTDO
+mode input via switch per channel -> 2 digital ins
+
+TODO
+compile time asserts for pinnames: blue pill platform -> 
+    is PWM (for analog out), 
+    (is 5V tolerant (for inputs), )
+    is digital input (5V tolerant, not reset, not low current), 
+    is digital output (5V tolerant, not reset, not low current)
+    is ADC (for analog in), 
+    ...
+compile time getter pinname to/from index (same convention as chips) 
+compile time check/count of pin usage (??)
+print pin usage upon startup / upon compilation (?? for asserted pins??)
+
+CV midi handler voltage offet move to octave handler?
+mode handler: use note stack to end all notes when changing mode
+'midi panic' (i.e. all notes off) -> via dedicated function on handlers?
+??? "is mono/poly" getter on handler e.g. CV, can be used by other handlers????
+log CV midi after monophonic not after mode handler
