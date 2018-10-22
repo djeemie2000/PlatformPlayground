@@ -22,11 +22,9 @@ public:
 private:
     struct State 
     {
-        //uint8_t MidiNote{0};
         bool Pressed{false};
         uint8_t Velocity{0};
-        uint32_t TickOn{0};
-        uint32_t TickOff{0};
+        uint32_t Tick{0};// tick on (pressed) or duration (not pressed)
         int Transpose{0};
     };
 

@@ -16,7 +16,7 @@ MidiNoteState::MidiNoteState(){}
         if(!m_State[MidiNote].Pressed)
         {
             ++m_NumPressed;
-            m_State[MidiNote].TickOn = m_Tick;
+            m_State[MidiNote].Tick = m_Tick;
             m_State[MidiNote].Pressed = true;
         }
         m_State[MidiNote].Velocity = Velocity;
@@ -28,7 +28,7 @@ MidiNoteState::MidiNoteState(){}
         if(m_State[MidiNote].Pressed)
         {
             --m_NumPressed;
-            m_State[MidiNote].TickOff = m_Tick;
+            m_State[MidiNote].Tick = m_Tick-m_State[MidiNote].Tick;
             m_State[MidiNote].Pressed = false;
         }
         m_State[MidiNote].Velocity = Velocity;
@@ -50,7 +50,8 @@ MidiNoteState::MidiNoteState(){}
     }
     uint32_t MidiNoteState::PressDuration(int MidiNote) const
     {
-        return !m_State[MidiNote].Pressed ? m_State[MidiNote].TickOff- m_State[MidiNote].TickOn :  m_Tick-m_State[MidiNote].TickOn;
+        return !m_State[MidiNote].Pressed ? m_State[MidiNote].Tick :  m_Tick-m_State[MidiNote].Tick;
+
     }
     int MidiNoteState::Transpose(int MidiNote) const
     {
