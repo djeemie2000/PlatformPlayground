@@ -66,7 +66,7 @@ int main()
   pc2.printf("create channel 1\r\n");
   LogMidiHandler logHandler1(pc2, 1);
   SerialMidiHandler midiHandler1(pcMidi);
-  DigitalOut gateLed1(PB_1);
+  DigitalOut gateLed1(PA_11);
   GateMidiHandler midiGate1(gateLed1);
   MultiMidiHandler midiMulti1(logHandler1, midiHandler1, midiGate1, midiDummy);
   ModeMidiHandler modeHandler1(0, midiMulti1);
@@ -77,15 +77,18 @@ int main()
   pc2.printf("create channel 2\r\n");
   LogMidiHandler logHandler2(pc2, 2);
   // outputs for CV out channel 2
-  DigitalOut gateOut2(PB_4);//gate output TODO PB10 next to pwm's
-  PwmVoltageOut voltageOutPitch2(PB_6);//PWM voltage output for 1V/oct
-  PwmVoltageOut voltageOutVelocity2(PB_7);//PWM voltage output for velocity
+  DigitalOut gateOut2(PB_4);//gate output 
+  PwmVoltageOut voltageOutPitch2(PB_0);//PWM voltage output for 1V/oct
+  PwmVoltageOut voltageOutVelocity2(PB_1);//PWM voltage output for velocity
   CVMidiHandler midiHandler2(voltageOutPitch2, voltageOutVelocity2, gateOut2);
   MonophonicMidiHandler midiMono2(midiHandler2);
-  DigitalOut gateLed2(PB_10);
+  // gate led
+  DigitalOut gateLed2(PA_12);
   GateMidiHandler midiGate2(gateLed2);
-  //TODO midi serial
-  MultiMidiHandler midiMulti2(logHandler2, midiMono2, midiGate2, midiDummy);
+  // midi serial
+  SerialMidiHandler midiHandler2b(pcMidi);
+  // multi
+  MultiMidiHandler midiMulti2(logHandler2, midiMono2, midiGate2, midiHandler2b);
   ModeMidiHandler modeHandler2(1, midiMulti2);
   modeHandler2.SetMode(ModeMidiHandler::LivePoly);
 
@@ -94,9 +97,14 @@ int main()
   pc2.printf("create channel 3\r\n");
   LogMidiHandler logHandler3(pc2, 3);
   SerialMidiHandler midiHandler3(pcMidi);
-  DigitalOut gateLed3(PB_11);
+  DigitalOut gateOut3(PB_5);//gate output 
+  PwmVoltageOut voltageOutPitch3(PB_10);//PWM voltage output for 1V/oct
+  PwmVoltageOut voltageOutVelocity3(PB_11);//PWM voltage output for velocity
+  CVMidiHandler midiHandler3b(voltageOutPitch3, voltageOutVelocity3, gateOut3);
+  MonophonicMidiHandler midiMono3(midiHandler3);
+  DigitalOut gateLed3(PA_15);
   GateMidiHandler midiGate3(gateLed3);
-  MultiMidiHandler midiMulti3(logHandler3, midiHandler3, midiGate3, midiDummy);
+  MultiMidiHandler midiMulti3(logHandler3, midiHandler3, midiGate3, midiHandler3b);
   ModeMidiHandler modeHandler3(2, midiMulti3);
   modeHandler3.SetMode(ModeMidiHandler::StepperRecord);
 
