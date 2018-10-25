@@ -9,13 +9,13 @@ class SerialMidiHandler : public MidiHandler
 public:
   SerialMidiHandler(Serial& pc);
 
-  void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override
+  void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) /*override*/
   {
       m_pc.putc(0x90 | (Channel & 0x0F));
       m_pc.putc(MidiNote & 0x7F);
       m_pc.putc(Velocity & 0x7F);
   }
- void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override
+ void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) /*override*/
  {
       m_pc.putc(0x80 | (Channel & 0x0F));
       m_pc.putc(MidiNote & 0x7F);

@@ -17,10 +17,10 @@ private:
   bool HandleSystemRealtime(uint8_t byte, MidiHandler& handler);
   bool HandleBuffer(MidiHandler& handler) const;
 
-  uint8_t m_Command{0x00};
-  uint8_t m_Param1{0x00};
-  uint8_t m_Param2{0x00};
-  int m_Cntr{0};
+  uint8_t m_Command;//{0x00};
+  uint8_t m_Param1;//{0x00};
+  uint8_t m_Param2;//{0x00};
+  int m_Cntr;//{0};
 };
 
 #endif /* end of include guard: MIDIPARSER_H */

@@ -20,6 +20,6 @@ public:
 
 private:
     uint8_t m_Stack[Capacity];
-    int m_Size{0};
+    int m_Size;//{0};
 };
 

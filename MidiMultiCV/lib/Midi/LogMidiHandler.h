@@ -10,11 +10,11 @@ public:
   LogMidiHandler(Serial& pc, int Id) : m_pc(pc), m_Id(Id)
   {}
 
-  void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override
+  void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) /*override*/
   {
     m_pc.printf("%d : Ch 0x%02X : On    0x%02X 0x%02X\r\n", m_Id, Channel, MidiNote, Velocity);
   }
- void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override
+ void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) /*override*/
  {
     m_pc.printf("%d : Ch 0x%02X : Off   0x%02X 0x%02X\r\n", m_Id, Channel, MidiNote, Velocity);
  }

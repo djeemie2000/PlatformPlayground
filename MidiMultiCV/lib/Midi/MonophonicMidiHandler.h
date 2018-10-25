@@ -14,9 +14,9 @@ public:
     : m_Handler(handler)
     {}
 
-    void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override;
+    void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) /*override*/;
 
-    void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override;
+    void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) /*override*/;
     
     void ContinuousController(uint8_t Channel, uint8_t Controller, uint8_t Value)
     {

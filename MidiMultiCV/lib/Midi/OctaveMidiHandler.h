@@ -12,14 +12,16 @@ class OctaveMidiHandler : public MidiHandler
 public:
     OctaveMidiHandler(MidiHandler& handler) 
     : m_Handler(handler)
+    , m_Controller(128)
+    ,m_OctaveOffset(-4)
     {}
 
-    void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override
+    void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) /*override*/
     {
         m_NoteState.NoteOn(MidiNote, Velocity, 12*m_OctaveOffset);
         m_Handler.NoteOn(Channel, Transpose(MidiNote, 12*m_OctaveOffset), Velocity);
     }
-    void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override
+    void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) /*override*/
     {
         // problem : what if octave is changed between note on and note off?
         // solution: remember in note state
@@ -64,6 +66,6 @@ public:
 private:
     MidiHandler& m_Handler;
     MidiNoteState m_NoteState;
-    uint8_t m_Controller{128};
-    int m_OctaveOffset{-4};
+    uint8_t m_Controller;//{128};
+    int m_OctaveOffset;//{-4};
 };

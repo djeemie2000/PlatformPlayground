@@ -1,6 +1,13 @@
 #include "MidiNoteStepper.h"
 
-MidiNoteStepper::MidiNoteStepper(){}
+MidiNoteStepper::MidiNoteStepper()
+    : m_NumSteps(0)
+    , m_CurrStep(0)
+    , m_Gate(0)
+    , m_PrevGate(0)
+    , m_BaseNote(-1)
+    , m_PlayBaseNote(-1)
+{}
 
 void MidiNoteStepper::Tick(int Gate)
 {

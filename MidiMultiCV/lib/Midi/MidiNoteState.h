@@ -22,15 +22,22 @@ public:
 private:
     struct State 
     {
-        bool Pressed{false};
-        uint8_t Velocity{0};
-        uint32_t Tick{0};// tick on (pressed) or duration (not pressed)
-        int Transpose{0};
+        State()
+         : Pressed(false)
+         , Velocity(0)
+         , Tick(0)
+         , Transpose(0)
+         {}
+
+        bool Pressed;//{false};
+        uint8_t Velocity;//{0};
+        uint32_t Tick;//{0};// tick on (pressed) or duration (not pressed)
+        int Transpose;//{0};
     };
 
     static const int NumMidiNotes = 128;
 
-    uint32_t m_Tick{0};
+    uint32_t m_Tick;//{0};
     State m_State[NumMidiNotes];
-    int m_NumPressed{0};
+    int m_NumPressed;//{0};
 };

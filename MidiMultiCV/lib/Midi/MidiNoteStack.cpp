@@ -1,6 +1,8 @@
 #include "MidiNoteStack.h"
 
 MidiNoteStack::MidiNoteStack()
+ : m_Stack()
+ , m_Size(0)
 {}
 
 void MidiNoteStack::NoteOn(uint8_t MidiNote)

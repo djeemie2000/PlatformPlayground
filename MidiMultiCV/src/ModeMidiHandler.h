@@ -21,10 +21,10 @@ public:
   void Tick(int Gate);
   void SetMode(Mode mode);
 
-  void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override;
-  void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override;
-  void ContinuousController(uint8_t Channel, uint8_t Controller, uint8_t Value) override;
-  void PitchWheel(uint8_t Channel, int Bend) override;
+  void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) /*override*/;
+  void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) /*override*/;
+  void ContinuousController(uint8_t Channel, uint8_t Controller, uint8_t Value) /*override*/;
+  void PitchWheel(uint8_t Channel, int Bend) /*override*/;
     void AfterTouch(uint8_t Channel, uint8_t MidiNote, uint8_t Pressure)
     {
         m_midiOut.AfterTouch(Channel, MidiNote, Pressure);

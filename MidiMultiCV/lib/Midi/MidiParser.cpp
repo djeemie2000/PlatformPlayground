@@ -1,6 +1,10 @@
 #include "MidiParser.h"
 
 MidiParser::MidiParser()
+  : m_Command(0x00)
+  , m_Param1(0x00)
+  , m_Param2(0x00)
+  , m_Cntr(0)
 {}
 
 bool MidiParser::IsCommand(uint8_t byte) const

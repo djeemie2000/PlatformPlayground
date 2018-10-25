@@ -6,7 +6,7 @@
 class VoltageOut
 {
 public:
-//  virtual ~VoltageOut() =default;
+  virtual ~VoltageOut(){};// =default;
   virtual void WriteVoltage(float voltage){}
   virtual void WriteValue(float value){}
 };

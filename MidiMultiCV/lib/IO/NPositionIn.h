@@ -12,6 +12,6 @@ public:
 
 private:
     AnalogIn m_In;
-    const int m_NumPositions{2};
-    int m_Position{0};
+    const int m_NumPositions;
+    int m_Position;
 };

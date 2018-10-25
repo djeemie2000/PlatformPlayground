@@ -1,6 +1,6 @@
 #include "PwmVoltageOut.h"
 
-  PwmVoltageOut::PwmVoltageOut(PinName pin) : m_Out(pin)
+  PwmVoltageOut::PwmVoltageOut(PinName pin) : m_Out(pin), m_ReferenceVoltage(3.3f)
   {
     m_Out.period_us(400);//2.5kHz
   }

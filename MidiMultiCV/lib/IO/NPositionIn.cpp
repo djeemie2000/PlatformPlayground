@@ -3,6 +3,7 @@
 NPositionIn::NPositionIn(PinName pin, int NumPositions)
 : m_In(pin)
 , m_NumPositions(NumPositions)
+, m_Position(0)
 {}
 
 void NPositionIn::Read()

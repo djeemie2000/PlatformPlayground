@@ -7,7 +7,7 @@ template<int Capacity>
 class SerialBuffer
 {
 public:
-  SerialBuffer()
+  SerialBuffer() : m_WritePos(0), m_ReadPos(0)
   {
 
   }
@@ -42,8 +42,8 @@ private:
   }
 
   uint8_t m_Buffer[Capacity];
-  int m_WritePos{0};
-  int m_ReadPos{0};
+  int m_WritePos;
+  int m_ReadPos;
 };
 
 #endif /* end of include guard: SERIAL_BUFFER_H_INCLUDE */

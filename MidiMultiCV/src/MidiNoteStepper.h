@@ -37,19 +37,20 @@ private:
     
     struct Step 
     {
-        uint8_t MidiNote{0};
-        bool Gate{false};
-        uint8_t Velocity{0};
+        Step() : MidiNote(0), Gate(false), Velocity(0){}
+        uint8_t MidiNote;//{0};
+        bool Gate;//{false};
+        uint8_t Velocity;//{0};
     };
 
     static const int Capacity = 64;
 
-    int m_NumSteps{0};
-    int m_CurrStep{0};
+    int m_NumSteps;//{0};
+    int m_CurrStep;//{0};
     Step m_Step[Capacity];
-    int m_Gate{0};
-    int m_PrevGate{0};
+    int m_Gate;//{0};
+    int m_PrevGate;//{0};
 
-    int m_BaseNote{-1};
-    int m_PlayBaseNote{-1};
+    int m_BaseNote;//{-1};
+    int m_PlayBaseNote;//{-1};
 };

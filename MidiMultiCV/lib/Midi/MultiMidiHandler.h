@@ -14,14 +14,14 @@ public:
   , m_handler4(handler4)
   {}
 
-  void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override
+  void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) /*override*/
   {
     m_handler1.NoteOn(Channel, MidiNote, Velocity);
     m_handler2.NoteOn(Channel, MidiNote, Velocity);
     m_handler3.NoteOn(Channel, MidiNote, Velocity);
     m_handler4.NoteOn(Channel, MidiNote, Velocity);
   }
- void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) override
+ void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) /*override*/
  {
    m_handler1.NoteOff(Channel, MidiNote, Velocity);
    m_handler2.NoteOff(Channel, MidiNote, Velocity);

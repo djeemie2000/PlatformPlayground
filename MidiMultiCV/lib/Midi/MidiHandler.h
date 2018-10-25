@@ -6,7 +6,7 @@
 class MidiHandler
 {
 public:
-  virtual ~MidiHandler() =default;
+  virtual ~MidiHandler(){}// =default;
 
   // voice commands
   virtual void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) {}
