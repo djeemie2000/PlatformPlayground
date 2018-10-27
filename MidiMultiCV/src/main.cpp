@@ -31,6 +31,7 @@ int main()
   //clock output
   PeriodicOutState clockState;
   DigitalOut clockOut(PB_13);
+  DigitalOut clockLed(PA_11);
 
   // mode inputs (uses analog in)
   const int numModes = 3;
@@ -66,7 +67,7 @@ int main()
   pc2.printf("create channel 1\r\n");
   LogMidiHandler logHandler1(pc2, 1);
   SerialMidiHandler midiHandler1(pcMidi);
-  DigitalOut gateLed1(PA_11);
+  DigitalOut gateLed1(PA_12);
   GateMidiHandler midiGate1(gateLed1);
   MultiMidiHandler midiMulti1(logHandler1, midiHandler1, midiGate1, midiDummy);
   ModeMidiHandler modeHandler1(0, midiMulti1);
@@ -83,7 +84,7 @@ int main()
   CVMidiHandler midiHandler2(voltageOutPitch2, voltageOutVelocity2, gateOut2);
   MonophonicMidiHandler midiMono2(midiHandler2);
   // gate led
-  DigitalOut gateLed2(PA_12);
+  DigitalOut gateLed2(PA_15);
   GateMidiHandler midiGate2(gateLed2);
   // midi serial
   SerialMidiHandler midiHandler2b(pcMidi);
@@ -102,7 +103,7 @@ int main()
   PwmVoltageOut voltageOutVelocity3(PB_11);//PWM voltage output for velocity
   CVMidiHandler midiHandler3b(voltageOutPitch3, voltageOutVelocity3, gateOut3);
   MonophonicMidiHandler midiMono3(midiHandler3);
-  DigitalOut gateLed3(PA_15);
+  DigitalOut gateLed3(PB_3);
   GateMidiHandler midiGate3(gateLed3);
   MultiMidiHandler midiMulti3(logHandler3, midiHandler3, midiGate3, midiHandler3b);
   ModeMidiHandler modeHandler3(2, midiMulti3);
@@ -123,6 +124,8 @@ int main()
       timer.reset();
       timer.start();
 
+      //int clockPeriod = 300;
+
       int numRead = 0;
       for(int repeat = 0; repeat<1000; ++repeat)
       {
@@ -142,11 +145,14 @@ int main()
         // TODO read reset from clock input  clockIn.read()
 
         // clock led and gate out
-        ledOut = clockState.Get() ? 0:1;//need to invert led??
+        ledOut = clockState.Get() ? 0:1;//need to invert led
         clockOut = clockState.Get() ? 1:0;
+        clockLed = clockState.Get() ? 1:0;
 
         // read pots, one at a time : mode in, clock speed
-
+        // clock period in  [125, 125+2048]
+        int currClockPeriod = 125 + (clockSpeedIn.read_u16()>>5);
+        clockState.SetPeriod(currClockPeriod);
         // 
         wait_ms(1);
       }
