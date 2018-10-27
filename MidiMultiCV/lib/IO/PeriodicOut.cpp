@@ -4,7 +4,7 @@
   : m_Period(1024)
   , m_Cntr(0)
   , m_Duration(0.5f)
-  , m_State(0)
+  , m_State(1)
   {}
 
     void PeriodicOutState::Tick(bool Reset)
@@ -13,13 +13,21 @@
         {
             m_Cntr = 0;
         }
-        m_State = (m_Duration*m_Period<m_Cntr) ? 1 : 0;
+        //prevent state switching upon period increase
+        if(m_State==1)
+        {
+            if(m_Duration*m_Period<m_Cntr)
+            {
+                m_State = 0;
+            }
+        }
 
         // advance counter
         ++m_Cntr;
         if(m_Period<=m_Cntr)
         {
             m_Cntr = 0;
+            m_State = 1;
         }
     }
 
