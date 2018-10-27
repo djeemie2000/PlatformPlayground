@@ -12,8 +12,8 @@ public:
     enum Mode
     {
         LivePoly,
-        StepperRecord,
-        StepperPlay
+        StepperPlay,
+        StepperRecord
     };
 
   ModeMidiHandler(uint8_t Channel, MidiHandler& midiOut);

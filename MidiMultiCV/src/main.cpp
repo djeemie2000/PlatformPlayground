@@ -35,9 +35,9 @@ int main()
 
   // mode inputs (uses analog in)
   const int numModes = 3;
-  NPositionIn modeIn1(A4, numModes);
+  NPositionIn modeIn1(A6, numModes);
   NPositionIn modeIn2(A5, numModes);
-  NPositionIn modeIn3(A6, numModes);
+  NPositionIn modeIn3(A4, numModes);
 
   // clock speed in
   AnalogIn clockSpeedIn(A7);
@@ -149,15 +149,39 @@ int main()
         clockOut = clockState.Get() ? 1:0;
         clockLed = clockState.Get() ? 1:0;
 
-        // read pots, one at a time : mode in, clock speed
-        // clock period in  [125, 125+2048]
-        int currClockPeriod = 125 + (clockSpeedIn.read_u16()>>5);
-        clockState.SetPeriod(currClockPeriod);
+        int analogRead = repeat%4;
+        if(analogRead==0)
+        {
+          // read pots, one at a time : mode in, clock speed
+          // clock period in  [125, 125+2048]
+          int currClockPeriod = 60 + (clockSpeedIn.read_u16()>>5);
+          clockState.SetPeriod(currClockPeriod);
+        } 
+        else if(analogRead==1)
+        {
+          modeIn1.Read();
+          ModeMidiHandler::Mode mode = static_cast<ModeMidiHandler::Mode>(modeIn1.Get());
+          modeHandler1.SetMode(mode);
+        }
+        else if(analogRead==2)
+        {
+          modeIn2.Read();
+          ModeMidiHandler::Mode mode = static_cast<ModeMidiHandler::Mode>(modeIn2.Get());
+          modeHandler2.SetMode(mode);
+        }
+        else if(analogRead==3)
+        {
+          modeIn3.Read();
+          ModeMidiHandler::Mode mode = static_cast<ModeMidiHandler::Mode>(modeIn3.Get());
+          modeHandler3.SetMode(mode);
+        }
         // 
         wait_ms(1);
       }
 
       timer.stop();
       pc2.printf("\r\ntime=%f seconds, count=%d numRead=%d \r\n", timer.read(), counter++, numRead);
+
+      pc2.printf("%d %d %d\r\n", modeIn1.Get(), modeIn2.Get(), modeIn3.Get());
   }
 }
