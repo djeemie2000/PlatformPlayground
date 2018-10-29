@@ -1,6 +1,7 @@
 #include <mbed.h>
 #include "GateIn.h"
 #include "GateTrack.h"
+#include "LogMidiHandler.h"
 
 int main() {
 
@@ -19,12 +20,25 @@ int main() {
   pc2.printf("version 0.1\r\n");
   wait_ms(1000);
 
+  // common
   GateIn clockIn(PA_12);//external clock input
+  LogMidiHandler midiLog(pc2, 1);
+  GateIn muteBtn(A1);
+  GateIn setBtn(A2);
+  GateIn clearBtn(A5);
+  ToggleIn learnModeBtn(A6);
+  //TODO play/Step mode toggle btn
+  //TODO reset/advance btn
 
-  GateIn trackBtn(A0);//TODO multiple
-  GateTrack track;//TODO multiple
-  track.Learn(0x40, 0x04);
+  // track
+  //TODO multiple tracks
+  GateIn trackBtn(A0);
+  GateTrack track(midiLog);
+  const uint8_t MidiNote = 0x40;
+  const uint8_t MidiChannel = 0x04;
+  track.Learn(MidiNote, MidiChannel);
 
+  // 
   Timer timer;
   int counter = 0;
 
@@ -37,13 +51,17 @@ int main() {
 
       for(int repeat = 0; repeat<1000; ++repeat)
       {
+        muteBtn.Read();
+        setBtn.Read();
+        clearBtn.Read();
+        learnModeBtn.Read();
         //
-        bool mutePressed = repeat<100;
-        bool setPressed = 100<repeat && repeat<200;
-        bool clearPressed = 200<repeat && repeat<300;
-        bool learnMode = 300<repeat;
+        bool mutePressed = muteBtn.Get();
+        bool setPressed = setBtn.Get();
+        bool clearPressed = clearBtn.Get();
+        bool learnMode = learnModeBtn.Get();
 
-        trackBtn.read();
+        trackBtn.Read();
         if(trackBtn.IsRising())
         {
             if(mutePressed)
@@ -56,7 +74,7 @@ int main() {
               //set current Step
               track.SetCurrentStep();
             } 
-            else if(clearStep)
+            else if(clearPressed)
             {
               //clear current step
               track.ClearCurrentStep();
@@ -83,10 +101,12 @@ int main() {
         if(clockIn.IsRising())
         {
           // step on
+          track.StepOn();
         }
         else if(clockIn.IsFalling())
         {
           // step off
+          track.StepOff();
         }
 
         //
