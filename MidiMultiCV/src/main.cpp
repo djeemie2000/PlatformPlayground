@@ -78,7 +78,7 @@ int main()
   pc2.printf("create channel 2\r\n");
   LogMidiHandler logHandler2(pc2, 2);
   // outputs for CV out channel 2
-  DigitalOut gateOut2(PB_4);//gate output 
+  DigitalOut gateOut2(PB_15);//gate output 
   PwmVoltageOut voltageOutPitch2(PB_0);//PWM voltage output for 1V/oct
   PwmVoltageOut voltageOutVelocity2(PB_1);//PWM voltage output for velocity
   CVMidiHandler midiHandler2(voltageOutPitch2, voltageOutVelocity2, gateOut2);
@@ -98,7 +98,7 @@ int main()
   pc2.printf("create channel 3\r\n");
   LogMidiHandler logHandler3(pc2, 3);
   SerialMidiHandler midiHandler3(pcMidi);
-  DigitalOut gateOut3(PB_5);//gate output 
+  DigitalOut gateOut3(PA_8);//gate output 
   PwmVoltageOut voltageOutPitch3(PB_10);//PWM voltage output for 1V/oct
   PwmVoltageOut voltageOutVelocity3(PB_11);//PWM voltage output for velocity
   CVMidiHandler midiHandler3b(voltageOutPitch3, voltageOutVelocity3, gateOut3);
