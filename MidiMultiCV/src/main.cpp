@@ -180,8 +180,8 @@ int main()
       }
 
       timer.stop();
-      pc2.printf("\r\ntime=%f seconds, count=%d numRead=%d \r\n", timer.read(), counter++, numRead);
+      pc2.printf("%d : %d ms read %d\r\n", counter++, timer.read_ms(), numRead);
 
-      pc2.printf("%d %d %d\r\n", modeIn1.Get(), modeIn2.Get(), modeIn3.Get());
+      //pc2.printf("%d %d %d\r\n", modeIn1.Get(), modeIn2.Get(), modeIn3.Get());
   }
 }

@@ -7,6 +7,18 @@ DONOTDO
 mode input via switch per channel -> 2 digital ins
 
 TODO
+ToggleIn -> DigitalIn / GateIn + toggle upon rising
+
+AnalogInBank<int Size> -> read() alternating, get(int index)
+
+serial printf -> optimisation? 
+- ?? -> sprintf -> circular buffer + buffer write to serial n chars every tick 
+- ?? simple debugprint implementation for char[], integers (to hex, to decimal), floats??
+- debugprint level ~define 
+- debugprint level ~input???
+
+LogMidiHandler -> fixed buffer, overwrite, serial write()
+
 compile time asserts for pinnames: blue pill platform -> 
     is PWM (for analog out), 
     (is 5V tolerant (for inputs), )
