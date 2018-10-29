@@ -6,7 +6,7 @@
 class GateTrack
 {
 public:
-    GateTrack(MidiHandler& handler);
+    GateTrack(MidiHandler& handler, int NumSteps = 16);
 
     void PlayOn();
     void PlayOff();
@@ -20,13 +20,14 @@ public:
     void SetCurrentStep();
     void ClearCurrentStep();
     int GetCurrentStep() const;
+    uint32_t GetPattern() const;
 
     void Learn(uint8_t MidiNote, uint8_t Channel);
 
-    //TODO GetPattern() const;
 
 private:
-    static const int NumSteps;
+    const int m_NumSteps;
+
     MidiHandler& m_Handler;
     uint8_t m_Channel;
     uint8_t m_MidiNote;
@@ -35,5 +36,5 @@ private:
     bool m_Muted;
 
     int m_CurrentStep;
-    bool m_Steps[NumSteps];//TODO???
+    uint32_t m_Pattern;
 };
