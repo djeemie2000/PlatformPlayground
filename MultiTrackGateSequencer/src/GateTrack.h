@@ -3,10 +3,10 @@
 #include <mbed.h>
 #include "MidiHandler.h"
 
-class GateTrack
+class GateTrackPlayer
 {
 public:
-    GateTrack(MidiHandler& handler, int NumSteps = 16);
+    GateTrackPlayer(MidiHandler& handler, int NumSteps = 16);
 
     void PlayOn();
     void PlayOff();
@@ -21,6 +21,7 @@ public:
     void ClearCurrentStep();
     int GetCurrentStep() const;
     uint32_t GetPattern() const;
+    void SetPattern(uint32_t pattern);
 
     void Learn(uint8_t MidiNote, uint8_t Channel);
 

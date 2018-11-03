@@ -24,7 +24,7 @@ bool GateState::IsFalling() const
 }
 
 GateIn:: GateIn(PinName pin)
-: m_In(pin)
+: m_In(pin, PullDown)
 , m_State()
 {}
 
@@ -46,7 +46,7 @@ bool GateIn::IsFalling() const
 }
 
 ToggleIn::ToggleIn(PinName pin)
-: m_In(pin)
+: m_In(pin, PullDown)
 , m_State()
 , m_ToggleState()
 {}
@@ -65,6 +65,32 @@ bool ToggleIn::IsRising() const
     return m_ToggleState.IsRising();
 }
 bool ToggleIn::IsFalling() const
+{
+    return m_ToggleState.IsFalling();
+}
+
+ToggleInOut::ToggleInOut(PinName inPin, PinName outPin)
+: m_In(inPin, PullDown)
+, m_Out(outPin)
+, m_State()
+, m_ToggleState()
+{}
+
+void ToggleInOut::Read()
+{
+    m_State.Tick(m_In);
+    m_ToggleState.Tick(m_State.Get());
+    m_Out = m_ToggleState.Get();
+}
+int ToggleInOut::Get() const
+{
+    return m_ToggleState.Get();
+}
+bool ToggleInOut::IsRising() const
+{
+    return m_ToggleState.IsRising();
+}
+bool ToggleInOut::IsFalling() const
 {
     return m_ToggleState.IsFalling();
 }

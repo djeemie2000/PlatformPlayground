@@ -49,3 +49,19 @@ private:
     GateState m_ToggleState;
 };
 
+class ToggleInOut
+{
+public:
+    ToggleInOut(PinName inPin, PinName outPin);
+
+    void Read();
+    int Get() const;
+    bool IsRising() const;
+    bool IsFalling() const;
+
+private:
+    DigitalIn m_In;
+    DigitalOut m_Out;
+    GateState m_State;
+    GateState m_ToggleState;
+};
