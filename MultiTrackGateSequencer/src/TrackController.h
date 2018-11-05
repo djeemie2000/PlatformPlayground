@@ -17,6 +17,7 @@ public:
 
     //for display:
     uint32_t GetDisplayPattern() const;
+    uint32_t GetPattern() const;
 
 private:
     GateIn m_TrackBtn;

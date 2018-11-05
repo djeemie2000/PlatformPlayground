@@ -65,6 +65,7 @@ int main() {
   GateIn clearBtn(PB_14);
   ToggleInOut learnModeBtn(PB_15, PC_14);//with indicator led
   GateIn clockIn(PA_8);//external clock input
+  DigitalOut clockLed(PA_1);
   // debug serial
   // 8x track button 
   ToggleInOut playStepModeBtn(PB_8, PC_15);// play/Step mode toggle btn, with indicator led
@@ -95,6 +96,7 @@ int main() {
   // 
   Timer timer;
   int counter = 0;
+  GateState fakeClock;
 
   wait_ms(500);
   pc2.printf("start processing\r\n");
@@ -103,55 +105,61 @@ int main() {
       timer.reset();
       timer.start();
 
-      for(int repeat = 0; repeat<500; ++repeat)
+      for(int repeat1 = 0; repeat1<4; ++repeat1)
       {
-        muteBtn.Read();
-        setBtn.Read();
-        clearBtn.Read();
-        learnModeBtn.Read();
-        clockIn.Read();
-        
-        //
-        commonState.mutePressed = muteBtn.Get();
-        commonState.setPressed = setBtn.Get();
-        commonState.clearPressed = clearBtn.Get();
-        commonState.learnMode = learnModeBtn.Get();
-        commonState.clockIsRising = clockIn.IsRising();
-        commonState.clockIsFalling = clockIn.IsFalling();
-        commonState.learnValue = learnValuePot.read();
 
-        // fake clock
-        commonState.clockIsRising = (repeat==0);
-        commonState.clockIsFalling = (repeat==5000);
-        
-        track1.Tick(commonState);
-        track2.Tick(commonState);
-        track3.Tick(commonState);
-        track4.Tick(commonState);
-        track5.Tick(commonState);
-        track6.Tick(commonState);
-        track7.Tick(commonState);
-        track8.Tick(commonState);
-        // update display takes some time =>
-        //update display? always? only upon clock rising/falling? also upon track button pressed?
-        // alternating?
-        //TODO use tracks[]
-        int trackIdx = repeat%NumTracks;
+        const int fakeClockPeriod = 250;
+        for(int repeat = 0; repeat<fakeClockPeriod; ++repeat)
         {
-          //display track!
-          uint32_t displayPattern = tracks[trackIdx]->GetDisplayPattern();
-          uint8_t digit = 1+trackIdx;//Max7219::MAX7219_DIGIT_0;
-          max7219.write_digit(1, digit, displayPattern&0xFF);
-          max7219.write_digit(2, digit, (displayPattern>>8)&0xFF);
+          muteBtn.Read();
+          setBtn.Read();
+          clearBtn.Read();
+          learnModeBtn.Read();
+          clockIn.Read();
+          //fake clock
+          fakeClock.Tick(repeat<fakeClockPeriod/2?1:0);
+          //
+          commonState.mutePressed = muteBtn.Get();
+          commonState.setPressed = setBtn.Get();
+          commonState.clearPressed = clearBtn.Get();
+          commonState.learnMode = learnModeBtn.Get();
+          commonState.clockIsRising = clockIn.IsRising();
+          commonState.clockIsFalling = clockIn.IsFalling();
+          commonState.learnValue = learnValuePot.read();
+
+          // fake clock
+          commonState.clockIsRising = fakeClock.IsRising();
+          commonState.clockIsFalling = fakeClock.IsFalling();
+          
+          track1.Tick(commonState);
+          track2.Tick(commonState);
+          track3.Tick(commonState);
+          track4.Tick(commonState);
+          track5.Tick(commonState);
+          track6.Tick(commonState);
+          track7.Tick(commonState);
+          track8.Tick(commonState);
+          // update display takes some time =>
+          //update display? always? only upon clock rising/falling? also upon track button pressed?
+          // alternating?
+          {
+            int trackIdx = repeat%NumTracks;
+            //display track!
+            uint32_t displayPattern = fakeClock.Get() ? tracks[trackIdx]->GetDisplayPattern() : tracks[trackIdx]->GetPattern();
+            uint8_t digit = 8-trackIdx;//invert row [1,8]
+            max7219.write_digit(1, digit, displayPattern&0xFF);
+            max7219.write_digit(2, digit, (displayPattern>>8)&0xFF);
+          }
+
+          // fake clock
+          clockLed = fakeClock.Get();
+          ledOut = 1-fakeClock.Get();//inverted
+          //ledOut = clockIn.Get()? 0:1;//inverted
+          // 
+          wait_ms(1);
         }
-
-        // fake clock
-        ledOut = repeat<500?0:1;
-        //ledOut = clockIn.Get()? 0:1;//inverted
-        // 
-        wait_ms(1);
       }
-
+      
       timer.stop();
       pc2.printf("mute %d set %d clear %d learn %d\r\n", 
                   commonState.mutePressed?1:0, 

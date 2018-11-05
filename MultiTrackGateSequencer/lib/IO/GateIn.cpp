@@ -54,7 +54,10 @@ ToggleIn::ToggleIn(PinName pin)
 void ToggleIn::Read()
 {
     m_State.Tick(m_In);
-    m_ToggleState.Tick(m_State.Get());
+    if(m_State.IsRising())
+    {
+        m_ToggleState.Tick(1-m_ToggleState.Get());
+    }
 }
 int ToggleIn::Get() const
 {
@@ -79,7 +82,10 @@ ToggleInOut::ToggleInOut(PinName inPin, PinName outPin)
 void ToggleInOut::Read()
 {
     m_State.Tick(m_In);
-    m_ToggleState.Tick(m_State.Get());
+    if(m_State.IsRising())
+    {
+        m_ToggleState.Tick(1-m_ToggleState.Get());
+    }
     m_Out = m_ToggleState.Get();
 }
 int ToggleInOut::Get() const

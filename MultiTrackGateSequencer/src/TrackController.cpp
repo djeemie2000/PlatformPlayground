@@ -70,12 +70,17 @@ uint32_t TrackController::GetDisplayPattern() const
     uint32_t pattern = m_Player.GetPattern();
     if(!m_Player.IsMuted())
     {
-        //invert current step bit to indicate current step
-        BitInvert(pattern, m_Player.GetCurrentStep());
+        //invert or clear current step bit to indicate current step
+        BitClear(pattern, m_Player.GetCurrentStep());
     }
     // muted => no inversion to indicate current step 
     // alternative? muted => empty pattern?
     return pattern;
+}
+
+uint32_t TrackController::GetPattern() const
+{
+    return m_Player.GetPattern();
 }
 
 void TrackController::SetPattern(uint32_t pattern)
