@@ -17,7 +17,38 @@ private:
     int m_Prev;
 };
 
-//also: ButtonIn
+class DebounceState
+{
+public:
+    DebounceState();
+    DebounceState(int maximum);
+    void SetMaximum(int maximum);
+
+    void Tick(int Gate);
+    int Get() const;
+
+private:
+    int m_State;
+    int m_Cntr;
+    int m_Maximum;
+};
+
+// class ToggleState
+// {
+// public:
+//     GateState();
+
+//     void Tick(int Gate);
+//     int Get() const;
+//     bool IsRising() const;
+//     bool IsFalling() const;
+
+// private:
+//     int m_Curr;
+//     int m_Prev;
+//     GateState m_ToggleState;
+// };
+
 class GateIn
 {
 public:
@@ -32,6 +63,23 @@ private:
     DigitalIn m_In;
     GateState m_State;
 };
+
+class ButtonIn
+{
+public:
+    ButtonIn(PinName pin, int maximum);
+
+    void Read();
+    int Get() const;
+    bool IsRising() const;
+    bool IsFalling() const;
+
+private:
+    DigitalIn m_In;
+    DebounceState m_DebounceState;
+    GateState m_State;
+};
+
 
 class ToggleIn
 {

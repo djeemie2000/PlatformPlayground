@@ -23,7 +23,54 @@ bool GateState::IsFalling() const
     return !m_Curr && m_Prev;
 }
 
-GateIn:: GateIn(PinName pin)
+DebounceState::DebounceState()
+ : m_State(0)
+ , m_Cntr(0)
+ , m_Maximum(1)//no debouncing
+{}
+
+DebounceState::DebounceState(int maximum)
+ : m_State(0)
+ , m_Cntr(0)
+ , m_Maximum(maximum)//debouncing
+{}
+
+void DebounceState::SetMaximum(int maximum)
+{
+    m_Maximum = maximum;
+}
+
+void DebounceState::Tick(int Gate)
+{
+    if(Gate)
+    {
+        if(m_Cntr<m_Maximum)
+        {
+            ++m_Cntr;
+        }
+    }
+    else if(0<m_Cntr)//gate == 0
+    {
+        --m_Cntr;
+    }
+
+    if(0==m_Cntr)
+    {
+        m_State = 0;
+    } 
+    else if(m_Maximum==m_Cntr)
+    {
+        m_State = 1;
+    }
+    // else: state unchanged
+}
+
+int DebounceState::Get() const
+{
+    return m_State;
+}
+
+GateIn::GateIn(PinName pin)
 : m_In(pin, PullDown)
 , m_State()
 {}
@@ -41,6 +88,33 @@ bool GateIn::IsRising() const
     return m_State.IsRising();
 }
 bool GateIn::IsFalling() const
+{
+    return m_State.IsFalling();
+}
+
+ButtonIn::ButtonIn(PinName pin, int maximum)
+: m_In(pin, PullDown)
+, m_DebounceState(maximum)
+, m_State()
+{}
+
+void ButtonIn::Read()
+{
+    m_DebounceState.Tick(m_In);
+    m_State.Tick(m_DebounceState.Get());
+}
+
+int ButtonIn::Get() const
+{
+    return m_State.Get();
+}
+
+bool ButtonIn::IsRising() const
+{
+    return m_State.IsRising();
+}
+
+bool ButtonIn::IsFalling() const
 {
     return m_State.IsFalling();
 }

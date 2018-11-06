@@ -7,6 +7,7 @@
 #include "max7219.h"
 #include "SerialMidiHandler.h"
 #include "MultiMidiHandler.h"
+#include "PeriodicOut.h"
 
 int main() {
 
@@ -88,17 +89,17 @@ int main() {
   // multiple tracks
   pc2.printf("Init tracks\r\n");
   const uint8_t MidiNote = 0x23;
-  const uint8_t MidiChannel = 0x04;
-  TrackController track1(PA_11, midiMult1, MidiNote, MidiChannel);
+  const uint8_t MidiChannel = 0x00;
+  TrackController track1(PA_11, midiSerial, MidiNote, MidiChannel);
   track1.SetPattern(0x1111);
-  TrackController track2(PA_12, midiMult2, MidiNote+2, MidiChannel);
-  track2.SetPattern(0xFFFF);
-  TrackController track3(PA_15, midiMult3, MidiNote+4, MidiChannel);
-  TrackController track4(PB_3, midiMult4, MidiNote+8, MidiChannel);
-  TrackController track5(PB_4, midiMult5, MidiNote+10, MidiChannel);
-  TrackController track6(PB_5, midiMult6, MidiNote+12, MidiChannel);
-  TrackController track7(PB_6, midiMult7, MidiNote+14, MidiChannel);
-  TrackController track8(PB_7, midiMult8, MidiNote+16, MidiChannel);
+  TrackController track2(PA_12, midiSerial, MidiNote+1, MidiChannel);
+  TrackController track3(PA_15, midiSerial, MidiNote+2, MidiChannel);
+  track3.SetPattern(0xFFFF);
+  TrackController track4(PB_3, midiSerial, MidiNote+8, MidiChannel);
+  TrackController track5(PB_4, midiSerial, MidiNote+10, MidiChannel);
+  TrackController track6(PB_5, midiSerial, MidiNote+12, MidiChannel);
+  TrackController track7(PB_6, midiSerial, MidiNote+14, MidiChannel);
+  TrackController track8(PB_7, midiSerial, MidiNote+16, MidiChannel);
   track8.SetPattern(0xAAAA);
   const int NumTracks = 8;
   TrackController* tracks[] = {&track1, &track2, &track3, &track4, &track5, &track6, &track7, &track8};
@@ -106,7 +107,11 @@ int main() {
   // 
   Timer timer;
   int counter = 0;
+  const int fakeClockPeriod = 220;//1000;
   GateState fakeClock;
+  PeriodicOutState quantizeSampling;
+  quantizeSampling.SetPeriod(fakeClockPeriod/2);//TODO 4 or 8??
+  GateState quantizeSamplingState;
 
   wait_ms(500);
   pc2.printf("start processing\r\n");
@@ -117,8 +122,6 @@ int main() {
 
       for(int repeat1 = 0; repeat1<4; ++repeat1)
       {
-
-        const int fakeClockPeriod = 500;
         for(int repeat = 0; repeat<fakeClockPeriod; ++repeat)
         {
           muteBtn.Read();
@@ -128,7 +131,10 @@ int main() {
           clockIn.Read();
           //fake clock
           fakeClock.Tick(repeat<fakeClockPeriod/2?1:0);
-          //
+          // quantized sampling
+          quantizeSampling.Tick(repeat==0);
+          quantizeSamplingState.Tick(quantizeSampling.Get());
+
           commonState.mutePressed = muteBtn.Get();
           commonState.setPressed = setBtn.Get();
           commonState.clearPressed = clearBtn.Get();
@@ -141,14 +147,20 @@ int main() {
           commonState.clockIsRising = fakeClock.IsRising();
           commonState.clockIsFalling = fakeClock.IsFalling();
           
-          track1.Tick(commonState);
-          track2.Tick(commonState);
-          track3.Tick(commonState);
-          track4.Tick(commonState);
-          track5.Tick(commonState);
-          track6.Tick(commonState);
-          track7.Tick(commonState);
-          track8.Tick(commonState);
+          bool sample = true;//quantizeSamplingState.IsRising();
+          //wait_ms(200);
+          //if(sample)
+          //{
+          //  pc2.printf("s%d%d", quantizeSampling.Get(), quantizeSamplingState.Get());
+          //}
+          track1.Tick(commonState, sample);
+          track2.Tick(commonState, sample);
+          track3.Tick(commonState, sample);
+          track4.Tick(commonState, sample);
+          track5.Tick(commonState, sample);
+          track6.Tick(commonState, sample);
+          track7.Tick(commonState, sample);
+          track8.Tick(commonState, sample);
           // update display takes some time =>
           //update display? always? only upon clock rising/falling? also upon track button pressed?
           // alternating?
@@ -167,6 +179,7 @@ int main() {
           //ledOut = clockIn.Get()? 0:1;//inverted
           // 
           wait_ms(1);
+          //wait_ms(1);
         }
       }
       

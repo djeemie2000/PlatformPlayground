@@ -15,7 +15,7 @@ play/stop(step) mode toggle
     - ???? note off ????
     - (un)mute all ??
 
-learn note pot -> TODO
+learn note pot -> done
 
 - fix track2 btn????
 
