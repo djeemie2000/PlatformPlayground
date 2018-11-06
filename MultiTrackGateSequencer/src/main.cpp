@@ -5,6 +5,8 @@
 #include "CommonState.h"
 #include "TrackController.h"
 #include "max7219.h"
+#include "SerialMidiHandler.h"
+#include "MultiMidiHandler.h"
 
 int main() {
 
@@ -51,14 +53,24 @@ int main() {
   
   // common
   pc2.printf("Init common\r\n");
+  SerialMidiHandler midiSerial(pcMidi);
+  MidiHandler midiDummy;
   LogMidiHandler midiLog1(pc2, 1);
+  MultiMidiHandler midiMult1(midiSerial, midiLog1, midiDummy, midiDummy);
   LogMidiHandler midiLog2(pc2, 2);
+  MultiMidiHandler midiMult2(midiSerial, midiLog2, midiDummy, midiDummy);
   LogMidiHandler midiLog3(pc2, 3);
+  MultiMidiHandler midiMult3(midiSerial, midiLog3, midiDummy, midiDummy);
   LogMidiHandler midiLog4(pc2, 4);
+  MultiMidiHandler midiMult4(midiSerial, midiLog4, midiDummy, midiDummy);
   LogMidiHandler midiLog5(pc2, 5);
+  MultiMidiHandler midiMult5(midiSerial, midiLog5, midiDummy, midiDummy);
   LogMidiHandler midiLog6(pc2, 6);
+  MultiMidiHandler midiMult6(midiSerial, midiLog6, midiDummy, midiDummy);
   LogMidiHandler midiLog7(pc2, 7);
+  MultiMidiHandler midiMult7(midiSerial, midiLog7, midiDummy, midiDummy);
   LogMidiHandler midiLog8(pc2, 8);
+  MultiMidiHandler midiMult8(midiSerial, midiLog8, midiDummy, midiDummy);
 
   GateIn muteBtn(PB_12);
   GateIn setBtn(PB_13);
@@ -73,25 +85,23 @@ int main() {
   AnalogIn learnValuePot(PA_0);
   CommonState commonState;
 
-  // track
+  // multiple tracks
   pc2.printf("Init tracks\r\n");
-  //TODO multiple tracks
-  const uint8_t MidiNote = 0x40;
+  const uint8_t MidiNote = 0x23;
   const uint8_t MidiChannel = 0x04;
-  TrackController track1(PA_11, midiLog1, MidiNote, MidiChannel);
-  track1.SetPattern(0x5555);// 10101010 10101010
-  TrackController track2(PA_12, midiLog2, MidiNote+1, MidiChannel);
-  TrackController track3(PA_15, midiLog3, MidiNote+2, MidiChannel);
-  TrackController track4(PB_3, midiLog4, MidiNote+3, MidiChannel);
-  TrackController track5(PB_4, midiLog5, MidiNote+4, MidiChannel);
-  TrackController track6(PB_5, midiLog6, MidiNote+5, MidiChannel);
-  TrackController track7(PB_6, midiLog7, MidiNote+6, MidiChannel);
-  TrackController track8(PB_7, midiLog8, MidiNote+7, MidiChannel);
+  TrackController track1(PA_11, midiMult1, MidiNote, MidiChannel);
+  track1.SetPattern(0x1111);
+  TrackController track2(PA_12, midiMult2, MidiNote+2, MidiChannel);
+  track2.SetPattern(0xFFFF);
+  TrackController track3(PA_15, midiMult3, MidiNote+4, MidiChannel);
+  TrackController track4(PB_3, midiMult4, MidiNote+8, MidiChannel);
+  TrackController track5(PB_4, midiMult5, MidiNote+10, MidiChannel);
+  TrackController track6(PB_5, midiMult6, MidiNote+12, MidiChannel);
+  TrackController track7(PB_6, midiMult7, MidiNote+14, MidiChannel);
+  TrackController track8(PB_7, midiMult8, MidiNote+16, MidiChannel);
+  track8.SetPattern(0xAAAA);
   const int NumTracks = 8;
   TrackController* tracks[] = {&track1, &track2, &track3, &track4, &track5, &track6, &track7, &track8};
-//  GateIn trackBtn(PA_11);
-//  GateTrackPlayer track(midiLog);
-//  track.Learn(MidiNote, MidiChannel);
 
   // 
   Timer timer;
@@ -108,7 +118,7 @@ int main() {
       for(int repeat1 = 0; repeat1<4; ++repeat1)
       {
 
-        const int fakeClockPeriod = 250;
+        const int fakeClockPeriod = 500;
         for(int repeat = 0; repeat<fakeClockPeriod; ++repeat)
         {
           muteBtn.Read();

@@ -24,6 +24,8 @@ void TrackController::Tick(CommonState& commonState)
         {
             //set current Step
             m_Player.SetCurrentStep();
+            //play note as well
+            m_Player.PlayOn();
         } 
         else if(commonState.clearPressed)
         {
