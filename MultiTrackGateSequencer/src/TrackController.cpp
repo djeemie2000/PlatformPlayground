@@ -41,6 +41,7 @@ void TrackController::Tick(CommonState& commonState)
             //     midiNote = 127;
             // }
             m_Player.Learn(midiNote, m_MidiChannel);
+            m_Player.PlayOn();
         }
         else
         {
