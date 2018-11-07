@@ -32,14 +32,22 @@ void GateTrackPlayer::PlayOff()
     }
 }
 
+int GateTrackPlayer::AdvanceStep(int step) const
+{
+    ++step;
+    if(m_NumSteps<=step)
+    {
+        step = 0;
+    }
+    return step;
+}
+
+
 void GateTrackPlayer::StepOn()
 {
     //advance step
-    ++m_CurrentStep;
-    if(m_NumSteps<=m_CurrentStep)
-    {
-        m_CurrentStep = 0;
-    }
+    m_CurrentStep = AdvanceStep(m_CurrentStep);
+
     uint32_t CurrentNoteMask = 1<<m_CurrentStep;
     if(m_Pattern & CurrentNoteMask)
     {
@@ -70,7 +78,14 @@ void GateTrackPlayer::SetCurrentStep()
     uint32_t CurrentNoteMask = 1<<m_CurrentStep;
     m_Pattern |= CurrentNoteMask;
 }
-    
+
+void GateTrackPlayer::SetNextStep()
+{
+    uint32_t NoteMask = 1<<AdvanceStep(m_CurrentStep);
+    m_Pattern |= NoteMask;
+}
+
+
 void GateTrackPlayer::ClearCurrentStep()
 {
     uint32_t CurrentNoteMask = 1<<m_CurrentStep;
@@ -91,7 +106,6 @@ void GateTrackPlayer::SetPattern(uint32_t pattern)
 {
     m_Pattern = pattern;
 }
-
 
 void GateTrackPlayer::Learn(uint8_t MidiNote, uint8_t Channel)
 {

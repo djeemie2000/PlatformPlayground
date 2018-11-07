@@ -19,6 +19,7 @@ public:
 
     void SetCurrentStep();
     void ClearCurrentStep();
+    void SetNextStep();
     int GetCurrentStep() const;
     uint32_t GetPattern() const;
     void SetPattern(uint32_t pattern);
@@ -27,6 +28,8 @@ public:
 
 
 private:
+    int AdvanceStep(int step) const;
+    
     const int m_NumSteps;
 
     MidiHandler& m_Handler;

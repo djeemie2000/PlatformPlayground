@@ -12,7 +12,7 @@ class TrackController
 public:
     TrackController(PinName btnPin, MidiHandler& midiHandler, uint8_t MidiNote, uint8_t MidiChannel);
 
-    void Tick(CommonState& commonState, bool sampleBtn);
+    void Tick(CommonState& commonState);
     void SetPattern(uint32_t pattern);//presets, ...
 
     //for display:

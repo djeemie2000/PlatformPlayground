@@ -10,61 +10,82 @@ TrackController::TrackController(PinName btnPin, MidiHandler& midiHandler, uint8
     m_Player.Learn(MidiNote, MidiChannel);
 }
 
-void TrackController::Tick(CommonState& commonState, bool sampleBtn)
+void TrackController::Tick(CommonState& commonState)
 {
-    if(sampleBtn)
+    m_TrackBtn.Read();
+    if(m_TrackBtn.IsRising())
     {
-        m_TrackBtn.Read();
-        if(m_TrackBtn.IsRising())
+        if(commonState.mutePressed)
         {
-            if(commonState.mutePressed)
+            //toggle mute
+            m_Player.Mute(!m_Player.IsMuted());
+        } 
+        else if(commonState.setPressed)
+        {
+            // TODO 
+            // in play mode : depending on closest to current or next step, 
+                // set current step (and play) 
+                // set next step (do not play, wait until step)
+            // in step mode : 
+                // always set current step (and play)
+            if(commonState.playMode)
             {
-                //toggle mute
-                m_Player.Mute(!m_Player.IsMuted());
-            } 
-            else if(commonState.setPressed)
+                if(commonState.clockOn)
+                {
+                    //set current Step
+                    m_Player.SetCurrentStep();
+                    //play note as well
+                    m_Player.PlayOn();
+                }
+                else 
+                {
+                    m_Player.SetNextStep();
+                    // do not play (yet)
+                }
+            }
+            else
             {
                 //set current Step
                 m_Player.SetCurrentStep();
                 //play note as well
                 m_Player.PlayOn();
-            } 
-            else if(commonState.clearPressed)
-            {
-                //clear current step
-                m_Player.ClearCurrentStep();
-                // stop note as well
-                m_Player.PlayOff();            
             }
-            else if(commonState.learnMode)
-            {
-                //learn ~ pot analog in
-                uint8_t midiNote = 32+commonState.learnValue*64;
-                // if(127<=midiNote)
-                // {
-                //     midiNote = 127;
-                // }
-                m_Player.Learn(midiNote, m_MidiChannel);
-                m_Player.PlayOn();
-            }
-            else
-            {
-                //play note on
-                m_Player.PlayOn();
-            }
-        }
-        else if(m_TrackBtn.IsFalling())
-        {
-            //play note off (if note is on)
-            m_Player.PlayOff();
-        }
-        else if(m_TrackBtn.Get() && commonState.clearPressed)
+        } 
+        else if(commonState.clearPressed)
         {
             //clear current step
             m_Player.ClearCurrentStep();
             // stop note as well
             m_Player.PlayOff();            
         }
+        else if(commonState.learnMode)
+        {
+            //learn ~ pot analog in
+            uint8_t midiNote = 32+commonState.learnValue*64;
+            // if(127<=midiNote)
+            // {
+            //     midiNote = 127;
+            // }
+            m_Player.Learn(midiNote, m_MidiChannel);
+            m_Player.PlayOn();
+        }
+        else
+        {
+            //play note on
+            m_Player.PlayOn();
+        }
+    }
+    else if(m_TrackBtn.IsFalling())
+    {
+        //play note off (if note is on)
+        m_Player.PlayOff();
+    }
+    else if(m_TrackBtn.Get() && commonState.clearPressed)
+    {
+        //clear current step
+        m_Player.ClearCurrentStep();
+        // stop note as well
+        m_Player.PlayOff();            
     }
 
     // 

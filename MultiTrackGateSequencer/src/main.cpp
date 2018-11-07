@@ -47,7 +47,7 @@ int main() {
   max7219.init_display(cfg);//init all devices!
   max7219.enable_display();//enable all devices
   max7219.set_display_test();
-  wait_ms(1000);
+  wait_ms(500);
   max7219.clear_display_test();
   max7219.display_all_off();
   wait_ms(1000);
@@ -109,9 +109,6 @@ int main() {
   int counter = 0;
   const int fakeClockPeriod = 220;//1000;
   GateState fakeClock;
-  PeriodicOutState quantizeSampling;
-  quantizeSampling.SetPeriod(fakeClockPeriod/2);//TODO 4 or 8??
-  GateState quantizeSamplingState;
 
   wait_ms(500);
   pc2.printf("start processing\r\n");
@@ -129,11 +126,9 @@ int main() {
           clearBtn.Read();
           learnModeBtn.Read();
           clockIn.Read();
+          playStepModeBtn.Read();
           //fake clock
           fakeClock.Tick(repeat<fakeClockPeriod/2?1:0);
-          // quantized sampling
-          quantizeSampling.Tick(repeat==0);
-          quantizeSamplingState.Tick(quantizeSampling.Get());
 
           commonState.mutePressed = muteBtn.Get();
           commonState.setPressed = setBtn.Get();
@@ -142,25 +137,23 @@ int main() {
           commonState.clockIsRising = clockIn.IsRising();
           commonState.clockIsFalling = clockIn.IsFalling();
           commonState.learnValue = learnValuePot.read();
+          commonState.playMode = true;//playStepModeBtn.Get();
 
           // fake clock
           commonState.clockIsRising = fakeClock.IsRising();
           commonState.clockIsFalling = fakeClock.IsFalling();
+          commonState.clockOn = fakeClock.Get();
+          // TODO if play mode, use (fake) clock
+          // TODO if step mode, use reset/advance btn
           
-          bool sample = true;//quantizeSamplingState.IsRising();
-          //wait_ms(200);
-          //if(sample)
-          //{
-          //  pc2.printf("s%d%d", quantizeSampling.Get(), quantizeSamplingState.Get());
-          //}
-          track1.Tick(commonState, sample);
-          track2.Tick(commonState, sample);
-          track3.Tick(commonState, sample);
-          track4.Tick(commonState, sample);
-          track5.Tick(commonState, sample);
-          track6.Tick(commonState, sample);
-          track7.Tick(commonState, sample);
-          track8.Tick(commonState, sample);
+          track1.Tick(commonState);
+          track2.Tick(commonState);
+          track3.Tick(commonState);
+          track4.Tick(commonState);
+          track5.Tick(commonState);
+          track6.Tick(commonState);
+          track7.Tick(commonState);
+          track8.Tick(commonState);
           // update display takes some time =>
           //update display? always? only upon clock rising/falling? also upon track button pressed?
           // alternating?
