@@ -89,7 +89,7 @@ int main() {
   // multiple tracks
   pc2.printf("Init tracks\r\n");
   const uint8_t MidiNote = 0x23;
-  const uint8_t MidiChannel = 0x00;
+  const uint8_t MidiChannel = 0x03;//channel 4
   TrackController track1(PA_11, midiSerial, MidiNote, MidiChannel);
   track1.SetPattern(0x1111);
   TrackController track2(PA_12, midiSerial, MidiNote+1, MidiChannel);
@@ -100,7 +100,7 @@ int main() {
   TrackController track6(PB_5, midiSerial, MidiNote+12, MidiChannel);
   TrackController track7(PB_6, midiSerial, MidiNote+14, MidiChannel);
   TrackController track8(PB_7, midiSerial, MidiNote+16, MidiChannel);
-  track8.SetPattern(0xAAAA);
+  track8.SetPattern(0xAA88);
   const int NumTracks = 8;
   TrackController* tracks[] = {&track1, &track2, &track3, &track4, &track5, &track6, &track7, &track8};
 
@@ -162,8 +162,8 @@ int main() {
             //display track!
             uint32_t displayPattern = fakeClock.Get() ? tracks[trackIdx]->GetDisplayPattern() : tracks[trackIdx]->GetPattern();
             uint8_t digit = 8-trackIdx;//invert row [1,8]
-            max7219.write_digit(1, digit, displayPattern&0xFF);
-            max7219.write_digit(2, digit, (displayPattern>>8)&0xFF);
+            max7219.write_digit(2, digit, displayPattern&0xFF);
+            max7219.write_digit(1, digit, (displayPattern>>8)&0xFF);
           }
 
           // fake clock
@@ -177,11 +177,12 @@ int main() {
       }
       
       timer.stop();
-      pc2.printf("mute %d set %d clear %d learn %d\r\n", 
+      pc2.printf("mute %d set %d clear %d learn %d play %d\r\n", 
                   commonState.mutePressed?1:0, 
                   commonState.setPressed?1:0, 
                   commonState.clearPressed?1:0, 
-                  commonState.learnMode?1:0);
+                  commonState.learnMode?1:0,
+                  commonState.playMode?1:0);
       pc2.printf("%d : %d ms\r\n", counter++, timer.read_ms());
       
   }

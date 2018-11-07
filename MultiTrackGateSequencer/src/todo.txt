@@ -16,8 +16,18 @@ play/stop(step) mode toggle
     - (un)mute all ??
 
 learn note pot -> done
+change midi channel -> ????
+
+tempo button? external clock?
+
+play mode vs step mode
+
+save to / load from flash : patterns, notes, channel
 
 - fix track2 btn????
+
+rotate pattern left/right
+pattern fill / erase all
 
 pattern display: 
     ? invert current step
