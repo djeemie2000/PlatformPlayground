@@ -3,7 +3,7 @@
 #include "BitWise.h"
 
 TrackController::TrackController(PinName btnPin, MidiHandler& midiHandler, uint8_t MidiNote, uint8_t MidiChannel)
- : m_TrackBtn(btnPin, 50)//TODO based on clock period???
+ : m_TrackBtn(btnPin, 5)//TODO based on clock period???
  , m_Player(midiHandler)
  , m_MidiChannel(MidiChannel)
 {
@@ -107,7 +107,8 @@ uint32_t TrackController::GetDisplayPattern() const
     if(!m_Player.IsMuted())
     {
         //invert or clear current step bit to indicate current step
-        BitClear(pattern, m_Player.GetCurrentStep());
+        uint32_t step = m_Player.GetCurrentStep();
+        BitClear(pattern, step);
     }
     // muted => no inversion to indicate current step 
     // alternative? muted => empty pattern?

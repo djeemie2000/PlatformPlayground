@@ -2,22 +2,28 @@
 
 #include <mbed.h>//uint32_t, ...
 
-uint32_t BitRead(uint32_t value, uint32_t bit)
+template<class T>
+T BitRead(T value, T bit)
 {
     return (value >> bit) & 0x01;
 } 
 
-void BitSet(uint32_t& value, uint32_t bit)
+template<class T>
+void BitSet(T& value, T bit)
 {
-    value |= (1UL << bit);
+    T mask = 1;
+    value |= (mask << bit);
 } 
 
-void BitClear(uint32_t& value, uint32_t bit)
+template<class T>
+void BitClear(T& value, T bit)
 {
-    value &= (~(1UL << bit));
+    T mask = 1;
+    value &= (~(mask << bit));
 } 
 
-void BitWrite(uint32_t& value, uint32_t bit, uint32_t bitValue)
+template<class T>
+void BitWrite(T& value, T bit, T bitValue)
 {
     if(bitValue)
     {
@@ -29,7 +35,8 @@ void BitWrite(uint32_t& value, uint32_t bit, uint32_t bitValue)
     }
 } 
 
-void BitInvert(uint32_t& value, uint32_t bit)
+template<class T>
+void BitInvert(T& value, T bit)
 {
     if(BitRead(value, bit))
     {
