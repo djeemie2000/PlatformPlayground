@@ -3,16 +3,16 @@
 #include "BitWise.h"
 
 TrackController::TrackController(PinName btnPin, MidiHandler& midiHandler, uint8_t MidiNote, uint8_t MidiChannel)
- : m_TrackBtn(btnPin, 5)//TODO based on clock period???
+ : m_TrackBtn()//m_TrackBtn(btnPin, 5)//TODO based on clock period???
  , m_Player(midiHandler)
  , m_MidiChannel(MidiChannel)
 {
     m_Player.Learn(MidiNote, MidiChannel);
 }
 
-void TrackController::Tick(CommonState& commonState)
+void TrackController::Tick(const CommonState& commonState, int btn)
 {
-    m_TrackBtn.Read();
+    m_TrackBtn.Tick(btn);//m_TrackBtn.Read();
     if(m_TrackBtn.IsRising())
     {
         if(commonState.mutePressed)

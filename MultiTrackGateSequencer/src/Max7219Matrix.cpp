@@ -3,7 +3,7 @@
 
 Max7219Matrix::Max7219Matrix(int numDevices,PinName mosi, PinName miso, PinName sclk, PinName cs)
  : m_NumDevices(numDevices)
- , m_LedMatrix(mosi, miso, sclk, cs)//(SPI0_MOSI, SPI0_MISO, SPI0_SCK, SPI0_SS)
+ , m_LedMatrix(mosi, miso, sclk, cs)
 {
     for(int idx = 0; idx<Size; ++idx)
     {
@@ -11,7 +11,7 @@ Max7219Matrix::Max7219Matrix(int numDevices,PinName mosi, PinName miso, PinName 
     }
 }
 
-void Max7219Matrix::Init()
+void Max7219Matrix::Configure()
 {
   max7219_configuration_t cfg = {
          .device_number = 1,
@@ -50,7 +50,7 @@ void Max7219Matrix::Clear(int row, int col)
 
 void Max7219Matrix::Write()
 {
-    for(uint8_t row =0; row<Size; ++row)
+    for(uint8_t row =1; row<=Size; ++row)
     {
         if(0<m_NumDevices)
         {
@@ -68,5 +68,25 @@ void Max7219Matrix::Write()
         {
             m_LedMatrix.write_digit(4, row, (m_Pattern[row]>>24)&0xFF);
         }
+    }
+}
+
+void Max7219Matrix::Write(int row)
+{
+    if(0<m_NumDevices)
+    {
+        m_LedMatrix.write_digit(1, 1+row, m_Pattern[row]&0xFF);
+    }
+    if(1<m_NumDevices)
+    {
+        m_LedMatrix.write_digit(2, 1+row, (m_Pattern[row]>>8)&0xFF);
+    }
+    if(2<m_NumDevices)
+    {
+        m_LedMatrix.write_digit(3, 1+row, (m_Pattern[row]>>16)&0xFF);
+    }
+    if(3<m_NumDevices)
+    {
+        m_LedMatrix.write_digit(4, 1+row, (m_Pattern[row]>>24)&0xFF);
     }
 }

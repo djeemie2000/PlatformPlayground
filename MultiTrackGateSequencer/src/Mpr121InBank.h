@@ -3,18 +3,20 @@
 #include <mbed.h>
 #include "DigitalInBank.h"
 #include "mpr121.h"
+#include "GateIn.h"
 
 class Mpr121InBank : public DigitalInBank
 {
 public:
-    Mpr121InBank(PinName sda, PinName sdc);
+    Mpr121InBank(I2C* i2c, PinName irqPin);
 
     int Size() const;
     int Get(int idx) const;
     void Read();
 
 private:
-    I2C m_I2C;
     Mpr121 m_Touchpad;
+    DigitalIn m_In;
+    GateState m_State;
     int m_TouchState;
 };

@@ -4,20 +4,30 @@
 #include "LogMidiHandler.h"
 #include "CommonState.h"
 #include "TrackController.h"
-#include "max7219.h"
 #include "SerialMidiHandler.h"
 #include "MultiMidiHandler.h"
 #include "PeriodicOut.h"
+#include "Mpr121InBank.h"
+#include "Max7219Matrix.h"
+#include "BitWise.h"
+
+void ScanI2C(I2C& i2c, Serial& serial)
+{
+  serial.printf("I2C scanning...\r\n");
+  for(int address = 1; address < 127; address++ ) 
+  {
+    i2c.start();
+    int error = i2c.write(address << 1); //We shift it left because mbed takes in 8 bit addreses
+    i2c.stop();
+    if (error == 1)
+    {
+      serial.printf("I2C device found at address 0x%X\r\n", address); //Returns 7-bit addres
+    }
+  }
+  serial.printf("I2C scan done\r\n");
+}
 
 int main() {
-
-//   bluepill::Pin<1> pin1;
-// //  bluepill::Pin<2> pin2;
-//   bluepill::Pin<3> pin3;
-//   PinName tmp = pin1;
-//   tmp = bluepill::Pin<2>::pinname();
-//   tmp = pin3;
-//   tmp = bluepill::Pin<2>::name;
 
   // put your setup code here, to run once:
   DigitalOut ledOut(PC_13);//builtin led as gate indicator
@@ -36,42 +46,13 @@ int main() {
 
   //
   pc2.printf("Init led matrix...\r\n");
-  max7219_configuration_t cfg = {
-         .device_number = 1,
-         .decode_mode = 0,
-         .intensity = Max7219::MAX7219_INTENSITY_1,
-         .scan_limit = Max7219::MAX7219_SCAN_8
-     };
-  Max7219 max7219(PA_7, PA_6, PA_5, PA_4);//(SPI0_MOSI, SPI0_MISO, SPI0_SCK, SPI0_SS)
-  max7219.set_num_devices(2);//2 devices
-  max7219.init_display(cfg);//init all devices!
-  max7219.enable_display();//enable all devices
-  max7219.set_display_test();
-  wait_ms(500);
-  max7219.clear_display_test();
-  max7219.display_all_off();
-  wait_ms(1000);
+  Max7219Matrix ledMatrix(2, PA_7, PA_6, PA_5, PA_4);//(SPI0_MOSI, SPI0_MISO, SPI0_SCK, SPI0_SS));//2 devices
+  ledMatrix.Configure();
+  ledMatrix.Test();
   
   // common
   pc2.printf("Init common\r\n");
   SerialMidiHandler midiSerial(pcMidi);
-  MidiHandler midiDummy;
-  LogMidiHandler midiLog1(pc2, 1);
-  MultiMidiHandler midiMult1(midiSerial, midiLog1, midiDummy, midiDummy);
-  LogMidiHandler midiLog2(pc2, 2);
-  MultiMidiHandler midiMult2(midiSerial, midiLog2, midiDummy, midiDummy);
-  LogMidiHandler midiLog3(pc2, 3);
-  MultiMidiHandler midiMult3(midiSerial, midiLog3, midiDummy, midiDummy);
-  LogMidiHandler midiLog4(pc2, 4);
-  MultiMidiHandler midiMult4(midiSerial, midiLog4, midiDummy, midiDummy);
-  LogMidiHandler midiLog5(pc2, 5);
-  MultiMidiHandler midiMult5(midiSerial, midiLog5, midiDummy, midiDummy);
-  LogMidiHandler midiLog6(pc2, 6);
-  MultiMidiHandler midiMult6(midiSerial, midiLog6, midiDummy, midiDummy);
-  LogMidiHandler midiLog7(pc2, 7);
-  MultiMidiHandler midiMult7(midiSerial, midiLog7, midiDummy, midiDummy);
-  LogMidiHandler midiLog8(pc2, 8);
-  MultiMidiHandler midiMult8(midiSerial, midiLog8, midiDummy, midiDummy);
 
   GateIn muteBtn(PB_12);
   GateIn setBtn(PB_13);
@@ -80,11 +61,14 @@ int main() {
   GateIn clockIn(PA_8);//external clock input
   DigitalOut clockLed(PA_1);
   // debug serial
-  // 8x track button 
-  ToggleInOut playStepModeBtn(PB_8, PC_15);// play/Step mode toggle btn, with indicator led
-  GateIn resetAdvanceBtn(PB_9);// reset/advance btn
+  //ToggleInOut playStepModeBtn(PB_8, PC_15);// play/Step mode toggle btn, with indicator led
+  //GateIn resetAdvanceBtn(PB_9);// reset/advance btn
   AnalogIn learnValuePot(PA_0);
   CommonState commonState;
+  I2C i2c(PB_11, PB_10);
+  ScanI2C(i2c, pc2);
+  // 8x track button 
+  Mpr121InBank touchPad(&i2c, PB_1);
 
   // multiple tracks
   pc2.printf("Init tracks\r\n");
@@ -107,7 +91,7 @@ int main() {
   // 
   Timer timer;
   int counter = 0;
-  const int fakeClockPeriod = 220;//1000;
+  const int fakeClockPeriod = 220;
   GateState fakeClock;
 
   wait_ms(500);
@@ -126,13 +110,14 @@ int main() {
           clearBtn.Read();
           learnModeBtn.Read();
           clockIn.Read();
-          playStepModeBtn.Read();
+          //playStepModeBtn.Read();
+          touchPad.Read();
           //fake clock
           fakeClock.Tick(repeat<fakeClockPeriod/2?1:0);
 
-          commonState.mutePressed = muteBtn.Get();
-          commonState.setPressed = setBtn.Get();
-          commonState.clearPressed = clearBtn.Get();
+          commonState.mutePressed = touchPad.Get(1);//muteBtn.Get();
+          commonState.setPressed = touchPad.Get(0);//setBtn.Get();
+          commonState.clearPressed = touchPad.Get(2);//clearBtn.Get();
           commonState.learnMode = learnModeBtn.Get();
           commonState.clockIsRising = clockIn.IsRising();
           commonState.clockIsFalling = clockIn.IsFalling();
@@ -145,25 +130,33 @@ int main() {
           commonState.clockOn = fakeClock.Get();
           // TODO if play mode, use (fake) clock
           // TODO if step mode, use reset/advance btn
-          
-          track1.Tick(commonState);
-          track2.Tick(commonState);
-          track3.Tick(commonState);
-          track4.Tick(commonState);
-          track5.Tick(commonState);
-          track6.Tick(commonState);
-          track7.Tick(commonState);
-          track8.Tick(commonState);
+
+          for(int idx = 0; idx<NumTracks; ++idx)
+          {
+            tracks[idx]->Tick(commonState, touchPad.Get(4+idx));
+          }          
+
           // update display takes some time =>
-          //update display? always? only upon clock rising/falling? also upon track button pressed?
-          // alternating?
+          // alternating rows
           {
             int trackIdx = repeat%NumTracks;
             //display track!
             uint32_t displayPattern = fakeClock.Get() ? tracks[trackIdx]->GetDisplayPattern() : tracks[trackIdx]->GetPattern();
-            uint8_t digit = 8-trackIdx;//invert row [1,8]
-            max7219.write_digit(2, digit, displayPattern&0xFF);
-            max7219.write_digit(1, digit, (displayPattern>>8)&0xFF);
+            int row = 7-trackIdx;//TODO
+            //uint8_t digit = 8-trackIdx;//invert row [1,8]
+            //TODO pass led matrix into track controller , but call Write() for alternating rows
+            for(uint32_t col = 0; col<16u; ++col)
+            {
+              if(BitRead(displayPattern, col))
+              {
+                ledMatrix.Set(row, col);
+              }
+              else 
+              {
+                ledMatrix.Clear(row, col);
+              }
+            }
+            ledMatrix.Write(row);
           }
 
           // fake clock
@@ -183,6 +176,19 @@ int main() {
                   commonState.clearPressed?1:0, 
                   commonState.learnMode?1:0,
                   commonState.playMode?1:0);
+      pc2.printf("touchpad %d%d%d%d%d%d%d%d%d%d%d%d\r\n", 
+                  touchPad.Get(0), 
+                  touchPad.Get(1), 
+                  touchPad.Get(2), 
+                  touchPad.Get(3), 
+                  touchPad.Get(4), 
+                  touchPad.Get(5), 
+                  touchPad.Get(6), 
+                  touchPad.Get(7), 
+                  touchPad.Get(8), 
+                  touchPad.Get(9), 
+                  touchPad.Get(10), 
+                  touchPad.Get(11));
       pc2.printf("%d : %d ms\r\n", counter++, timer.read_ms());
       
   }

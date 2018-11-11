@@ -9,7 +9,7 @@ class Max7219Matrix : public DigitalOutMatrix
 public:
     Max7219Matrix(int numDevices, PinName mosi, PinName miso, PinName sclk, PinName cs);
 
-    void Init();
+    void Configure();
     void Test();
 
     int NumRows() const{return Size;}
@@ -17,6 +17,7 @@ public:
     void Set(int row, int col);
     void Clear(int row, int col);
     void Write();
+    void Write(int row);
 
 private:
     static const int Size = 8;//8x8 led matrix

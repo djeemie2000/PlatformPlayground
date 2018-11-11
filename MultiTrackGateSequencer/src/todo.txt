@@ -3,7 +3,8 @@ buttons:
     use mechanical buttons?
     test capacitive buttons on a print?
     ? use capacitive 12 channel?
-    MPR121 for function buttons TODO
+    MPR121 for function buttons -> TODO
+    fix track2 btn????
 
 invert pattern display row -> done
 
@@ -16,19 +17,19 @@ play/stop(step) mode toggle
     - (un)mute all ??
 
 learn note pot -> done
-change midi channel -> ????
 
-tempo button? external clock?
+change midi channel -> ???? TODO
 
-play mode vs step mode
+tempo button? external clock? -> TODO
 
-save to / load from flash : patterns, notes, channel
+play mode vs step mode -> TODO
 
-- fix track2 btn????
+save to / load from flash : patterns, notes, channel -> TODO
 
-rotate pattern left/right
-pattern fill / erase all
-
+More track functions (mpr121 buttons)
+    rotate pattern left/right
+    pattern fill all / erase all
+    
 pattern display: 
     ? invert current step
     ? set current step to off when clock is high -> done
@@ -39,11 +40,11 @@ log midi handler:
     use hard coded string, overwrite bytes, use write not printf -> no measurable improvement (?)
     idem debug log??
 
-MPR121 DigitalInputBank (read(), Get(int idx), Size())
+MPR121 DigitalInputBank (read(), Get(int idx), Size()) -> done
 
 digital out matrix 
-    interface set(row, col)  update/write() -> TODO
+    interface set(row, col)  update/write() -> done
     impl: max7219, invert rows/cols if needed, uint8[8] per display, use bitwise -> TODO
 
-Bitwise ~ template (uint32_t , uint8_t, ...) TODO
+Bitwise ~ template (uint32_t , uint8_t, ...) -> done
 
