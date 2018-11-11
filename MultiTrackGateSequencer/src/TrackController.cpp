@@ -2,8 +2,8 @@
 #include "CommonState.h"
 #include "BitWise.h"
 
-TrackController::TrackController(PinName btnPin, MidiHandler& midiHandler, uint8_t MidiNote, uint8_t MidiChannel)
- : m_TrackBtn()//m_TrackBtn(btnPin, 5)//TODO based on clock period???
+TrackController::TrackController(MidiHandler& midiHandler, uint8_t MidiNote, uint8_t MidiChannel)
+ : m_TrackBtn()
  , m_Player(midiHandler)
  , m_MidiChannel(MidiChannel)
 {

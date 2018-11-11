@@ -20,6 +20,9 @@ public:
     void Write(int row);
 
 private:
+    void SetInternal(int row, int col);
+    void ClearInternal(int row, int col);
+
     static const int Size = 8;//8x8 led matrix
     const int m_NumDevices;
     Max7219 m_LedMatrix;

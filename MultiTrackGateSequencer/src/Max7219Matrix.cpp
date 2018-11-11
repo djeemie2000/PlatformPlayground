@@ -34,14 +34,24 @@ void Max7219Matrix::Test()
   wait_ms(1000);
 }
 
-void Max7219Matrix::Set(int row, int col) 
+void Max7219Matrix::Set(int row, int col)
+{
+    SetInternal(col%Size, row+(col/Size)*Size);
+}
+
+void Max7219Matrix::Clear(int row, int col)
+{
+    ClearInternal(col%Size, row+(col/Size)*Size);
+}
+
+void Max7219Matrix::SetInternal(int row, int col) 
 {
     //no check on row, col
     uint32_t c = col;
     BitSet(m_Pattern[row],c);
 }
 
-void Max7219Matrix::Clear(int row, int col) 
+void Max7219Matrix::ClearInternal(int row, int col) 
 {
     //no check on row, col
     uint32_t c = col;

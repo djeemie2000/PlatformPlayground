@@ -10,7 +10,7 @@ class MidiHandler;
 class TrackController
 {
 public:
-    TrackController(PinName /*btnPin*/, MidiHandler& midiHandler, uint8_t MidiNote, uint8_t MidiChannel);
+    TrackController(MidiHandler& midiHandler, uint8_t MidiNote, uint8_t MidiChannel);
 
     void Tick(const CommonState& commonState, int btn);
     void SetPattern(uint32_t pattern);//presets, ...

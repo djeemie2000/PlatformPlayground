@@ -67,23 +67,23 @@ int main() {
   CommonState commonState;
   I2C i2c(PB_11, PB_10);
   ScanI2C(i2c, pc2);
-  // 8x track button 
+  // set, mute, clear btn, 8x track button 
   Mpr121InBank touchPad(&i2c, PB_1);
 
   // multiple tracks
   pc2.printf("Init tracks\r\n");
   const uint8_t MidiNote = 0x23;
   const uint8_t MidiChannel = 0x03;//channel 4
-  TrackController track1(PA_11, midiSerial, MidiNote, MidiChannel);
+  TrackController track1(midiSerial, MidiNote, MidiChannel);
   track1.SetPattern(0x1111);
-  TrackController track2(PA_12, midiSerial, MidiNote+1, MidiChannel);
-  TrackController track3(PA_15, midiSerial, MidiNote+2, MidiChannel);
+  TrackController track2(midiSerial, MidiNote+1, MidiChannel);
+  TrackController track3(midiSerial, MidiNote+2, MidiChannel);
   track3.SetPattern(0xFFFF);
-  TrackController track4(PB_3, midiSerial, MidiNote+8, MidiChannel);
-  TrackController track5(PB_4, midiSerial, MidiNote+10, MidiChannel);
-  TrackController track6(PB_5, midiSerial, MidiNote+12, MidiChannel);
-  TrackController track7(PB_6, midiSerial, MidiNote+14, MidiChannel);
-  TrackController track8(PB_7, midiSerial, MidiNote+16, MidiChannel);
+  TrackController track4(midiSerial, MidiNote+8, MidiChannel);
+  TrackController track5(midiSerial, MidiNote+10, MidiChannel);
+  TrackController track6(midiSerial, MidiNote+12, MidiChannel);
+  TrackController track7(midiSerial, MidiNote+14, MidiChannel);
+  TrackController track8(midiSerial, MidiNote+16, MidiChannel);
   track8.SetPattern(0xAA88);
   const int NumTracks = 8;
   TrackController* tracks[] = {&track1, &track2, &track3, &track4, &track5, &track6, &track7, &track8};

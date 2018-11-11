@@ -24,8 +24,8 @@ void Mpr121InBank::Read()
     m_State.Tick(m_In);
     if(m_State.IsFalling())
     {
-//    m_TouchState = m_Touchpad.readTouchData();
-        m_TouchState = m_Touchpad.read(0x00);
-        m_TouchState += m_Touchpad.read(0x01)<<8;
+    m_TouchState = m_Touchpad.readTouchData();
+//        m_TouchState = m_Touchpad.read(0x00);
+//        m_TouchState += m_Touchpad.read(0x01)<<8;
     }
 }
