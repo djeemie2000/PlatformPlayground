@@ -20,11 +20,19 @@ public:
     void Write(int row);
 
 private:
-    void SetInternal(int row, int col);
-    void ClearInternal(int row, int col);
-
     static const int Size = 8;//8x8 led matrix
+    static const int MaxNumDevices = 4;
+
+    struct Device
+    {
+        Device();
+        void Set(uint8_t row, uint8_t col);
+        void Clear(uint8_t row, uint8_t col);
+
+        uint8_t m_Digit[Size];
+    };
+
     const int m_NumDevices;
     Max7219 m_LedMatrix;
-    uint32_t m_Pattern[Size];//max 4 devices
+    Device m_Device[MaxNumDevices];
 };

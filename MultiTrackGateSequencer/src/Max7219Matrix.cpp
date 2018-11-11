@@ -1,14 +1,28 @@
 #include "Max7219Matrix.h"
 #include "BitWise.h"
 
+Max7219Matrix::Device::Device()
+{
+    for(int idx = 0; idx<Size; ++idx)
+    {
+        m_Digit[idx] = 0x00;
+    }
+}
+
+void Max7219Matrix::Device::Set(uint8_t row, uint8_t col)
+{
+    BitSet(m_Digit[row], col);
+}
+
+void Max7219Matrix::Device::Clear(uint8_t row, uint8_t col)
+{
+    BitClear(m_Digit[row], col);
+}
+
 Max7219Matrix::Max7219Matrix(int numDevices,PinName mosi, PinName miso, PinName sclk, PinName cs)
  : m_NumDevices(numDevices)
  , m_LedMatrix(mosi, miso, sclk, cs)
 {
-    for(int idx = 0; idx<Size; ++idx)
-    {
-        m_Pattern[idx] = 0;
-    }
 }
 
 void Max7219Matrix::Configure()
@@ -36,48 +50,25 @@ void Max7219Matrix::Test()
 
 void Max7219Matrix::Set(int row, int col)
 {
-    SetInternal(col%Size, row+(col/Size)*Size);
+    int device = row/Size;
+    int r = row;
+    int c = col-device*Size;
+    m_Device[device].Set(c,r);//rotated
 }
 
 void Max7219Matrix::Clear(int row, int col)
 {
-    ClearInternal(col%Size, row+(col/Size)*Size);
-}
-
-void Max7219Matrix::SetInternal(int row, int col) 
-{
-    //no check on row, col
-    uint32_t c = col;
-    BitSet(m_Pattern[row],c);
-}
-
-void Max7219Matrix::ClearInternal(int row, int col) 
-{
-    //no check on row, col
-    uint32_t c = col;
-    BitClear(m_Pattern[row],c);
+    int device = row/Size;
+    int r = row;
+    int c = col-device*Size;
+    m_Device[device].Clear(c,r);//rotated
 }
 
 void Max7219Matrix::Write()
 {
-    for(uint8_t row =1; row<=Size; ++row)
+    for(int row =0; row<Size; ++row)
     {
-        if(0<m_NumDevices)
-        {
-            m_LedMatrix.write_digit(1, row, m_Pattern[row]&0xFF);
-        }
-        if(1<m_NumDevices)
-        {
-            m_LedMatrix.write_digit(2, row, (m_Pattern[row]>>8)&0xFF);
-        }
-        if(2<m_NumDevices)
-        {
-            m_LedMatrix.write_digit(3, row, (m_Pattern[row]>>16)&0xFF);
-        }
-        if(3<m_NumDevices)
-        {
-            m_LedMatrix.write_digit(4, row, (m_Pattern[row]>>24)&0xFF);
-        }
+        Write(row);
     }
 }
 
@@ -85,18 +76,18 @@ void Max7219Matrix::Write(int row)
 {
     if(0<m_NumDevices)
     {
-        m_LedMatrix.write_digit(1, 1+row, m_Pattern[row]&0xFF);
+        m_LedMatrix.write_digit(1, 1+row, m_Device[0].m_Digit[row]);
     }
     if(1<m_NumDevices)
     {
-        m_LedMatrix.write_digit(2, 1+row, (m_Pattern[row]>>8)&0xFF);
+        m_LedMatrix.write_digit(2, 1+row, m_Device[1].m_Digit[row]);
     }
     if(2<m_NumDevices)
     {
-        m_LedMatrix.write_digit(3, 1+row, (m_Pattern[row]>>16)&0xFF);
+        m_LedMatrix.write_digit(3, 1+row, m_Device[2].m_Digit[row]);
     }
     if(3<m_NumDevices)
     {
-        m_LedMatrix.write_digit(4, 1+row, (m_Pattern[row]>>24)&0xFF);
+        m_LedMatrix.write_digit(4, 1+row, m_Device[3].m_Digit[row]);
     }
 }
