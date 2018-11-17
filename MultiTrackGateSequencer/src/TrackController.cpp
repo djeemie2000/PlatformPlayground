@@ -113,8 +113,12 @@ void TrackController::Tick(const CommonState& commonState, int btn)
     {
         // step on
         m_Player.StepOn();
-        // display : clear current step
-        m_LedMatrix.Clear(m_TrackIdx, m_Player.GetCurrentStep());
+        // display : clear current step to indicate current step is playing
+        // if muted: no change 
+        if(!m_Player.IsMuted())
+        {
+            m_LedMatrix.Clear(m_TrackIdx, m_Player.GetCurrentStep());
+        }
     }
     else if(commonState.clockIsFalling)
     {
