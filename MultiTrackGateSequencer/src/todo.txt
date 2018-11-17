@@ -1,10 +1,9 @@
 
 buttons:
-    use mechanical buttons?
-    test capacitive buttons on a print?
+    use mechanical buttons? -> discard?
+    test capacitive buttons on a print? -> TODO
     ? use capacitive 12 channel?
-    MPR121 for function buttons -> TODO
-    fix track2 btn????
+    MPR121 for function buttons -> done, track x8 + set clear mute (learn?)
 
 invert pattern display row -> done
 
@@ -12,39 +11,52 @@ ToggleState -> TODO
 
 midi serial out -> done
 
-play/stop(step) mode toggle 
-    - ???? note off ????
-    - (un)mute all ??
+play mode vs step mode -> TODO
+    play/stop(step) mode toggle 
+        - ???? note off ????
+        - (un)mute all ??
 
 learn note pot -> done
 
-change midi channel -> ???? TODO
+change midi channel
+    - common: function button + pot? -> TODO
+    - per track (?) -> function toggle button + led, exclusive with learn midi note mode, press track + pot (cfr midi note learn)
 
 tempo button? external clock? -> TODO
-
-play mode vs step mode -> TODO
 
 save to / load from flash : patterns, notes, channel -> TODO
 
 More track functions (mpr121 buttons)
-    rotate pattern left/right
-    pattern fill all / erase all
-    
+    track pattern rotate left/right
+    track pattern fill all / erase all
+    track gate length up/down (?)
+    track clock divider up/down (?)
+    track length up/down (?)
+    'all tracks' button (for any function)
+
+select pattern 1-8 (?)
+    function button + track buttons to switch to pattern 1-8, switch bank 1-8
+    TODO naming: track , (track) pattern, part
+    track = pattern of 32 steps, part = 8 tracks, 
+    ????? step = on/off, track = 32 steps, pattern = 8 tracks, bank = 8 patterns
+
+play patterns in order (?), 7 tracks + pattern 'track' -> ?????
+
 pattern display: 
-    ? invert current step
+    ? invert current step -> discard
     ? set current step to off when clock is high -> done
-    ? invert current step when clock is high
+    ? invert current step when clock is high -> discard
     ?
 
 log midi handler: 
-    use hard coded string, overwrite bytes, use write not printf -> no measurable improvement (?)
+    use hard coded string, overwrite bytes, use write not printf -> no measurable improvement (?) -> discard
     idem debug log??
 
 MPR121 DigitalInputBank (read(), Get(int idx), Size()) -> done
 
 digital out matrix 
     interface set(row, col)  update/write() -> done
-    impl: max7219, invert rows/cols if needed, uint8[8] per display, use bitwise -> TODO
+    impl: max7219, invert rows/cols if needed, uint8[8] per display, use bitwise -> done
 
 Bitwise ~ template (uint32_t , uint8_t, ...) -> done
 

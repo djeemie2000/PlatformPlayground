@@ -62,7 +62,7 @@ int main() {
   DigitalOut clockLed(PA_1);
   // debug serial
   //ToggleInOut playStepModeBtn(PB_8, PC_15);// play/Step mode toggle btn, with indicator led
-  //GateIn resetAdvanceBtn(PB_9);// reset/advance btn
+  GateIn resetAdvanceBtn(PB_9);// reset/advance btn
   AnalogIn learnValuePot(PA_0);
   CommonState commonState;
   I2C i2c(PB_11, PB_10);
@@ -111,6 +111,7 @@ int main() {
           learnModeBtn.Read();
           clockIn.Read();
           //playStepModeBtn.Read();
+          resetAdvanceBtn.Read();
           touchPad.Read();
           //fake clock
           fakeClock.Tick(repeat<fakeClockPeriod/2?1:0);
@@ -125,11 +126,20 @@ int main() {
           commonState.playMode = true;//playStepModeBtn.Get();
 
           // fake clock
-          commonState.clockIsRising = fakeClock.IsRising();
-          commonState.clockIsFalling = fakeClock.IsFalling();
-          commonState.clockOn = fakeClock.Get();
-          // TODO if play mode, use (fake) clock
-          // TODO if step mode, use reset/advance btn
+          // if play mode, use (fake) clock
+          // if step mode, use reset/advance btn
+          if(commonState.playMode)
+          {
+            commonState.clockIsRising = fakeClock.IsRising();
+            commonState.clockIsFalling = fakeClock.IsFalling();
+            commonState.clockOn = fakeClock.Get();
+          }
+          else
+          {
+            commonState.clockIsRising = resetAdvanceBtn.IsRising();
+            commonState.clockIsFalling = resetAdvanceBtn.IsFalling();
+            commonState.clockOn = resetAdvanceBtn.Get();
+          }
 
           for(int idx = 0; idx<NumTracks; ++idx)
           {
@@ -142,10 +152,10 @@ int main() {
             int trackIdx = repeat%NumTracks;
             //display track!
             uint32_t displayPattern = fakeClock.Get() ? tracks[trackIdx]->GetDisplayPattern() : tracks[trackIdx]->GetPattern();
-            int row = 7-trackIdx;//TODO
+            int row = trackIdx;//7-trackIdx;//TODO
             //uint8_t digit = 8-trackIdx;//invert row [1,8]
             //TODO pass led matrix into track controller , but call Write() for alternating rows
-            for(uint32_t col = 0; col<16u; ++col)
+            for(uint32_t col = 0; col<16u; ++col)//TODO 32 step track pattern
             {
               if(BitRead(displayPattern, col))
               {
