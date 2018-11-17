@@ -74,16 +74,16 @@ int main() {
   pc2.printf("Init tracks\r\n");
   const uint8_t MidiNote = 0x23;
   const uint8_t MidiChannel = 0x03;//channel 4
-  TrackController track1(midiSerial, MidiNote, MidiChannel);
+  TrackController track1(midiSerial, MidiNote, MidiChannel, 0, ledMatrix);
   track1.SetPattern(0x1111);
-  TrackController track2(midiSerial, MidiNote+1, MidiChannel);
-  TrackController track3(midiSerial, MidiNote+2, MidiChannel);
+  TrackController track2(midiSerial, MidiNote+1, MidiChannel, 1, ledMatrix);
+  TrackController track3(midiSerial, MidiNote+2, MidiChannel, 2, ledMatrix);
   track3.SetPattern(0xFFFF);
-  TrackController track4(midiSerial, MidiNote+8, MidiChannel);
-  TrackController track5(midiSerial, MidiNote+10, MidiChannel);
-  TrackController track6(midiSerial, MidiNote+12, MidiChannel);
-  TrackController track7(midiSerial, MidiNote+14, MidiChannel);
-  TrackController track8(midiSerial, MidiNote+16, MidiChannel);
+  TrackController track4(midiSerial, MidiNote+8, MidiChannel, 3, ledMatrix);
+  TrackController track5(midiSerial, MidiNote+10, MidiChannel, 4, ledMatrix);
+  TrackController track6(midiSerial, MidiNote+12, MidiChannel, 5, ledMatrix);
+  TrackController track7(midiSerial, MidiNote+14, MidiChannel, 6, ledMatrix);
+  TrackController track8(midiSerial, MidiNote+16, MidiChannel, 7, ledMatrix);
   track8.SetPattern(0xAA88);
   const int NumTracks = 8;
   TrackController* tracks[] = {&track1, &track2, &track3, &track4, &track5, &track6, &track7, &track8};
@@ -146,28 +146,9 @@ int main() {
             tracks[idx]->Tick(commonState, touchPad.Get(4+idx));
           }          
 
-          // update display takes some time =>
-          // alternating rows
-          {
-            int trackIdx = repeat%NumTracks;
-            //display track!
-            uint32_t displayPattern = fakeClock.Get() ? tracks[trackIdx]->GetDisplayPattern() : tracks[trackIdx]->GetPattern();
-            int row = trackIdx;//7-trackIdx;//TODO
-            //uint8_t digit = 8-trackIdx;//invert row [1,8]
-            //TODO pass led matrix into track controller , but call Write() for alternating rows
-            for(uint32_t col = 0; col<16u; ++col)//TODO 32 step track pattern
-            {
-              if(BitRead(displayPattern, col))
-              {
-                ledMatrix.Set(row, col);
-              }
-              else 
-              {
-                ledMatrix.Clear(row, col);
-              }
-            }
-            ledMatrix.Write(row);
-          }
+          // update display takes some time => alternating rows
+          int trackIdx = repeat%NumTracks;
+          ledMatrix.Write(trackIdx);
 
           // fake clock
           clockLed = fakeClock.Get();
@@ -175,12 +156,11 @@ int main() {
           //ledOut = clockIn.Get()? 0:1;//inverted
           // 
           wait_ms(1);
-          //wait_ms(1);
         }
       }
       
       timer.stop();
-      pc2.printf("mute %d set %d clear %d learn %d play %d\r\n", 
+      pc2.printf("mute %d set %d clear %d learn %d play %d ", 
                   commonState.mutePressed?1:0, 
                   commonState.setPressed?1:0, 
                   commonState.clearPressed?1:0, 

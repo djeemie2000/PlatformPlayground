@@ -73,23 +73,22 @@ bool GateTrackPlayer::IsMuted() const
     return m_Muted;
 }
 
-void GateTrackPlayer::SetCurrentStep()
+void GateTrackPlayer::SetStep(int step)
 {
-    uint32_t CurrentNoteMask = 1<<m_CurrentStep;
-    m_Pattern |= CurrentNoteMask;
+    uint32_t noteMask = 1<<step;
+    m_Pattern |= noteMask;
 }
 
-void GateTrackPlayer::SetNextStep()
+void GateTrackPlayer::ClearStep(int step)
 {
-    uint32_t NoteMask = 1<<AdvanceStep(m_CurrentStep);
-    m_Pattern |= NoteMask;
+    uint32_t noteMask = 1<<step;
+    m_Pattern &= (~noteMask);
 }
 
-
-void GateTrackPlayer::ClearCurrentStep()
+bool GateTrackPlayer::GetStep(int step) const
 {
-    uint32_t CurrentNoteMask = 1<<m_CurrentStep;
-    m_Pattern &= (~CurrentNoteMask);
+//    uint32_t bit = step;//TODO check boundaries
+    return (m_Pattern>>step)&0x01;
 }
 
 int GateTrackPlayer::GetCurrentStep() const
@@ -97,14 +96,9 @@ int GateTrackPlayer::GetCurrentStep() const
     return m_CurrentStep;
 }
 
-uint32_t GateTrackPlayer::GetPattern() const
+int GateTrackPlayer::GetNextStep() const
 {
-    return m_Pattern;
-}
-
-void GateTrackPlayer::SetPattern(uint32_t pattern)
-{
-    m_Pattern = pattern;
+    return AdvanceStep(m_CurrentStep);
 }
 
 void GateTrackPlayer::Learn(uint8_t MidiNote, uint8_t Channel)

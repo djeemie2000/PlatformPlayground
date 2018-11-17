@@ -13,4 +13,5 @@ public:
     virtual void Set(int row, int col) {}
     virtual void Clear(int row, int col) {}
     virtual void Write(){}
+    virtual void Write(int row){}
 };

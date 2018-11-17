@@ -17,15 +17,14 @@ public:
     void Mute(bool mute);
     bool IsMuted() const;
 
-    void SetCurrentStep();
-    void ClearCurrentStep();
-    void SetNextStep();
-    int GetCurrentStep() const;
-    uint32_t GetPattern() const;
-    void SetPattern(uint32_t pattern);
+    void SetStep(int step);
+    void ClearStep(int step);
+    bool GetStep(int step) const;
+
+    int GetCurrentStep() const;//position of current step
+    int GetNextStep() const;//position of next step
 
     void Learn(uint8_t MidiNote, uint8_t Channel);
-
 
 private:
     int AdvanceStep(int step) const;
