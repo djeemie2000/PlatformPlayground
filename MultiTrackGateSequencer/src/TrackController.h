@@ -23,7 +23,6 @@ private:
     GateState m_TrackBtn;
     GateState m_AllTrackBtn;
     GateTrackPlayer m_Player;
-    uint8_t m_MidiChannel;
     int m_TrackIdx;
     DigitalOutMatrix& m_LedMatrix;
 };

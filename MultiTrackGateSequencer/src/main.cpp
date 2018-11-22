@@ -57,7 +57,10 @@ int main() {
 //  GateIn muteBtn(PB_12);
 //  GateIn setBtn(PB_13);
 //  GateIn clearBtn(PB_14);
-  ToggleInOut learnModeBtn(PB_15, PC_14);//with indicator led
+  //ToggleInOut learnModeBtn(PB_15, PC_14);//with indicator led
+  DigitalOut midiNoteLearnLed(PC_14);
+  DigitalOut midiChannelLearnLed(PB_15);
+  ToggleNState learnMode(3);
   GateIn clockIn(PA_8);//external clock input
   DigitalOut clockLed(PA_1);
   // debug serial
@@ -106,18 +109,19 @@ int main() {
   //        muteBtn.Read();
   //        setBtn.Read();
   //        clearBtn.Read();
-          learnModeBtn.Read();
+          //learnModeBtn.Read();
           clockIn.Read();
           //playStepModeBtn.Read();
           resetAdvanceBtn.Read();
           touchPad.Read();
+          learnMode.Tick(touchPad.Get(3));
           //fake clock
           fakeClock.Tick(repeat<fakeClockPeriod/2?1:0);
 
           commonState.setPressed = touchPad.Get(0);//setBtn.Get();
           commonState.clearPressed = touchPad.Get(2);//clearBtn.Get();
           commonState.mutePressed = touchPad.Get(1);//muteBtn.Get();
-          commonState.learnMode = learnModeBtn.Get();
+          commonState.learnMode = learnMode.Get();
     //      commonState.clockIsRising = clockIn.IsRising();
     //      commonState.clockIsFalling = clockIn.IsFalling();
           commonState.learnValue = learnValuePot.read();
@@ -152,6 +156,8 @@ int main() {
           clockLed = fakeClock.Get();
           ledOut = 1-fakeClock.Get();//inverted
           //ledOut = clockIn.Get()? 0:1;//inverted
+          midiNoteLearnLed = (learnMode.Get()==1)?1:0;
+          midiChannelLearnLed = (learnMode.Get()==2)?1:0;
           // 
           wait_ms(1);
         }

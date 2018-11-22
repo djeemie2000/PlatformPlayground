@@ -5,7 +5,7 @@ struct CommonState
     bool mutePressed;
     bool setPressed;
     bool clearPressed;
-    bool learnMode;
+    int learnMode;
     bool clockIsRising;
     bool clockIsFalling;
     bool clockOn;
