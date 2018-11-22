@@ -1,11 +1,13 @@
+EightTrack gate sequencer
 
 buttons:
     use mechanical buttons? -> discard?
     test capacitive buttons on a print? -> TODO
+    test close switch on a print (debouncing!) -> TODO
     ? use capacitive 12 channel?
-    MPR121 for function buttons -> done, track x8 + set clear mute (learn?)
+    MPR121 for function buttons -> done : track x8 + set clear mute (learn?)
 
-invert pattern display row -> done
+invert/rotate pattern display row -> done
 
 ToggleState -> TODO
 
@@ -23,16 +25,65 @@ change midi channel
     - per track (?) -> function toggle button + led, exclusive with learn midi note mode, press track + pot (cfr midi note learn)
 
 tempo button? external clock? -> TODO
+    reset / period to clock gate state
 
-save to / load from flash : patterns, notes, channel -> TODO
+step record quantize independent of clock duty cycle
 
-More track functions (mpr121 buttons)
-    track pattern rotate left/right
-    track pattern fill all / erase all
-    track gate length up/down (?)
-    track clock divider up/down (?)
-    track length up/down (?)
+save to / load from flash : 
+    header: app, length, version, ... -> TODO 
+    8x track: midi note, channel, gate length -> TODO
+    pattern: 8 x track pattern 
+    track pattern: 32 x steps, length -> TODO
+    8x bank: 8x patterns -> TODO
+
+save to / load from midi sysex -> TODO 
+    save to midi sysex btn?
+    midi in support
+    ???? use midi cc for other commands??? (gate length, ...)
+    format cfr flash
+
+save to / load from debug serial -> TODO
+    save / dump : btn?
+    load / import : always read??????
+    format cfr flash
+        dump as hex??
+        dump as text??
+
+Track functions:
+    track: set step
+    track: clear step
+    track: toggle mute
+    track: toggle learn midi note + pot upon track btn rising
+    track: toggle learn midi channel + pot upon track btn rising
+        toggle learn mode btn + 2 leds (learn midi note / learn midi channel)
     'all tracks' button (for any function)
+
+Play functions
+    toggle play/step mode
+    reset (play mode) / advance (step mode)
+        separate reset btn (?)
+    ? play quantize toggle (per track?) (play mode) (indicator??)
+
+Edit track functions
+    track : pattern fill all / erase all
+    track : pattern rotate left/right (offset)
+    track : pattern invert 
+    track : gate length up/down (?)
+        + pot upon track btn rising (???)
+    track : clock divider up/down (?)
+    track : (play) length up/down (?)
+        per track???
+
+pattern bank functions
+    switch pattern [1-8]
+        switch takes effect when next pattern starts (play mode)
+    switch bank [1-8]
+        switch takes effect when next pattern starts (play mode)
+
+Euclidian mode (toggle?)
+    track: pattern length up/down
+    track: pattern fills up/down
+    track: offset up/down
 
 select pattern 1-8 (?)
     function button + track buttons to switch to pattern 1-8, switch bank 1-8
@@ -40,13 +91,17 @@ select pattern 1-8 (?)
     track = pattern of 32 steps, part = 8 tracks, 
     ????? step = on/off, track = 32 steps, pattern = 8 tracks, bank = 8 patterns
 
-play patterns in order (?), 7 tracks + pattern 'track' -> ?????
+song concept? 
+    record / play ?
+    play patterns in order (?), 
+        7 tracks + pattern 'track' -> ?????
 
 pattern display: 
     ? invert current step -> discard
-    ? set current step to off when clock is high -> done
+    set current step to off when clock is high -> done
     ? invert current step when clock is high -> discard
-    ?
+    display updated from track controller -> done
+    no change when muted
 
 log midi handler: 
     use hard coded string, overwrite bytes, use write not printf -> no measurable improvement (?) -> discard
