@@ -174,3 +174,32 @@ bool ToggleInOut::IsFalling() const
 {
     return m_ToggleState.IsFalling();
 }
+
+
+Toggle3InOut::Toggle3InOut(PinName inPin, PinName outPin1, PinName outPin2)
+    : m_In(inPin, PullDown)
+    , m_Out1(outPin1)
+    , m_Out2(outPin2)
+    , m_State()
+    , m_ToggleState(0)
+{}
+
+ void Toggle3InOut::Read()
+ {
+    m_State.Tick(m_In);
+    if(m_State.IsRising())
+    {
+        ++m_ToggleState;
+        if(NumStates<=m_ToggleState)
+        {
+            m_ToggleState = 0;
+        }
+    }
+    m_Out1 = (m_ToggleState==1)?1:0;
+    m_Out2 = (m_ToggleState==2)?1:0;
+ }
+
+int Toggle3InOut::Get() const
+{
+    return m_ToggleState;
+}

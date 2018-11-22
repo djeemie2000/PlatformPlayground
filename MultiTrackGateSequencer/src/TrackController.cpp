@@ -5,6 +5,7 @@
 
 TrackController::TrackController(MidiHandler& midiHandler, uint8_t MidiNote, uint8_t MidiChannel, int trackIdx, DigitalOutMatrix& ledMatrix)
  : m_TrackBtn()
+ , m_AllTrackBtn()
  , m_Player(midiHandler)
  , m_MidiChannel(MidiChannel)
  , m_TrackIdx(trackIdx)
@@ -31,10 +32,11 @@ void TrackController::ClearStep(int step)
     }
 }
 
-void TrackController::Tick(const CommonState& commonState, int btn)
+void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
 {
     m_TrackBtn.Tick(btn);
-    if(m_TrackBtn.IsRising())
+    m_AllTrackBtn.Tick(allBtn);
+    if(m_TrackBtn.IsRising() || m_AllTrackBtn.IsRising())
     {
         if(commonState.mutePressed)
         {
@@ -95,12 +97,12 @@ void TrackController::Tick(const CommonState& commonState, int btn)
             m_Player.PlayOn();
         }
     }
-    else if(m_TrackBtn.IsFalling())
+    else if(m_TrackBtn.IsFalling() || m_AllTrackBtn.IsFalling())
     {
         //play note off (if note is on)
         m_Player.PlayOff();
     }
-    else if(m_TrackBtn.Get() && commonState.clearPressed)
+    else if((m_TrackBtn.Get() || m_AllTrackBtn.Get()) && commonState.clearPressed)
     {
         //clear current step
         ClearStep(m_Player.GetCurrentStep());

@@ -113,3 +113,20 @@ private:
     GateState m_State;
     GateState m_ToggleState;
 };
+
+class Toggle3InOut
+{
+public:
+    Toggle3InOut(PinName inPin, PinName outPin1, PinName outPin2);
+
+    void Read();
+    int Get() const;
+
+private:
+    static const int NumStates = 3;
+    DigitalIn m_In;
+    DigitalOut m_Out1;
+    DigitalOut m_Out2;
+    GateState m_State;
+    int m_ToggleState;
+};

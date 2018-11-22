@@ -143,7 +143,8 @@ int main() {
 
           for(int idx = 0; idx<NumTracks; ++idx)
           {
-            tracks[idx]->Tick(commonState, touchPad.Get(4+idx));
+            int allTrackBtn = 0;
+            tracks[idx]->Tick(commonState, touchPad.Get(4+idx), allTrackBtn);
           }          
 
           // update display takes some time => alternating rows

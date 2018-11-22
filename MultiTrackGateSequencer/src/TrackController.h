@@ -13,7 +13,7 @@ class TrackController
 public:
     TrackController(MidiHandler& midiHandler, uint8_t MidiNote, uint8_t MidiChannel, int trackIdx, DigitalOutMatrix& ledMatrix);
 
-    void Tick(const CommonState& commonState, int btn);
+    void Tick(const CommonState& commonState, int btn, int allBtn);
     void SetPattern(uint32_t pattern);//presets, ...
 
 private:
@@ -21,6 +21,7 @@ private:
     void ClearStep(int step);
 
     GateState m_TrackBtn;
+    GateState m_AllTrackBtn;
     GateTrackPlayer m_Player;
     uint8_t m_MidiChannel;
     int m_TrackIdx;
