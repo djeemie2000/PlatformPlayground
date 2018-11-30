@@ -25,6 +25,8 @@ public:
     int GetNextStep() const;//position of next step
 
     void Learn(uint8_t MidiNote, uint8_t Channel);
+    void LearnNote(uint8_t MidiNote);
+    void LearnChannel(uint8_t Channel);
 
 private:
     int AdvanceStep(int step) const;

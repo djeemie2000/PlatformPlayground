@@ -7,11 +7,11 @@ TrackController::TrackController(MidiHandler& midiHandler, uint8_t MidiNote, uin
  : m_TrackBtn()
  , m_AllTrackBtn()
  , m_Player(midiHandler)
- , m_MidiChannel(MidiChannel)
  , m_TrackIdx(trackIdx)
  , m_LedMatrix(ledMatrix)
 {
-    m_Player.Learn(MidiNote, MidiChannel);
+    m_Player.LearnNote(MidiNote);
+    m_Player.LearnChannel(MidiChannel);
 }
 
 void TrackController::SetStep(int step)
@@ -80,15 +80,22 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
             // stop note as well
             m_Player.PlayOff(); 
         }
-        else if(commonState.learnMode)
+        else if(commonState.learnMode==1)
         {
-            //learn ~ pot analog in
+            //learn midi note ~ pot analog in
             uint8_t midiNote = 32+commonState.learnValue*64;
             // if(127<=midiNote)
             // {
             //     midiNote = 127;
             // }
-            m_Player.Learn(midiNote, m_MidiChannel);
+            m_Player.LearnNote(midiNote);
+            m_Player.PlayOn();
+        }
+        else if(commonState.learnMode==2)
+        {
+            //learn midi channel ~ pot analog in
+            uint8_t midiChannel = commonState.learnValue*16;
+            m_Player.LearnChannel(midiChannel);
             m_Player.PlayOn();
         }
         else

@@ -110,3 +110,21 @@ void GateTrackPlayer::Learn(uint8_t MidiNote, uint8_t Channel)
         m_Channel = Channel;
     }
 }
+
+void GateTrackPlayer::LearnNote(uint8_t MidiNote)
+{
+    if(MidiNote != m_MidiNote)
+    {
+        PlayOff();//checks if a note was on
+        m_MidiNote = MidiNote;
+    }
+}
+
+void GateTrackPlayer::LearnChannel(uint8_t Channel)
+{
+    if(Channel != m_Channel)
+    {
+        PlayOff();//checks if a note was on
+        m_Channel = Channel;
+    }
+}

@@ -114,6 +114,21 @@ private:
     GateState m_ToggleState;
 };
 
+class ToggleNState
+{
+public:
+    ToggleNState(int numStates);
+
+    void Tick(int gate);
+    int Get() const;
+
+private:
+    const int m_NumStates;
+    GateState m_State;
+    int m_ToggleState;
+};
+
+
 class Toggle3InOut
 {
 public:
@@ -123,10 +138,8 @@ public:
     int Get() const;
 
 private:
-    static const int NumStates = 3;
     DigitalIn m_In;
     DigitalOut m_Out1;
     DigitalOut m_Out2;
-    GateState m_State;
-    int m_ToggleState;
+    ToggleNState m_ToggleState;
 };
