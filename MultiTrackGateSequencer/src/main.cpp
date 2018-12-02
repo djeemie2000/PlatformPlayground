@@ -11,6 +11,8 @@
 #include "Max7219Matrix.h"
 #include "BitWise.h"
 
+#include "NPositionIn.h"
+
 void ScanI2C(I2C& i2c, Serial& serial)
 {
   serial.printf("I2C scanning...\r\n");
