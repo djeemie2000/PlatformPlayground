@@ -49,12 +49,13 @@ void GateTrackPlayer::StepOn()
     m_CurrentStep = AdvanceStep(m_CurrentStep);
 
     uint32_t CurrentNoteMask = 1<<m_CurrentStep;
-    if(m_Pattern & CurrentNoteMask)
+    if((m_Pattern & CurrentNoteMask) && !m_Muted)
     {
-        if(!m_Muted)
-        {
-            PlayOn();//other function??            
-        }
+        PlayOn();//other function??            
+    }
+    else 
+    {
+        PlayOff();//checks for note on
     }
 }
 
