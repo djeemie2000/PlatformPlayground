@@ -10,8 +10,16 @@ buttons:
 invert/rotate pattern display row -> done
 
 ToggleState -> TODO
-
 midi serial out -> done
+
+filter channel midi handler -> done
+    midi mult CV: midi thru for unhandled channels [4,16] -> todo
+
+midi chord memory (hold) (midi handler) -> todo
+midi gated / chopped (midi handler) -> todo
+
+MCP4822 1V/Oct out (+ digital out for gate) -> todo
+    MCP48xx VoltageOut
 
 play mode vs step mode -> TODO
     play/stop(step) mode toggle 
