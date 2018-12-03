@@ -5,7 +5,6 @@
 #include "CommonState.h"
 #include "TrackController.h"
 #include "SerialMidiHandler.h"
-#include "MultiMidiHandler.h"
 #include "PeriodicOut.h"
 #include "Mpr121InBank.h"
 #include "Max7219Matrix.h"

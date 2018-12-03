@@ -12,6 +12,7 @@
 #include "MonophonicMidiHandler.h"
 #include "GateMidiHandler.h"
 #include "NPositionIn.h"
+#include "ChannelFilterMidiHandler.h"
 
 // globals because callback OnCharRecieved
 SerialBuffer<100> serialBuffer;
@@ -109,9 +110,23 @@ int main()
   ModeMidiHandler modeHandler3(2, midiMulti3);
   modeHandler3.SetMode(ModeMidiHandler::StepperRecord);
 
+  // channel [4-16]: midi thru to midi serial 
+  wait_ms(500);
+  pc2.printf("create channel [4-16]\r\n");
+  LogMidiHandler logHandler4(pc2, 4);
+  SerialMidiHandler midiHandler4b(pcMidi);
+  MultiMidiHandler midiMult4;
+  midiMult4.AddHandler(&logHandler4);
+  midiMult4.AddHandler(&midiHandler4b);
+  ChannelFilterMidiHandler midiHandler4(midiMult4);
+  midiHandler4.AllowChannel(0,false);
+  midiHandler4.AllowChannel(1,false);
+  midiHandler4.AllowChannel(2,false);
+  
   wait_ms(500);
   pc2.printf("create multi\r\n");
   MultiMidiHandler midiMulti(logHandlerCommon, modeHandler1, modeHandler2, modeHandler3);
+  midiMulti.AddHandler(&midiHandler4);
 
   wait_ms(500);
   pc2.printf("start midi listening\r\n");

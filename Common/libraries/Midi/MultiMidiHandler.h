@@ -8,53 +8,66 @@ class MultiMidiHandler : public MidiHandler
 {
 public:
   MultiMidiHandler(MidiHandler& handler1, MidiHandler& handler2, MidiHandler& handler3, MidiHandler& handler4) 
-  : m_handler1(handler1)
-  , m_handler2(handler2)
-  , m_handler3(handler3)
-  , m_handler4(handler4)
-  {}
+  : m_Size(4)
+  {
+    m_Handler[0] = &handler1;
+    m_Handler[1] = &handler2;
+    m_Handler[2] = &handler3;
+    m_Handler[3] = &handler4;
+  }
+
+  MultiMidiHandler() 
+  : m_Size(0)
+  {
+  }
+
+  void AddHandler(MidiHandler* handler)
+  {
+    m_Handler[m_Size] = handler;
+    m_Size++;
+  }
 
   void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) /*override*/
   {
-    m_handler1.NoteOn(Channel, MidiNote, Velocity);
-    m_handler2.NoteOn(Channel, MidiNote, Velocity);
-    m_handler3.NoteOn(Channel, MidiNote, Velocity);
-    m_handler4.NoteOn(Channel, MidiNote, Velocity);
+   for(int idx = 0; idx<m_Size; ++idx)
+   {
+     m_Handler[idx]->NoteOn(Channel, MidiNote, Velocity);
+   }
   }
  void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) /*override*/
  {
-   m_handler1.NoteOff(Channel, MidiNote, Velocity);
-   m_handler2.NoteOff(Channel, MidiNote, Velocity);
-   m_handler3.NoteOff(Channel, MidiNote, Velocity);
-   m_handler4.NoteOff(Channel, MidiNote, Velocity);
+   for(int idx = 0; idx<m_Size; ++idx)
+   {
+     m_Handler[idx]->NoteOff(Channel, MidiNote, Velocity);
+   }
  }
  void ContinuousController(uint8_t Channel, uint8_t Controller, uint8_t Value)
  {
-   m_handler1.ContinuousController(Channel, Controller, Value);
-   m_handler2.ContinuousController(Channel, Controller, Value);
-   m_handler3.ContinuousController(Channel, Controller, Value);
-   m_handler4.ContinuousController(Channel, Controller, Value);
+   for(int idx = 0; idx<m_Size; ++idx)
+   {
+     m_Handler[idx]->ContinuousController(Channel, Controller, Value);
+   }
  }
  void PitchWheel(uint8_t Channel, int Bend)
  {
-   m_handler1.PitchWheel(Channel, Bend);
-   m_handler2.PitchWheel(Channel, Bend);
-   m_handler3.PitchWheel(Channel, Bend);
-   m_handler4.PitchWheel(Channel, Bend);
+   for(int idx = 0; idx<m_Size; ++idx)
+   {
+     m_Handler[idx]->PitchWheel(Channel, Bend);
+   }
  }
+
  void ActiveSense()
  {
-   m_handler1.ActiveSense();
-   m_handler2.ActiveSense();
-   m_handler3.ActiveSense();
-   m_handler4.ActiveSense();
+   for(int idx = 0; idx<m_Size; ++idx)
+   {
+     m_Handler[idx]->ActiveSense();
+   }
  }
 
 private:
-  MidiHandler& m_handler1;
-  MidiHandler& m_handler2;
-  MidiHandler& m_handler3;
-  MidiHandler& m_handler4;
+  static const int Capacity = 8;
+  int m_Size;
+  MidiHandler* m_Handler[Capacity];
 };
 
 #endif /* end of include guard: MULTIMIDIHANDLER_H_INCLUDE */
