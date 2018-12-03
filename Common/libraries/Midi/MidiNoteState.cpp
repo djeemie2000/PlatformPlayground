@@ -70,3 +70,43 @@ int MidiNoteState::Transpose(int MidiNote) const
     return m_State[MidiNote].Transpose;
 }
 
+
+MidiNotePressedState::MidiNotePressedState() 
+    : m_NumPressed(0)
+{
+    for(int idx = 0; idx<NumMidiNotes;++idx)
+    {
+        m_Pressed[idx] = false;
+    }
+}
+
+void MidiNotePressedState::NoteOn(uint8_t MidiNote)
+{
+    // no check on note in range
+    if(!m_Pressed[MidiNote])
+    {
+        ++m_NumPressed;
+        m_Pressed[MidiNote] = true;
+    }
+}
+
+void MidiNotePressedState::NoteOff(uint8_t MidiNote)
+{
+    // no check on note in range
+    if(m_Pressed[MidiNote])
+    {
+        --m_NumPressed;
+        m_Pressed[MidiNote] = false;
+    }
+}
+
+int MidiNotePressedState::NumPressed() const
+{
+    return m_NumPressed;
+}
+
+bool MidiNotePressedState::NotePressed(int MidiNote) const
+{
+    // no check on note in range
+    return m_Pressed[MidiNote];
+}

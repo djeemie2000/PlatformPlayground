@@ -41,3 +41,20 @@ private:
     State m_State[NumMidiNotes];
     int m_NumPressed;//{0};
 };
+
+class MidiNotePressedState
+{
+public:
+    MidiNotePressedState();
+
+    void NoteOn(uint8_t MidiNote);
+    void NoteOff(uint8_t MidiNote);
+
+    int NumPressed() const;
+    bool NotePressed(int MidiNote) const;
+    
+private:
+    static const int NumMidiNotes = 128;
+    bool m_Pressed[NumMidiNotes];
+    int m_NumPressed;
+};

@@ -13,7 +13,7 @@ ToggleState -> TODO
 midi serial out -> done
 
 filter channel midi handler -> done
-    midi mult CV: midi thru for unhandled channels [4,16] -> todo
+    midi mult CV: midi thru for unhandled channels [4,16] -> done
 
 midi chord memory (hold) (midi handler) -> todo
 midi gated / chopped (midi handler) -> todo
