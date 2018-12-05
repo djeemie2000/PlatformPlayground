@@ -2,10 +2,10 @@ EightTrack gate sequencer
 
 buttons:
     use mechanical buttons? -> discard?
-    test capacitive buttons on a print? -> TODO
+    test capacitive buttons on a print? -> Tdone
     test close switch on a print (debouncing!) -> TODO
     ? use capacitive 12 channel?
-    MPR121 for function buttons -> done : track x8 + set clear mute (learn?)
+    MPR121 for function buttons -> done : track x8 + set clear mute learn
 
 invert/rotate pattern display row -> done
 
@@ -19,7 +19,10 @@ midi chord memory (hold) (midi handler) -> todo
 midi gated / chopped (midi handler) -> todo
 
 MCP4822 1V/Oct out (+ digital out for gate) -> todo
-    MCP48xx VoltageOut
+    MCP48xx VoltageOut (SPI, 5V, internal reference!, range [0V - 4.096V]) -> todo 
+
+MCP4725 1V/Oct out (+digital out for gate) (no velocity) -> TODO
+    MCP4725 VoltageOut (I2C, 3V3 or 5V, external reference! => range [0V - 3V3 or 5V]) -> todo
 
 play mode vs step mode -> TODO
     play/stop(step) mode toggle 

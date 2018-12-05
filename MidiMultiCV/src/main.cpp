@@ -63,18 +63,18 @@ int main()
   int counter = 0;
   MidiHandler midiDummy;
   LogMidiHandler logHandlerCommon(pc2, 0);
+  SerialMidiHandler serialMidiCommon(pcMidi);
 
-  // channel 1: live (poly) to midi serial
+  // channel 1: (poly) midi serial
   pc2.printf("create channel 1\r\n");
   LogMidiHandler logHandler1(pc2, 1);
-  SerialMidiHandler midiHandler1(pcMidi);
   DigitalOut gateLed1(PA_12);
   GateMidiHandler midiGate1(gateLed1);
-  MultiMidiHandler midiMulti1(logHandler1, midiHandler1, midiGate1, midiDummy);
+  MultiMidiHandler midiMulti1(logHandler1, midiDummy, midiGate1, serialMidiCommon);
   ModeMidiHandler modeHandler1(0, midiMulti1);
   modeHandler1.SetMode(ModeMidiHandler::LivePoly);
 
-  // channel 2: live to (mono)  CV + midi serial
+  // channel 2:  (mono) CV  out + midi serial
   wait_ms(500);
   pc2.printf("create channel 2\r\n");
   LogMidiHandler logHandler2(pc2, 2);
@@ -82,15 +82,14 @@ int main()
   DigitalOut gateOut2(PA_8);//gate output 
   PwmVoltageOut voltageOutPitch2(PB_0);//PWM voltage output for 1V/oct
   PwmVoltageOut voltageOutVelocity2(PB_1);//PWM voltage output for velocity
-  CVMidiHandler midiHandler2(voltageOutPitch2, voltageOutVelocity2, gateOut2);
-  MonophonicMidiHandler midiMono2(midiHandler2);
+  CVMidiHandler midiCV2(voltageOutPitch2, voltageOutVelocity2, gateOut2);
+  MonophonicMidiHandler midiMono2(midiCV2);
   // gate led
   DigitalOut gateLed2(PA_15);
   GateMidiHandler midiGate2(gateLed2);
   // midi serial
-  SerialMidiHandler midiHandler2b(pcMidi);
   // multi
-  MultiMidiHandler midiMulti2(logHandler2, midiMono2, midiGate2, midiHandler2b);
+  MultiMidiHandler midiMulti2(logHandler2, midiMono2, midiGate2, serialMidiCommon);
   ModeMidiHandler modeHandler2(1, midiMulti2);
   modeHandler2.SetMode(ModeMidiHandler::LivePoly);
 
@@ -98,15 +97,14 @@ int main()
   wait_ms(500);
   pc2.printf("create channel 3\r\n");
   LogMidiHandler logHandler3(pc2, 3);
-  SerialMidiHandler midiHandler3(pcMidi);
   DigitalOut gateOut3(PB_15);//gate output 
   PwmVoltageOut voltageOutPitch3(PB_10);//PWM voltage output for 1V/oct
   PwmVoltageOut voltageOutVelocity3(PB_11);//PWM voltage output for velocity
-  CVMidiHandler midiHandler3b(voltageOutPitch3, voltageOutVelocity3, gateOut3);
-  MonophonicMidiHandler midiMono3(midiHandler3);
+  CVMidiHandler midiCV3(voltageOutPitch3, voltageOutVelocity3, gateOut3);
+  MonophonicMidiHandler midiMono3(midiCV3);
   DigitalOut gateLed3(PB_3);
   GateMidiHandler midiGate3(gateLed3);
-  MultiMidiHandler midiMulti3(logHandler3, midiHandler3, midiGate3, midiHandler3b);
+  MultiMidiHandler midiMulti3(logHandler3, midiMono3, midiGate3, serialMidiCommon);
   ModeMidiHandler modeHandler3(2, midiMulti3);
   modeHandler3.SetMode(ModeMidiHandler::StepperRecord);
 
@@ -114,10 +112,9 @@ int main()
   wait_ms(500);
   pc2.printf("create channel [4-16]\r\n");
   LogMidiHandler logHandler4(pc2, 4);
-  SerialMidiHandler midiHandler4b(pcMidi);
   MultiMidiHandler midiMult4;
   midiMult4.AddHandler(&logHandler4);
-  midiMult4.AddHandler(&midiHandler4b);
+  midiMult4.AddHandler(&serialMidiCommon);
   ChannelFilterMidiHandler midiHandler4(midiMult4);
   midiHandler4.AllowChannel(0,false);
   midiHandler4.AllowChannel(1,false);
@@ -125,8 +122,8 @@ int main()
   
   wait_ms(500);
   pc2.printf("create multi\r\n");
-  MultiMidiHandler midiMulti(logHandlerCommon, modeHandler1, modeHandler2, modeHandler3);
-  midiMulti.AddHandler(&midiHandler4);
+  MultiMidiHandler midiMulti(modeHandler1, modeHandler2, modeHandler3, midiHandler4);
+  midiMulti.AddHandler(&logHandlerCommon);
 
   wait_ms(500);
   pc2.printf("start midi listening\r\n");
