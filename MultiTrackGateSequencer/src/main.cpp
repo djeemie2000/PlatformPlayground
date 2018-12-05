@@ -10,6 +10,8 @@
 #include "Max7219Matrix.h"
 #include "BitWise.h"
 #include "ScanI2C.h"
+#include "MultiMidiHandler.h"
+#include "GateMidiHandler.h"
 
 
 int main() {
@@ -39,12 +41,8 @@ int main() {
   pc2.printf("Init common\r\n");
   SerialMidiHandler midiSerial(pcMidi);
 
-//  GateIn muteBtn(PB_12);
-//  GateIn setBtn(PB_13);
-//  GateIn clearBtn(PB_14);
-  //ToggleInOut learnModeBtn(PB_15, PC_14);//with indicator led
   DigitalOut midiNoteLearnLed(PC_14);
-  DigitalOut midiChannelLearnLed(PB_15);
+  DigitalOut midiChannelLearnLed(PC_15);
   ToggleNState learnMode(3);
   GateIn clockIn(PA_8);//external clock input
   DigitalOut clockLed(PA_1);
@@ -62,15 +60,22 @@ int main() {
   // multiple tracks
   pc2.printf("Init tracks\r\n");
   const int NumTracks = 8;
-  //default note, pattern, channel
+  //default note, pattern, channel, gate outputs, midi handlers
   const uint8_t midiNotes[] = {0x23, 0x24, 0x25, 0x2B, 0x2D, 0x30, 0x32, 0x34};
   const uint32_t patterns[] = {0x1111, 0x00, 0xFFFF, 0x00, 0x00, 0x00, 0x00, 0xAA88};
   const uint8_t MidiChannel = 0x03;//channel 4
+  const PinName outPins[] = {PA_11, PA_12, PA_15, PB_3, PB_4, PB_5, PB_6, PB_7 };
+  DigitalOut* midiOutputs[NumTracks];
+  MultiMidiHandler multis[NumTracks];
 
   TrackController* tracks[NumTracks];
   for(int idx = 0; idx<NumTracks; ++idx)
   {
-    tracks[idx] = new TrackController(midiSerial, midiNotes[idx], MidiChannel, idx, ledMatrix);
+    // yes, these are memory leaks (if we would ever destruct)
+    midiOutputs[idx] = new DigitalOut(outPins[idx]);
+    multis[idx].AddHandler(&midiSerial);
+    multis[idx].AddHandler(new GateMidiHandler(*midiOutputs[idx]));
+    tracks[idx] = new TrackController(multis[idx], midiNotes[idx], MidiChannel, idx, ledMatrix);
     tracks[idx]->SetPattern(patterns[idx]);
   }
 
@@ -91,24 +96,19 @@ int main() {
       {
         for(int repeat = 0; repeat<fakeClockPeriod; ++repeat)
         {
-  //        muteBtn.Read();
-  //        setBtn.Read();
-  //        clearBtn.Read();
-          //learnModeBtn.Read();
           clockIn.Read();
           //playStepModeBtn.Read();
           resetAdvanceBtn.Read();
           touchPad.Read();
-          learnMode.Tick(touchPad.Get(3));
+          learnMode.Tick(touchPad.Get(8));
+
           //fake clock
           fakeClock.Tick(repeat<fakeClockPeriod/2?1:0);
 
-          commonState.setPressed = touchPad.Get(0);//setBtn.Get();
-          commonState.clearPressed = touchPad.Get(2);//clearBtn.Get();
-          commonState.mutePressed = touchPad.Get(1);//muteBtn.Get();
+          commonState.setPressed = touchPad.Get(10);
+          commonState.clearPressed = touchPad.Get(11);
+          commonState.mutePressed = touchPad.Get(9);
           commonState.learnMode = learnMode.Get();
-    //      commonState.clockIsRising = clockIn.IsRising();
-    //      commonState.clockIsFalling = clockIn.IsFalling();
           commonState.learnValue = learnValuePot.read();
           commonState.playMode = true;//playStepModeBtn.Get();
 
@@ -131,7 +131,7 @@ int main() {
           for(int idx = 0; idx<NumTracks; ++idx)
           {
             int allTrackBtn = 0;
-            tracks[idx]->Tick(commonState, touchPad.Get(4+idx), allTrackBtn);
+            tracks[idx]->Tick(commonState, touchPad.Get(7-idx), allTrackBtn);
           }          
 
           // update display takes some time => update alternating rows
@@ -153,7 +153,7 @@ int main() {
                   commonState.mutePressed?1:0, 
                   commonState.setPressed?1:0, 
                   commonState.clearPressed?1:0, 
-                  commonState.learnMode?1:0,
+                  commonState.learnMode,
                   commonState.playMode?1:0);
       pc2.printf("touchpad %d%d%d%d%d%d%d%d%d%d%d%d\r\n", 
                   touchPad.Get(0), 
@@ -168,7 +168,6 @@ int main() {
                   touchPad.Get(9), 
                   touchPad.Get(10), 
                   touchPad.Get(11));
-      pc2.printf("%d : %d ms\r\n", counter++, timer.read_ms());
-      
+      pc2.printf("%d : %d ms\r\n", counter++, timer.read_ms());      
   }
 }
