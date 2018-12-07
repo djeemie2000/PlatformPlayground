@@ -5,6 +5,7 @@
 #include "MidiHandler.h"
 #include "MidiNoteState.h"
 #include "MidiNoteStepper.h"
+#include "MidiNoteStack.h"
 
 class ModeMidiHandler : public MidiHandler
 {
@@ -38,15 +39,20 @@ public:
         m_midiOut.ChannelPressure(Channel, Pressure);
     }
     //TODO pass all other functions to handler!
-    void AllNotesOff();
 
 private:
+    void OutNoteOn(uint8_t MidiNote, uint8_t Velocity);
+    void OutNoteOff(uint8_t MidiNote, uint8_t Velocity);
+    void OutAllNotesOff();
+
+
   uint8_t m_Channel;
   MidiHandler& m_midiOut;
   Mode m_Mode;
   bool m_PrevGate;
   MidiNoteState m_State;
   MidiNoteStepper m_Stepper;
+  MidiNoteStack m_OutStack;
 };
 
 #endif /* end of include guard: MODEMIDIHANDLER_H_INCLUDE */

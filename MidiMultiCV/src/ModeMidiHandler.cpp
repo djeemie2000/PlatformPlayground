@@ -31,6 +31,26 @@ void ModeMidiHandler::Tick(int Gate)
     }
   }
 
+  void ModeMidiHandler::OutNoteOn(uint8_t MidiNote, uint8_t Velocity)
+  {
+      m_OutStack.NoteOn(MidiNote);
+      m_Handler.NoteOn(m_Channel, MidiNote, Velocity);
+  }
+
+  void ModeMidiHandler::OutNoteOff(uint8_t MidiNote, uint8_t Velocity)
+  {
+      m_OutStack.NoteOff(MidiNote);
+      m_Handler.NoteOff(m_Channel, MidiNote, Velocity);
+  }
+
+  void ModeMidiHandler::OutAllNotesOff()
+  {
+      while(m_OutStack.Size())
+      {
+          OutNoteOff(m_OutStack.CurrentNote());
+      }
+  }
+
   void ModeMidiHandler::SetMode(Mode mode)
   {
       if(mode != m_Mode)
@@ -65,6 +85,7 @@ void ModeMidiHandler::Tick(int Gate)
          } 
          else if(m_Mode==StepperPlay)
          {
+             //noteoff on midi note with previous basenote??
              m_Stepper.SetBaseNote(MidiNote);
          }
          else if(m_Mode==StepperRecord)

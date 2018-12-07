@@ -37,8 +37,15 @@ change midi channel
 
 tempo button? external clock? -> TODO
     reset / period to clock gate state
+    quantize to clock in (e.g. 64 parts)
+        recording
+        gate length
 
-step record quantize independent of clock duty cycle
+step record quantize independent of clock duty cycle -> todo
+
+fix bug note stuck when switching mode live <-> stepper (play) -> todo  
+
+log midi on/off depending on input -> todo
 
 save to / load from flash : 
     header: app, length, version, ... -> TODO 
