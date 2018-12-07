@@ -20,11 +20,11 @@ void ModeMidiHandler::Tick(int Gate)
         {
             if(m_PrevGate)
             {
-                m_midiOut.NoteOff(m_Channel, m_Stepper.MidiNote(), m_Stepper.Velocity());
+                OutAllNotesOff();
             }
             else
             {
-                m_midiOut.NoteOn(m_Channel, m_Stepper.MidiNote(), m_Stepper.Velocity());
+                OutNoteOn(m_Stepper.MidiNote(), m_Stepper.Velocity());
             }
             m_PrevGate = !m_PrevGate;
         }
@@ -34,20 +34,21 @@ void ModeMidiHandler::Tick(int Gate)
   void ModeMidiHandler::OutNoteOn(uint8_t MidiNote, uint8_t Velocity)
   {
       m_OutStack.NoteOn(MidiNote);
-      m_Handler.NoteOn(m_Channel, MidiNote, Velocity);
+      m_midiOut.NoteOn(m_Channel, MidiNote, Velocity);
   }
 
   void ModeMidiHandler::OutNoteOff(uint8_t MidiNote, uint8_t Velocity)
   {
       m_OutStack.NoteOff(MidiNote);
-      m_Handler.NoteOff(m_Channel, MidiNote, Velocity);
+      m_midiOut.NoteOff(m_Channel, MidiNote, Velocity);
   }
 
   void ModeMidiHandler::OutAllNotesOff()
   {
+      uint8_t dummyVelocity = 64;
       while(m_OutStack.Size())
       {
-          OutNoteOff(m_OutStack.CurrentNote());
+          OutNoteOff(m_OutStack.CurrentNote(), dummyVelocity);
       }
   }
 
@@ -55,22 +56,15 @@ void ModeMidiHandler::Tick(int Gate)
   {
       if(mode != m_Mode)
       {
-        // when switching mode, make sure no notes get stuck
-        // e.g. live -> sequencer, sequencer -> live
-        // Note: a real note stack (highest note, latest note order, ...) would be usefull
-        if(m_Mode==StepperRecord || m_Mode == StepperPlay)
+        // when switching mode between live and stepper, make sure no notes get stuck
+        // switching between stepper record and play => must play notes without interruption
+        if((m_Mode==LivePoly) != (mode==LivePoly))
         {
-            // current note off if a note is on
-            if(m_Stepper.Gate())
-            {
-                m_midiOut.NoteOff(m_Channel, m_Stepper.MidiNote(), m_Stepper.Velocity());
-            }
+            OutAllNotesOff();
         }
 
         m_Mode = mode;
-
       }
-
   }
 
 
@@ -81,7 +75,7 @@ void ModeMidiHandler::Tick(int Gate)
          m_State.NoteOn(MidiNote, Velocity);
          if(m_Mode==LivePoly)
          {
-             m_midiOut.NoteOn(Channel, MidiNote, Velocity);
+             OutNoteOn(MidiNote, Velocity);
          } 
          else if(m_Mode==StepperPlay)
          {
@@ -113,7 +107,7 @@ void ModeMidiHandler::Tick(int Gate)
         m_State.NoteOff(MidiNote, Velocity);
         if(m_Mode==LivePoly)
         {
-            m_midiOut.NoteOff(Channel, MidiNote, Velocity);
+            OutNoteOff(MidiNote, Velocity);
         }
         else if(m_Mode==StepperRecord)
         {
@@ -123,11 +117,7 @@ void ModeMidiHandler::Tick(int Gate)
             // alternative: act in tick???  
             if(1024<m_State.PressDuration(MidiNote))
             {
-                // current note off if a note is on
-                if(m_Stepper.Gate())
-                {
-                    m_midiOut.NoteOff(m_Channel, m_Stepper.MidiNote(), m_Stepper.Velocity());
-                }
+                OutAllNotesOff();
                 m_Stepper.Clear();
             }
         }
