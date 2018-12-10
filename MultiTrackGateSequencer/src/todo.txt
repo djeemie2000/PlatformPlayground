@@ -43,7 +43,7 @@ tempo button? external clock? -> TODO
 
 step record quantize independent of clock duty cycle -> todo
 
-fix bug note stuck when switching mode live <-> stepper (play) -> todo  
+fix bug note stuck when switching mode live <-> stepper (play) -> done  
 
 log midi on/off depending on input -> todo
 

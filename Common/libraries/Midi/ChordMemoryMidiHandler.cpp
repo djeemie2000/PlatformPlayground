@@ -25,10 +25,11 @@ void ChordMemoryMidiHandler::NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t V
             }
         }
         m_NotePressed.NoteOn(MidiNote);
-        // add note to chord
+        // add note to chord:
+        // prevent same note being added twice to stack by first removing it (will do nothing if not in stack)
+        m_OutStack.NoteOff(MidiNote);
         m_OutStack.NoteOn(MidiNote);
         m_Handler.NoteOn(Channel, MidiNote, Velocity);
-        // TODO prevent same note being added twice to stack???
     }
 }
 
