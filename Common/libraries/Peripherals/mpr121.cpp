@@ -70,7 +70,7 @@ void Mpr121::configureSettings()
         };
 
     for(int i=0; i<12; i++){
-        int result = writeMany((ELE0_T+(i*2)),electrodeThresholds,2);
+        /*int result = */writeMany((ELE0_T+(i*2)),electrodeThresholds,2);
     }   
 
     // Proximity Settings
@@ -128,16 +128,16 @@ unsigned char Mpr121::read(int key){
     i2c->start();
 
     // Address the target (Write mode)
-    int ack1= i2c->write(address);
+    /*int ack1=*/i2c->write(address);
 
     // Set the register key to read
-    int ack2 = i2c->write(key);
+    /*int ack2 =*/i2c->write(key);
 
     // Re-start for read of data
     i2c->start();
 
     // Re-send the target address in read mode
-    int ack3 = i2c->write(address+1);
+    /*int ack3 =*/i2c->write(address+1);
 
     // Read in the result
     data[0] = i2c->read(0); 
