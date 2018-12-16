@@ -9,6 +9,8 @@ struct CommonState
     bool clockIsRising;
     bool clockIsFalling;
     bool clockOn;
+    int clockSegment;
+    int clockNumSegments;
     float learnValue;
     bool playMode;
 };

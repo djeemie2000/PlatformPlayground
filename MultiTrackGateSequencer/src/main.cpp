@@ -12,7 +12,7 @@
 #include "ScanI2C.h"
 #include "MultiMidiHandler.h"
 #include "GateMidiHandler.h"
-
+#include "ClockInQuantizer.h"
 
 int main() {
 
@@ -84,6 +84,8 @@ int main() {
   int counter = 0;
   const int fakeClockPeriod = 220;
   GateState fakeClock;
+  const int NumClockSegments = 16;
+  ClockInQuantizer clockInQuantizer(NumClockSegments);
 
   wait_ms(500);
   pc2.printf("start processing\r\n");
@@ -111,6 +113,11 @@ int main() {
           commonState.learnMode = learnMode.Get();
           commonState.learnValue = learnValuePot.read();
           commonState.playMode = true;//playStepModeBtn.Get();
+          
+          // step mode => do not update period!
+          clockInQuantizer.Tick(fakeClock.IsRising(), commonState.playMode);
+          commonState.clockNumSegments = clockInQuantizer.GetNumSegments();
+          commonState.clockSegment = clockInQuantizer.GetSegment();
 
           // fake clock
           // if play mode, use (fake) clock

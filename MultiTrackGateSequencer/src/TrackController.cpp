@@ -52,7 +52,7 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
                 // always set current step (and play)
             if(commonState.playMode)
             {
-                if(commonState.clockOn)
+                if(commonState.clockSegment<commonState.clockNumSegments/2)
                 {
                     //set current Step
                     SetStep(m_Player.GetCurrentStep());
