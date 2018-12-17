@@ -1,6 +1,6 @@
 #include <mbed.h>
 #include "GateIn.h"
-#include "GateTrack.h"
+#include "TrackPlayer.h"
 #include "LogMidiHandler.h"
 #include "CommonState.h"
 #include "TrackController.h"

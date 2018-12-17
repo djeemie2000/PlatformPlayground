@@ -3,10 +3,10 @@
 #include <mbed.h>
 #include "MidiHandler.h"
 
-class GateTrackPlayer
+class TrackPlayer
 {
 public:
-    GateTrackPlayer(MidiHandler& handler, int NumSteps = 16);
+    TrackPlayer(MidiHandler& handler, int NumSteps = 16);
 
     void PlayOn();
     void PlayOff();

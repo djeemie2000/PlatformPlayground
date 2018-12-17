@@ -2,7 +2,7 @@
 
 #include <mbed.h>
 #include "GateIn.h"
-#include "GateTrack.h"
+#include "TrackPlayer.h"
 
 class CommonState;
 class MidiHandler;
@@ -22,7 +22,7 @@ private:
 
     GateState m_TrackBtn;
     GateState m_AllTrackBtn;
-    GateTrackPlayer m_Player;
+    TrackPlayer m_Player;
     int m_TrackIdx;
     DigitalOutMatrix& m_LedMatrix;
 };
