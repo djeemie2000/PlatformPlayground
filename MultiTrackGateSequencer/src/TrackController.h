@@ -3,6 +3,7 @@
 #include <mbed.h>
 #include "GateIn.h"
 #include "TrackPlayer.h"
+#include "ClockOutQuantizer.h"
 
 class CommonState;
 class MidiHandler;
@@ -22,6 +23,7 @@ private:
 
     GateState m_TrackBtn;
     GateState m_AllTrackBtn;
+    ClockOutQuantizer m_GateOut;
     TrackPlayer m_Player;
     int m_TrackIdx;
     DigitalOutMatrix& m_LedMatrix;

@@ -36,6 +36,9 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
 {
     m_TrackBtn.Tick(btn);
     m_AllTrackBtn.Tick(allBtn);
+    m_GateOut.SetDuration(commonState.clockNumSegments/4);
+    //TODO initialise, then increase or decrease with buttons
+    m_GateOut.Tick(commonState.clockSegment);
     if(m_TrackBtn.IsRising() || m_AllTrackBtn.IsRising())
     {
         if(commonState.mutePressed)
@@ -118,7 +121,7 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
     }
 
     // 
-    if(commonState.clockIsRising)
+    if(m_GateOut.IsRising())
     {
         // step on
         m_Player.StepOn();
@@ -129,7 +132,7 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
             m_LedMatrix.Clear(m_TrackIdx, m_Player.GetCurrentStep());
         }
     }
-    else if(commonState.clockIsFalling)
+    else if(m_GateOut.IsFalling())
     {
         // step off
         m_Player.StepOff();
