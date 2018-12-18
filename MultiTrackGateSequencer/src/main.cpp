@@ -113,6 +113,7 @@ int main() {
           commonState.learnMode = learnMode.Get();
           commonState.learnValue = learnValuePot.read();
           commonState.playMode = true;//playStepModeBtn.Get();
+          commonState.gateLengthChange = 0;
           
           // step mode => do not update period!
           clockInQuantizer.Tick(fakeClock.IsRising(), commonState.playMode);
