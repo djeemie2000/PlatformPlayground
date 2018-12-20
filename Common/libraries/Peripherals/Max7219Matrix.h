@@ -7,7 +7,7 @@
 class Max7219Matrix : public DigitalOutMatrix
 {
 public:
-    Max7219Matrix(int numDevices, PinName mosi, PinName miso, PinName sclk, PinName cs);
+    Max7219Matrix(int numDevices, SPI* spi, PinName cs);//PinName mosi, PinName miso, PinName sclk, PinName cs);
 
     void Configure();
     void Test();

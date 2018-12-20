@@ -1,9 +1,10 @@
 #include "MCP4x22.h"
 
-MCP4x22::MCP4x22()
- : m_SPI(PB_5, PB_4, PB_3, PA_15)//single chip, use chipselect from SPI1
+MCP4x22::MCP4x22(SPI* spi, PinName cs)
+ : m_SPI(spi)
+ , m_ChipSelect(cs, 1)
 {
-  m_SPI.format(16);//16 bits per write
+  m_SPI->format(16);//16 bits per write
 }
 
 void MCP4x22::SetOutput(int Value, int Channel, int Gain)
@@ -16,5 +17,7 @@ void MCP4x22::SetOutput(int Value, int Channel, int Gain)
     Value = 4095;
   }
   int writeValue = (Value&0x03FF) | Channel | Gain | Active;
-  m_SPI.write(writeValue);
+  m_ChipSelect.write(0);
+  m_SPI->write(writeValue);
+  m_ChipSelect.write(1);
 }

@@ -33,7 +33,8 @@ int main() {
 
   //
   pc2.printf("Init led matrix...\r\n");
-  Max7219Matrix ledMatrix(2, PA_7, PA_6, PA_5, PA_4);//(SPI0_MOSI, SPI0_MISO, SPI0_SCK, SPI0_SS));//2 devices
+  SPI spiPort(PA_7, PA_6, PA_5, NC);
+  Max7219Matrix ledMatrix(2, &spiPort, PA_4);//(SPI0_MOSI, SPI0_MISO, SPI0_SCK, SPI0_SS));//2 devices
   ledMatrix.Configure();
   ledMatrix.Test();
   

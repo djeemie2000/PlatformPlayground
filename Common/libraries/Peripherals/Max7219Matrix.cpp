@@ -19,9 +19,9 @@ void Max7219Matrix::Device::Clear(uint8_t row, uint8_t col)
     BitClear(m_Digit[row], col);
 }
 
-Max7219Matrix::Max7219Matrix(int numDevices,PinName mosi, PinName miso, PinName sclk, PinName cs)
+Max7219Matrix::Max7219Matrix(int numDevices, SPI* spi, PinName cs)
  : m_NumDevices(numDevices)
- , m_LedMatrix(mosi, miso, sclk, cs)
+ , m_LedMatrix(spi, cs)
 {
 }
 

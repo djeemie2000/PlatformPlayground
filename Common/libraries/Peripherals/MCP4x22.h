@@ -13,12 +13,13 @@ public:
   static const int Channel_A = 0;
   static const int Channel_B = 1<<15;
 
-  MCP4x22();
+  MCP4x22(SPI* spi, PinName cs);
 
   void SetOutput(int Value, int Channel, int Gain);//TODO multiple chips
 
 private:
-  SPI m_SPI;
+  SPI* m_SPI;
+  DigitalOut m_ChipSelect;
 };
 
 #endif /* end of include guard: MCP4X22_H_INCLUDE */
