@@ -28,7 +28,7 @@ int main() {
 
   // start running
   pc2.printf("\r\n-\r\n-\r\nMulti track gate sequencer...\r\n-\r\n-\r\n");
-  pc2.printf("version 0.2\r\n");
+  pc2.printf("version 0.5\r\n");
   wait_ms(1000);
 
   //
@@ -113,7 +113,7 @@ int main() {
           commonState.learnMode = learnMode.Get();
           commonState.learnValue = learnValuePot.read();
           commonState.playMode = true;//playStepModeBtn.Get();
-          commonState.gateLengthChange = 0;
+          commonState.gateLengthChange = 0;//TODO buttons?
           
           // step mode => do not update period!
           clockInQuantizer.Tick(fakeClock.IsRising(), commonState.playMode);

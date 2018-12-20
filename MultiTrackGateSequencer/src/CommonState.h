@@ -16,5 +16,5 @@ struct CommonState
     
     float learnValue;
 
-    bool gateLengthChange;
+    int gateLengthChange;
 };

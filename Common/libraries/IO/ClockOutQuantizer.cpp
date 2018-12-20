@@ -14,6 +14,10 @@ void ClockOutQuantizer::Tick(int segment)
         {
             m_State.Tick(0);
         }
+        else
+        {
+            m_State.Tick(1);
+        }
     }
     else
     {
@@ -21,6 +25,10 @@ void ClockOutQuantizer::Tick(int segment)
         if(segment==0)
         {
             m_State.Tick(1);
+        }
+        else
+        {
+            m_State.Tick(0);
         }
     }
 }
