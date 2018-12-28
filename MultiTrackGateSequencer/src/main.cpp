@@ -14,6 +14,8 @@
 #include "GateMidiHandler.h"
 #include "ClockInQuantizer.h"
 
+#include "MBedUnit.h"
+
 int main() {
 
   // put your setup code here, to run once:
@@ -26,6 +28,8 @@ int main() {
   // short pause before running
   wait_ms(2000);
 
+  //testMain(pc2);//TODO debug
+
   // start running
   pc2.printf("\r\n-\r\n-\r\nMulti track gate sequencer...\r\n-\r\n-\r\n");
   pc2.printf("version 0.5\r\n");
@@ -34,9 +38,11 @@ int main() {
   //
   pc2.printf("Init led matrix...\r\n");
   SPI spiPort(PA_7, PA_6, PA_5, NC);
-  Max7219Matrix ledMatrix(2, &spiPort, PA_4);//(SPI0_MOSI, SPI0_MISO, SPI0_SCK, SPI0_SS));//2 devices
-  ledMatrix.Configure();
-  ledMatrix.Test();
+  Max7219Matrix ledMatrix(4, &spiPort, PA_4);//(SPI0_MOSI, SPI0_MISO, SPI0_SCK, SPI0_SS));//4 devices
+  ledMatrix.Configure(false);
+  //pc2.printf("Test led matrix...\r\n");
+  //ledMatrix.Test();
+  //TestExtended(ledMatrix, pc2);
   
   // common
   pc2.printf("Init common\r\n");
@@ -63,7 +69,7 @@ int main() {
   const int NumTracks = 8;
   //default note, pattern, channel, gate outputs, midi handlers
   const uint8_t midiNotes[] = {0x23, 0x24, 0x25, 0x2B, 0x2D, 0x30, 0x32, 0x34};
-  const uint32_t patterns[] = {0x1111, 0x00, 0xFFFF, 0x00, 0x00, 0x00, 0x00, 0xAA88};
+  const uint32_t patterns[] = {0x11111111, 0x00000000, 0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xAA88AA88};
   const uint8_t MidiChannel = 0x03;//channel 4
   const PinName outPins[] = {PA_11, PA_12, PA_15, PB_3, PB_4, PB_5, PB_6, PB_7 };
   DigitalOut* midiOutputs[NumTracks];

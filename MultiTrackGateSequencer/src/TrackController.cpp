@@ -6,7 +6,7 @@
 TrackController::TrackController(MidiHandler& midiHandler, uint8_t MidiNote, uint8_t MidiChannel, int trackIdx, DigitalOutMatrix& ledMatrix)
  : m_TrackBtn()
  , m_AllTrackBtn()
- , m_Player(midiHandler)
+ , m_Player(midiHandler, 32)
  , m_TrackIdx(trackIdx)
  , m_LedMatrix(ledMatrix)
  , m_GateLength(0)
@@ -17,18 +17,18 @@ TrackController::TrackController(MidiHandler& midiHandler, uint8_t MidiNote, uin
 
 void TrackController::SetStep(int step)
 {
+    m_Player.SetStep(step);
     if(step<m_LedMatrix.NumCols())
     {
-        m_Player.SetStep(step);
         m_LedMatrix.Set(m_TrackIdx, step);
     }
 }
 
 void TrackController::ClearStep(int step)
 {
+    m_Player.ClearStep(step);
     if(step<m_LedMatrix.NumCols())
     {
-        m_Player.ClearStep(step);
         m_LedMatrix.Clear(m_TrackIdx, step);
     }
 }
@@ -41,7 +41,7 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
     // initialise gate length, then increase or decrease with buttons
     if(0==m_GateLength)
     {
-        m_GateLength = commonState.clockNumSegments/4;
+        m_GateLength = commonState.clockNumSegments/2;
         m_GateOut.SetDuration(m_GateLength);
     }
 

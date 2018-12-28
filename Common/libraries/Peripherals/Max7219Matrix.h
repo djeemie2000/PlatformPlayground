@@ -9,15 +9,15 @@ class Max7219Matrix : public DigitalOutMatrix
 public:
     Max7219Matrix(int numDevices, SPI* spi, PinName cs);//PinName mosi, PinName miso, PinName sclk, PinName cs);
 
-    void Configure();
+    void Configure(bool rotated = false);
     void Test();
 
     int NumRows() const{return Size;}
     int NumCols() const{return Size*m_NumDevices;}
-    void Set(int row, int col);
-    void Clear(int row, int col);
-    void Write();
-    void Write(int row);
+    bool Set(int row, int col);
+    bool Clear(int row, int col);
+    int Write();
+    int Write(int row);
 
 private:
     static const int Size = 8;//8x8 led matrix
@@ -26,8 +26,8 @@ private:
     struct Device
     {
         Device();
-        void Set(uint8_t row, uint8_t col);
-        void Clear(uint8_t row, uint8_t col);
+        bool Set(uint8_t row, uint8_t col);
+        bool Clear(uint8_t row, uint8_t col);
 
         uint8_t m_Digit[Size];
     };
@@ -35,4 +35,7 @@ private:
     const int m_NumDevices;
     Max7219 m_LedMatrix;
     Device m_Device[MaxNumDevices];
+    bool m_Rotated;
 };
+
+void TestExtended(Max7219Matrix& matrix, Serial& pc);
