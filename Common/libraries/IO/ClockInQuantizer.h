@@ -1,6 +1,18 @@
 #pragma once
 
-#include <mbed.h>
+class ClockInState
+{
+public:
+    ClockInState(int period = 500);
+
+    void Tick(bool reset, bool updatePeriodUponReset = true);
+    int Cntr() const;
+    int Period() const;
+    
+private:
+    int m_Cntr;
+    int m_Period;
+};
 
 class ClockInQuantizer
 {
