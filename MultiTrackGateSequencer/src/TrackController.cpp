@@ -166,7 +166,7 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
     }
 }
 
-void TrackController::SetPattern(uint32_t pattern)
+void TrackController::SetPattern(uint32_t pattern, int length)
 {
     for(uint32_t step = 0; step<32u; ++step)
     {
@@ -179,4 +179,5 @@ void TrackController::SetPattern(uint32_t pattern)
             ClearStep(step);
         }
     }
+    m_Player.SetNumSteps(length);
 }

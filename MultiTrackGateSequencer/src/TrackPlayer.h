@@ -20,6 +20,7 @@ public:
     void SetStep(int step);
     void ClearStep(int step);
     bool GetStep(int step) const;
+    void SetNumSteps(int numSteps);
 
     int GetCurrentStep() const;//position of current step
     int GetNextStep() const;//position of next step
@@ -31,8 +32,7 @@ public:
 private:
     int AdvanceStep(int step) const;
     
-    const int m_NumSteps;
-
+    int m_NumSteps;
     MidiHandler& m_Handler;
     uint8_t m_Channel;
     uint8_t m_MidiNote;

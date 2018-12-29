@@ -67,6 +67,7 @@ int main() {
   // multiple tracks
   pc2.printf("Init tracks\r\n");
   const int NumTracks = 8;
+  const int PatternLength = 32;
   //default note, pattern, channel, gate outputs, midi handlers
   const uint8_t midiNotes[] = {0x23, 0x24, 0x25, 0x2B, 0x2D, 0x30, 0x32, 0x34};
   const uint32_t patterns[] = {0x11111111, 0x00000000, 0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xAA88AA88};
@@ -83,7 +84,7 @@ int main() {
     multis[idx].AddHandler(&midiSerial);
     multis[idx].AddHandler(new GateMidiHandler(*midiOutputs[idx]));
     tracks[idx] = new TrackController(multis[idx], midiNotes[idx], MidiChannel, idx, ledMatrix);
-    tracks[idx]->SetPattern(patterns[idx]);
+    tracks[idx]->SetPattern(patterns[idx], PatternLength);
   }
 
   // 

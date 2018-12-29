@@ -92,6 +92,11 @@ bool TrackPlayer::GetStep(int step) const
     return (m_Pattern>>step)&0x01;
 }
 
+void TrackPlayer::SetNumSteps(int numSteps)
+{
+    m_NumSteps = numSteps;
+}
+
 int TrackPlayer::GetCurrentStep() const
 {
     return m_CurrentStep;
