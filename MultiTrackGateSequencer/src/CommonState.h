@@ -11,8 +11,8 @@ struct CommonState
     bool clockIsRising;
     bool clockIsFalling;
     bool clockOn;
-    int clockSegment;
-    int clockNumSegments;
+    int clockCntr;
+    int clockPeriod;
     
     float learnValue;
 

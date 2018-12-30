@@ -9,8 +9,9 @@ TrackController::TrackController(MidiHandler& midiHandler, uint8_t MidiNote, uin
  , m_Player(midiHandler, 32)
  , m_TrackIdx(trackIdx)
  , m_LedMatrix(ledMatrix)
- , m_GateLength(0)
+ , m_GateLength(0.5f)
 {
+    m_GateOut.SetDuration(m_GateLength);
     m_Player.LearnNote(MidiNote);
     m_Player.LearnChannel(MidiChannel);
 }
@@ -38,14 +39,7 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
     m_TrackBtn.Tick(btn);
     m_AllTrackBtn.Tick(allBtn);
 
-    // initialise gate length, then increase or decrease with buttons
-    if(0==m_GateLength)
-    {
-        m_GateLength = commonState.clockNumSegments/2;
-        m_GateOut.SetDuration(m_GateLength);
-    }
-
-    m_GateOut.Tick(commonState.clockSegment);
+    m_GateOut.Tick(commonState.clockCntr, commonState.clockPeriod);
     if(m_TrackBtn.IsRising() || m_AllTrackBtn.IsRising())
     {
         if(commonState.mutePressed)
@@ -62,7 +56,7 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
                 // always set current step (and play)
             if(commonState.playMode)
             {
-                if(commonState.clockSegment<commonState.clockNumSegments/2)
+                if(commonState.clockCntr<commonState.clockPeriod/2)
                 {
                     //set current Step
                     SetStep(m_Player.GetCurrentStep());
@@ -111,15 +105,16 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
         }
         else if(commonState.gateLengthChange)
         {
-            m_GateLength += commonState.gateLengthChange;
+            const float resolution = 0.0625f;//1/16
+            m_GateLength += commonState.gateLengthChange*resolution;
             // crop to [1, clockNumSegments]
-            if(m_GateLength<1)
+            if(m_GateLength<resolution)
             {
-                m_GateLength = 1;
+                m_GateLength = resolution;
             }
-            else if(commonState.clockNumSegments<m_GateLength)
+            else if(1<m_GateLength)
             {
-                m_GateLength = commonState.clockNumSegments;
+                m_GateLength = 1.0f;
             }
             m_GateOut.SetDuration(m_GateLength);
         }

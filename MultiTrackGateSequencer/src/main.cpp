@@ -92,8 +92,7 @@ int main() {
   int counter = 0;
   const int fakeClockPeriod = 220;
   GateState fakeClock;
-  const int NumClockSegments = 16;
-  ClockInQuantizer clockInQuantizer(NumClockSegments);
+  ClockInState clockInState(fakeClockPeriod);
 
   wait_ms(500);
   pc2.printf("start processing\r\n");
@@ -124,9 +123,9 @@ int main() {
           commonState.gateLengthChange = 0;//TODO buttons?
           
           // step mode => do not update period!
-          clockInQuantizer.Tick(fakeClock.IsRising(), commonState.playMode);
-          commonState.clockNumSegments = clockInQuantizer.GetNumSegments();
-          commonState.clockSegment = clockInQuantizer.GetSegment();
+          clockInState.Tick(fakeClock.IsRising(), commonState.playMode);
+          commonState.clockCntr = clockInState.Cntr();
+          commonState.clockPeriod = clockInState.Period();
 
           // fake clock
           // if play mode, use (fake) clock

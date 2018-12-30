@@ -23,9 +23,9 @@ private:
 
     GateState m_TrackBtn;
     GateState m_AllTrackBtn;
-    ClockOutQuantizer m_GateOut;
+    ClockOutState m_GateOut;
     TrackPlayer m_Player;
     int m_TrackIdx;
     DigitalOutMatrix& m_LedMatrix;
-    int m_GateLength;
+    float m_GateLength;
 };
