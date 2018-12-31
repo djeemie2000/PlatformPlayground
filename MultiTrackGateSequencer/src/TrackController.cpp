@@ -9,9 +9,8 @@ TrackController::TrackController(MidiHandler& midiHandler, uint8_t MidiNote, uin
  , m_Player(midiHandler, 32)
  , m_TrackIdx(trackIdx)
  , m_LedMatrix(ledMatrix)
- , m_GateLength(0.5f)
 {
-    m_GateOut.SetDuration(m_GateLength);
+    m_GateOut.SetDuration(0.5f);
     m_Player.LearnNote(MidiNote);
     m_Player.LearnChannel(MidiChannel);
 }
@@ -88,10 +87,6 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
         {
             //learn midi note ~ pot analog in
             uint8_t midiNote = 32+commonState.learnValue*64;
-            // if(127<=midiNote)
-            // {
-            //     midiNote = 127;
-            // }
             m_Player.LearnNote(midiNote);
             m_Player.PlayOn();
         }
@@ -103,20 +98,10 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
             m_Player.LearnChannel(midiChannel);
             m_Player.PlayOn();
         }
-        else if(commonState.gateLengthChange)
+        else if(commonState.learnMode==3)
         {
-            const float resolution = 0.0625f;//1/16
-            m_GateLength += commonState.gateLengthChange*resolution;
-            // crop to [1, clockNumSegments]
-            if(m_GateLength<resolution)
-            {
-                m_GateLength = resolution;
-            }
-            else if(1<m_GateLength)
-            {
-                m_GateLength = 1.0f;
-            }
-            m_GateOut.SetDuration(m_GateLength);
+            // crop to min length, 1.0f TODO
+            m_GateOut.SetDuration(commonState.learnValue);
         }
         else
         {
@@ -138,7 +123,7 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
     }
 
     // 
-    if(m_GateOut.IsRising())
+    if(m_GateOut.IsRising())//TODO clock rising in case of gate length 1??
     {
         // step on
         m_Player.StepOn();

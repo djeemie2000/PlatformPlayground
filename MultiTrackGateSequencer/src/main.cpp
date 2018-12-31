@@ -48,11 +48,12 @@ int main() {
   pc2.printf("Init common\r\n");
   SerialMidiHandler midiSerial(pcMidi);
 
+  DigitalOut clockLed(PA_1);
   DigitalOut midiNoteLearnLed(PC_14);
   DigitalOut midiChannelLearnLed(PC_15);
-  ToggleNState learnMode(3);
+  DigitalOut gateLengthLearnLed(PB_0);
+  ToggleNState learnMode(4);
   GateIn clockIn(PA_8);//external clock input
-  DigitalOut clockLed(PA_1);
   // debug serial
   //ToggleInOut playStepModeBtn(PB_8, PC_15);// play/Step mode toggle btn, with indicator led
   GateIn resetAdvanceBtn(PB_9);// reset/advance btn
@@ -120,7 +121,6 @@ int main() {
           commonState.learnMode = learnMode.Get();
           commonState.learnValue = learnValuePot.read();
           commonState.playMode = true;//playStepModeBtn.Get();
-          commonState.gateLengthChange = 0;//TODO buttons?
           
           // step mode => do not update period!
           clockInState.Tick(fakeClock.IsRising(), commonState.playMode);
@@ -158,6 +158,7 @@ int main() {
           //ledOut = clockIn.Get()? 0:1;//inverted
           midiNoteLearnLed = (learnMode.Get()==1)?1:0;
           midiChannelLearnLed = (learnMode.Get()==2)?1:0;
+          gateLengthLearnLed = (learnMode.Get()==3)?1:0;
           // 
           wait_ms(1);
         }

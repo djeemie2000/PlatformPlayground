@@ -15,6 +15,4 @@ struct CommonState
     int clockPeriod;
     
     float learnValue;
-
-    int gateLengthChange;
 };

@@ -27,5 +27,4 @@ private:
     TrackPlayer m_Player;
     int m_TrackIdx;
     DigitalOutMatrix& m_LedMatrix;
-    float m_GateLength;
 };
