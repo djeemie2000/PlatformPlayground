@@ -41,9 +41,8 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
     if(commonState.resetStepPressed)
     {
         // trigger reset step on player
-        //TODO
+        m_Player.ResetStep();
     }
-
 
     m_GateOut.Tick(commonState.clockCntr, commonState.clockPeriod);
     if(m_TrackBtn.IsRising() || m_AllTrackBtn.IsRising())

@@ -21,6 +21,7 @@ public:
     void ClearStep(int step);
     bool GetStep(int step) const;
     void SetNumSteps(int numSteps);
+    void ResetStep();
 
     int GetCurrentStep() const;//position of current step
     int GetNextStep() const;//position of next step
@@ -41,5 +42,6 @@ private:
     bool m_Muted;
 
     int m_CurrentStep;
+    bool m_ResetStep;
     uint32_t m_Pattern;
 };

@@ -8,6 +8,7 @@ TrackPlayer::TrackPlayer(MidiHandler& handler, int NumSteps)
  , m_NoteOn(false)
  , m_Muted(false)
  , m_CurrentStep(m_NumSteps-1)
+ , m_ResetStep(true)
  , m_Pattern(0x00)
 {
 }
@@ -46,7 +47,8 @@ int TrackPlayer::AdvanceStep(int step) const
 void TrackPlayer::StepOn()
 {
     //advance step
-    m_CurrentStep = AdvanceStep(m_CurrentStep);
+    m_CurrentStep = m_ResetStep ? 0 : AdvanceStep(m_CurrentStep);
+    m_ResetStep = false;
 
     uint32_t CurrentNoteMask = 1<<m_CurrentStep;
     if((m_Pattern & CurrentNoteMask) && !m_Muted)
@@ -95,6 +97,11 @@ bool TrackPlayer::GetStep(int step) const
 void TrackPlayer::SetNumSteps(int numSteps)
 {
     m_NumSteps = numSteps;
+}
+
+void TrackPlayer::ResetStep()
+{
+    m_ResetStep = true;
 }
 
 int TrackPlayer::GetCurrentStep() const
