@@ -38,6 +38,13 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
     m_TrackBtn.Tick(btn);
     m_AllTrackBtn.Tick(allBtn);
 
+    if(commonState.resetStepPressed)
+    {
+        // trigger reset step on player
+        //TODO
+    }
+
+
     m_GateOut.Tick(commonState.clockCntr, commonState.clockPeriod);
     if(m_TrackBtn.IsRising() || m_AllTrackBtn.IsRising())
     {
@@ -121,6 +128,7 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
         // stop note as well
         m_Player.PlayOff();   
     }
+
 
     // 
     if(m_GateOut.IsRising())//TODO clock rising in case of gate length 1??

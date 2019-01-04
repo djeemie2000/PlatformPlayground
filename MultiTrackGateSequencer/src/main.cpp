@@ -48,15 +48,17 @@ int main() {
   pc2.printf("Init common\r\n");
   SerialMidiHandler midiSerial(pcMidi);
 
-  DigitalOut clockLed(PA_1);
+  DigitalOut clockLed(PB_14);
+  GateIn clockIn(PA_8);//external clock input
+  
   DigitalOut midiNoteLearnLed(PC_14);
   DigitalOut midiChannelLearnLed(PC_15);
-  DigitalOut gateLengthLearnLed(PB_0);
+  DigitalOut gateLengthLearnLed(PA_1);
+  ButtonIn toggleModeBtn(PB_15,5);//debounce 5msec
   ToggleNState learnMode(4);
-  GateIn clockIn(PA_8);//external clock input
-  // debug serial
-  //ToggleInOut playStepModeBtn(PB_8, PC_15);// play/Step mode toggle btn, with indicator led
-  GateIn resetAdvanceBtn(PB_9);// reset/advance btn
+  //ToggleInOut playStepModeBtn(PB_8, PB_14);// play/Step mode toggle btn, with indicator led
+  //GateIn resetAdvanceBtn(PB_9);// reset/advance btn
+  GateState resetStepState;
   AnalogIn learnValuePot(PA_0);
   CommonState commonState;
   
@@ -108,10 +110,13 @@ int main() {
         {
           clockIn.Read();
           //playStepModeBtn.Read();
-          resetAdvanceBtn.Read();
+          //resetAdvanceBtn.Read();
+          toggleModeBtn.Read();
           touchPad.Read();
-          learnMode.Tick(touchPad.Get(8));
-
+          learnMode.Tick(toggleModeBtn.Get());
+          // use pad 8 for reset
+          resetStepState.Tick(touchPad.Get(8));
+          
           //fake clock
           fakeClock.Tick(repeat<fakeClockPeriod/2?1:0);
 
@@ -121,9 +126,11 @@ int main() {
           commonState.learnMode = learnMode.Get();
           commonState.learnValue = learnValuePot.read();
           commonState.playMode = true;//playStepModeBtn.Get();
+          commonState.resetStepPressed = resetStepState.IsRising();
           
           // step mode => do not update period!
           clockInState.Tick(fakeClock.IsRising(), commonState.playMode);
+          //TODO clockInState.Tick(clockIn.IsRising(), commonState.playMode);
           commonState.clockCntr = clockInState.Cntr();
           commonState.clockPeriod = clockInState.Period();
 
@@ -136,12 +143,12 @@ int main() {
             commonState.clockIsFalling = fakeClock.IsFalling();
             commonState.clockOn = fakeClock.Get();
           }
-          else
-          {
-            commonState.clockIsRising = resetAdvanceBtn.IsRising();
-            commonState.clockIsFalling = resetAdvanceBtn.IsFalling();
-            commonState.clockOn = resetAdvanceBtn.Get();
-          }
+          // else
+          // {
+          //   commonState.clockIsRising = resetAdvanceBtn.IsRising();
+          //   commonState.clockIsFalling = resetAdvanceBtn.IsFalling();
+          //   commonState.clockOn = resetAdvanceBtn.Get();
+          // }
 
           for(int idx = 0; idx<NumTracks; ++idx)
           {
