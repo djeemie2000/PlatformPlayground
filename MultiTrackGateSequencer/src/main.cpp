@@ -14,47 +14,48 @@
 #include "GateMidiHandler.h"
 #include "ClockInQuantizer.h"
 
+#include "LogMidiHandler.h"
 #include "MBedUnit.h"
 
 int main() {
 
   // put your setup code here, to run once:
   DigitalOut ledOut(PC_13);//builtin led as gate indicator
-  Serial pc2(PA_9, PA_10); // tx, rx
-  pc2.baud(115200);
+  Serial debugSerial(PA_9, PA_10); // tx, rx
+  debugSerial.baud(115200);
   Serial pcMidi(PA_2, PA_3); // tx, rx
   pcMidi.baud(31250);//midi baudrate
 
   // short pause before running
   wait_ms(2000);
 
-  //testMain(pc2);//TODO debug
+  //testMain(debugSerial);//TODO debug
 
   // start running
-  pc2.printf("\r\n-\r\n-\r\nMulti track gate sequencer...\r\n-\r\n-\r\n");
-  pc2.printf("version 0.5\r\n");
+  debugSerial.printf("\r\n-\r\n-\r\nMulti track gate sequencer...\r\n-\r\n-\r\n");
+  debugSerial.printf("version 0.5\r\n");
   wait_ms(1000);
 
   //
-  pc2.printf("Init led matrix...\r\n");
+  debugSerial.printf("Init led matrix...\r\n");
   SPI spiPort(PA_7, PA_6, PA_5, NC);
   Max7219Matrix ledMatrix(4, &spiPort, PA_4);//(SPI0_MOSI, SPI0_MISO, SPI0_SCK, SPI0_SS));//4 devices
   ledMatrix.Configure(false);
-  //pc2.printf("Test led matrix...\r\n");
+  //debugSerial.printf("Test led matrix...\r\n");
   //ledMatrix.Test();
-  //TestExtended(ledMatrix, pc2);
+  //TestExtended(ledMatrix, debugSerial);
   
   // common
-  pc2.printf("Init common\r\n");
+  debugSerial.printf("Init common\r\n");
   SerialMidiHandler midiSerial(pcMidi);
 
   DigitalOut clockLed(PB_14);
-  GateIn clockIn(PA_8);//external clock input
+  GateIn clockIn(PB_13);//external clock input
   
   DigitalOut midiNoteLearnLed(PC_14);
   DigitalOut midiChannelLearnLed(PC_15);
   DigitalOut gateLengthLearnLed(PA_1);
-  ButtonIn toggleModeBtn(PB_15,5);//debounce 5msec
+  ButtonIn toggleModeBtn(PB_0,5);//debounce 5msec
   ToggleNState learnMode(4);
   //ToggleInOut playStepModeBtn(PB_8, PB_14);// play/Step mode toggle btn, with indicator led
   //GateIn resetAdvanceBtn(PB_9);// reset/advance btn
@@ -63,12 +64,12 @@ int main() {
   CommonState commonState;
   
   I2C i2c(PB_11, PB_10);
-  ScanI2C(i2c, pc2);
+  ScanI2C(i2c, debugSerial);
   // set, mute, clear btn, unused, 8x track button 
   Mpr121InBank touchPad(&i2c, PB_1);
 
   // multiple tracks
-  pc2.printf("Init tracks\r\n");
+  debugSerial.printf("Init tracks\r\n");
   const int NumTracks = 8;
   const int PatternLength = 32;
   //default note, pattern, channel, gate outputs, midi handlers
@@ -86,6 +87,7 @@ int main() {
     midiOutputs[idx] = new DigitalOut(outPins[idx]);
     multis[idx].AddHandler(&midiSerial);
     multis[idx].AddHandler(new GateMidiHandler(*midiOutputs[idx]));
+    //multis[idx].AddHandler(new LogMidiHandler(debugSerial, idx));//debug
     tracks[idx] = new TrackController(multis[idx], midiNotes[idx], MidiChannel, idx, ledMatrix);
     tracks[idx]->SetPattern(patterns[idx], PatternLength);
   }
@@ -98,7 +100,7 @@ int main() {
   ClockInState clockInState(fakeClockPeriod);
 
   wait_ms(500);
-  pc2.printf("start processing\r\n");
+  debugSerial.printf("start processing\r\n");
   while(1) {
     // put your main code here, to run repeatedly:
       timer.reset();
@@ -115,14 +117,14 @@ int main() {
           touchPad.Read();
           learnMode.Tick(toggleModeBtn.Get());
           // use pad 8 for reset
-          resetStepState.Tick(touchPad.Get(8));
+          resetStepState.Tick(touchPad.Get(11));
           
           //fake clock
           fakeClock.Tick(repeat<fakeClockPeriod/2?1:0);
 
-          commonState.setPressed = touchPad.Get(10);
-          commonState.clearPressed = touchPad.Get(11);
-          commonState.mutePressed = touchPad.Get(9);
+          commonState.setPressed = touchPad.Get(8);
+          commonState.clearPressed = touchPad.Get(9);
+          commonState.mutePressed = touchPad.Get(10);
           commonState.learnMode = learnMode.Get();
           commonState.learnValue = learnValuePot.read();
           commonState.playMode = true;//playStepModeBtn.Get();
@@ -153,7 +155,7 @@ int main() {
           for(int idx = 0; idx<NumTracks; ++idx)
           {
             int allTrackBtn = 0;
-            tracks[idx]->Tick(commonState, touchPad.Get(7-idx), allTrackBtn);
+            tracks[idx]->Tick(commonState, touchPad.Get(idx), allTrackBtn);
           }          
 
           // update display takes some time => update alternating rows
@@ -172,13 +174,13 @@ int main() {
       }
       
       timer.stop();
-      pc2.printf("mute %d set %d clear %d learn %d play %d ", 
+      debugSerial.printf("mute %d set %d clear %d learn %d play %d ", 
                   commonState.mutePressed?1:0, 
                   commonState.setPressed?1:0, 
                   commonState.clearPressed?1:0, 
                   commonState.learnMode,
                   commonState.playMode?1:0);
-      pc2.printf("touchpad %d%d%d%d%d%d%d%d%d%d%d%d\r\n", 
+      debugSerial.printf("touchpad %d%d%d%d%d%d%d%d%d%d%d%d\r\n", 
                   touchPad.Get(0), 
                   touchPad.Get(1), 
                   touchPad.Get(2), 
@@ -191,6 +193,6 @@ int main() {
                   touchPad.Get(9), 
                   touchPad.Get(10), 
                   touchPad.Get(11));
-      pc2.printf("%d : %d ms\r\n", counter++, timer.read_ms());      
+      debugSerial.printf("%d : %d ms\r\n", counter++, timer.read_ms());      
   }
 }
