@@ -128,7 +128,7 @@ int main() {
           commonState.learnMode = learnMode.Get();
           commonState.learnValue = learnValuePot.read();
           commonState.playMode = true;//playStepModeBtn.Get();
-          commonState.resetStepPressed = resetStepState.IsRising();
+          commonState.resetStepPressed = resetStepState.Get();
           
           // step mode => do not update period!
           clockInState.Tick(fakeClock.IsRising(), commonState.playMode);
