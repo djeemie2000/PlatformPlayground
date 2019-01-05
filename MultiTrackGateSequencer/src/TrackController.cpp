@@ -132,24 +132,38 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
     // 
     if(m_GateOut.IsRising())//TODO clock rising in case of gate length 1??
     {
+        //clear previous step if needed
+        if(!m_Player.GetStep(m_Player.GetCurrentStep()))
+        {        
+            m_LedMatrix.Clear(m_TrackIdx, m_Player.GetCurrentStep());
+        }
+
         // step on
         m_Player.StepOn();
-        // display : clear current step to indicate current step is playing
+        // display : invert current step to indicate current step is playing
         // if muted: no change 
         if(!m_Player.IsMuted())
         {
-            m_LedMatrix.Clear(m_TrackIdx, m_Player.GetCurrentStep());
+            if(m_Player.GetStep(m_Player.GetCurrentStep()))
+            {
+                m_LedMatrix.Clear(m_TrackIdx, m_Player.GetCurrentStep());
+            }
+            else
+            {
+                m_LedMatrix.Set(m_TrackIdx, m_Player.GetCurrentStep());
+            }
         }
     }
     else if(m_GateOut.IsFalling())
     {
         // step off
         m_Player.StepOff();
-        // display: set current step to step set/cleared
+        // display: if set, non inverted current step 
+        //          if clear, show during whole step
         if(m_Player.GetStep(m_Player.GetCurrentStep()))
         {
             m_LedMatrix.Set(m_TrackIdx, m_Player.GetCurrentStep());
-        }// else: is already cleared
+        }
     }
 }
 
