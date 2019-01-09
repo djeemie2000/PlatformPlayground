@@ -9,6 +9,21 @@ buttons:
 
 invert/rotate pattern display row -> done
 
+reset pattern btn -> done
+
+toggle 4 states (3 state leds) -> todo
+    none, (track) midi note select, (track) midi channel select, (track) gate length
+    mechanical toggle button
+    optional: 8 states, binary state [0,7] with 3 leds
+        pattern select, bank select
+	clock divider (all tracks)
+	play/step mode, advance step???
+
+clock -> todo
+    internal clock with clock speed pot
+    clock input (connected to external or internal clock output) -> actual clock
+    clock ed for actual clock
+
 ToggleState -> TODO
 midi serial out -> done
 
