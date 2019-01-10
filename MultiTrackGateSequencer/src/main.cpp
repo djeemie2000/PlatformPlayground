@@ -51,6 +51,10 @@ int main() {
 
   DigitalOut clockLed(PB_14);
   GateIn clockIn(PB_13);//external clock input
+  PeriodicCounter internalClockCounter;
+  ClockOutState internalClockState;
+  DigitalOut internalClockOut(PB_12);
+  AnalogIn internalClockSpeed(PA_6);
   
   DigitalOut midiNoteLearnLed(PC_14);
   DigitalOut midiChannelLearnLed(PC_15);
@@ -96,7 +100,6 @@ int main() {
   Timer timer;
   int counter = 0;
   const int fakeClockPeriod = 220;
-  GateState fakeClock;
   ClockInState clockInState(fakeClockPeriod);
 
   wait_ms(500);
@@ -118,9 +121,10 @@ int main() {
           learnMode.Tick(toggleModeBtn.Get());
           // use pad 8 for reset
           resetStepState.Tick(touchPad.Get(11));
-          
-          //fake clock
-          fakeClock.Tick(repeat<fakeClockPeriod/2?1:0);
+
+          internalClockCounter.SetPeriod(40+internalClockSpeed.read()*1024);
+          internalClockCounter.Tick();
+          internalClockState.Tick(internalClockCounter.Cntr(), internalClockCounter.Period());
 
           commonState.setPressed = touchPad.Get(8);
           commonState.clearPressed = touchPad.Get(9);
@@ -131,19 +135,19 @@ int main() {
           commonState.resetStepPressed = resetStepState.Get();
           
           // step mode => do not update period!
-          clockInState.Tick(fakeClock.IsRising(), commonState.playMode);
-          //TODO clockInState.Tick(clockIn.IsRising(), commonState.playMode);
+          //clockInState.Tick(internalClockState.IsRising(), commonState.playMode);
+          clockInState.Tick(clockIn.IsRising(), commonState.playMode);
           commonState.clockCntr = clockInState.Cntr();
           commonState.clockPeriod = clockInState.Period();
 
-          // fake clock
+          // clock
           // if play mode, use (fake) clock
           // if step mode, use reset/advance btn
           if(commonState.playMode)
           {
-            commonState.clockIsRising = fakeClock.IsRising();
-            commonState.clockIsFalling = fakeClock.IsFalling();
-            commonState.clockOn = fakeClock.Get();
+            commonState.clockIsRising = clockIn.IsRising();
+            commonState.clockIsFalling = clockIn.IsFalling();
+            commonState.clockOn = clockIn.Get();
           }
           // else
           // {
@@ -161,10 +165,11 @@ int main() {
           // update display takes some time => update alternating rows
           ledMatrix.Write(repeat%NumTracks);
 
-          // fake clock
-          clockLed = fakeClock.Get();
-          ledOut = 1-fakeClock.Get();//inverted
-          //ledOut = clockIn.Get()? 0:1;//inverted
+          // clock
+          clockLed = internalClockState.Get();
+          ledOut = 1-internalClockState.Get();//inverted
+          internalClockOut = internalClockState.Get();
+
           midiNoteLearnLed = (learnMode.Get()==1)?1:0;
           midiChannelLearnLed = (learnMode.Get()==2)?1:0;
           gateLengthLearnLed = (learnMode.Get()==3)?1:0;

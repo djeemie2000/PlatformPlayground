@@ -20,6 +20,22 @@ private:
     GateState m_State;
 };
 
+class PeriodicCounter
+{
+public:
+    PeriodicCounter();
+    
+    void Tick();
+    void SetPeriod(int period);
+
+    int Cntr() const;
+    int Period() const;
+    
+private:
+    int m_Cntr;
+    int m_Period;
+};
+
 class ClockOutState
 {
 public:

@@ -53,6 +53,36 @@ void ClockOutQuantizer::SetDuration(int duration)
     m_Duration = duration;
 }
 
+
+PeriodicCounter::PeriodicCounter()
+: m_Cntr(0)
+, m_Period(1)
+{}
+    
+void PeriodicCounter::Tick()
+{
+    ++m_Cntr;
+    if(m_Period<=m_Cntr)
+    {
+        m_Cntr = 0;
+    }
+}
+
+void PeriodicCounter::SetPeriod(int period)
+{
+    m_Period = period;
+}
+
+int PeriodicCounter::Cntr() const
+{
+    return m_Cntr;
+}
+
+int PeriodicCounter::Period() const
+{
+    return m_Period;
+}
+    
 ClockOutState::ClockOutState() 
 :  m_Duration(0.5f)
 , m_State()
