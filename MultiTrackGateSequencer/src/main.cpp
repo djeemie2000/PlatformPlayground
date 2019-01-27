@@ -54,11 +54,11 @@ int main() {
   PeriodicCounter internalClockCounter;
   ClockOutState internalClockState;
   DigitalOut internalClockOut(PB_12);
-  AnalogIn internalClockSpeed(PA_6);
+  AnalogIn internalClockSpeed(PA_1);
   
-  DigitalOut midiNoteLearnLed(PC_14);
-  DigitalOut midiChannelLearnLed(PC_15);
-  DigitalOut gateLengthLearnLed(PA_1);
+  DigitalOut midiNoteLearnLed(PB_15);
+  DigitalOut midiChannelLearnLed(PA_8);
+  DigitalOut gateLengthLearnLed(PB_8);
   ButtonIn toggleModeBtn(PB_0,5);//debounce 5msec
   ToggleNState learnMode(4);
   //ToggleInOut playStepModeBtn(PB_8, PB_14);// play/Step mode toggle btn, with indicator led
@@ -122,7 +122,8 @@ int main() {
           // use pad 8 for reset
           resetStepState.Tick(touchPad.Get(11));
 
-          internalClockCounter.SetPeriod(40+internalClockSpeed.read()*1024);
+          int internalClockSp = 40+internalClockSpeed.read()*1024;
+          internalClockCounter.SetPeriod(internalClockSp);
           internalClockCounter.Tick();
           internalClockState.Tick(internalClockCounter.Cntr(), internalClockCounter.Period());
 
@@ -179,12 +180,16 @@ int main() {
       }
       
       timer.stop();
-      debugSerial.printf("mute %d set %d clear %d learn %d play %d ", 
+      debugSerial.printf("mute %d set %d clear %d learn %d play %d int %d ext %d val %f %f", 
                   commonState.mutePressed?1:0, 
                   commonState.setPressed?1:0, 
                   commonState.clearPressed?1:0, 
                   commonState.learnMode,
-                  commonState.playMode?1:0);
+                  commonState.playMode?1:0,
+                  internalClockCounter.Period(),
+                  clockInState.Period(),
+                  commonState.learnValue,
+                  internalClockSpeed.read());
       debugSerial.printf("touchpad %d%d%d%d%d%d%d%d%d%d%d%d\r\n", 
                   touchPad.Get(0), 
                   touchPad.Get(1), 

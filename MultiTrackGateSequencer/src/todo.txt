@@ -20,11 +20,11 @@ toggle 4 states (3 state leds) -> todo
 	play/step mode, advance step???
 
 clock -> todo
-    internal clock with clock speed pot
+    internal clock with clock speed pot -> done
     clock input (connected to external or internal clock output) -> actual clock
-    clock ed for actual clock
+    clock led for actual clock -> done
 
-ToggleState -> TODO
+ToggleState -> done
 midi serial out -> done
 
 filter channel midi handler -> done
@@ -50,7 +50,7 @@ change midi channel
     - common: function button + pot? -> TODO
     - per track (?) -> function toggle button + led, exclusive with learn midi note mode, press track + pot (cfr midi note learn)
 
-tempo button? external clock? -> TODO
+tempo button? external clock? -> discard
     reset / period to clock gate state
     quantize to clock in (e.g. 64 parts)
         recording
