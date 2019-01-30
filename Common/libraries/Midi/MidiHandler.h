@@ -6,16 +6,21 @@
 class MidiHandler
 {
 public:
-  virtual ~MidiHandler(){}// =default;
+  virtual ~MidiHandler() {} // =default;
 
   // voice commands
   virtual void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) {}
   virtual void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) {}
-  virtual void AfterTouch(uint8_t Channel, uint8_t MidiNote, uint8_t Pressure){}
-  virtual void ContinuousController(uint8_t Channel, uint8_t Controller, uint8_t Value) {}
+  virtual void AfterTouch(uint8_t Channel, uint8_t MidiNote, uint8_t Pressure)
+  {
+  }
+  virtual void ContinuousController(uint8_t Channel, uint8_t Controller,
+                                    uint8_t Value) {}
   virtual void ProgramChange(uint8_t Channel, uint8_t Program) {}
   virtual void ChannelPressure(uint8_t Channel, uint8_t Pressure) {}
-  virtual void PitchWheel(uint8_t Channel, int Bend) {}// centered = 0 ! range +/- 8192 ( 2^13 )
+  virtual void PitchWheel(uint8_t Channel, int Bend)
+  {
+  } // centered = 0 ! range +/- 8192 ( 2^13 )
 
   // system common
   virtual void QuarterFrameMessage(uint8_t TimeCode) {}
@@ -32,7 +37,6 @@ public:
   virtual void SystemReset() {}
 
   // system exclusive (sysex)
-
 };
 
 #endif /* end of include guard: MIDIHANDLER_H */
