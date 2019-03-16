@@ -1,7 +1,6 @@
 #include <Arduino.h>
 
-class CVClockState
-{
+class CVClockState {
 public:
   static const int DurationScale = 1024;
 
@@ -21,26 +20,23 @@ private:
 CVClockState::CVClockState()
     : m_Cntr(0), m_Period(500), m_ClockIn(0), m_Gate(0) {}
 
-int CVClockState::Tick(int clockIn, int duration)
-{
-  if (!m_ClockIn && clockIn)
-  {
+int CVClockState::Tick(int clockIn, int duration) {
+  if (!m_ClockIn && clockIn) {
     // clock rising edge
     // => measure period
-    if (0 < m_Cntr)
-    {
+    if (0 < m_Cntr) {
       m_Period = m_Cntr;
     }
     // => reset counter
     m_Cntr = 0;
     // => update gate
     m_Gate = duration ? 1 : 0;
-  }
-  else if (m_Gate)
-  {
+  } else if (m_Gate) {
     // gate off when cntr > period * duration/durationscale
-    if (m_Period * duration < m_Cntr * DurationScale)
-    {
+    // int32_t to prevent overflow
+    int32_t lDuration = duration;
+    int32_t lCntr = m_Cntr;
+    if (m_Period * lDuration < lCntr * DurationScale) {
       m_Gate = 0;
     }
   }
@@ -51,8 +47,7 @@ int CVClockState::Tick(int clockIn, int duration)
   return m_Gate;
 }
 
-class CVClock
-{
+class CVClock {
 public:
   CVClock(int clockInPin, int gateOutPin, int durationCVPin);
 
@@ -74,15 +69,13 @@ CVClock::CVClock(int clockInPin, int gateOutPin, int durationCVPin)
       m_DurationCVPin(durationCVPin),
       m_Duration(CVClockState::DurationScale / 2), m_State() {}
 
-void CVClock::Begin()
-{
+void CVClock::Begin() {
   pinMode(m_ClockInPin, INPUT);
   pinMode(m_GateOutPin, OUTPUT);
   pinMode(m_DurationCVPin, INPUT);
 }
 
-void CVClock::Tick()
-{
+void CVClock::Tick() {
   // put your main code here, to run repeatedly:
   int clockIn = digitalRead(m_ClockInPin); // TODO fast digital read!
   m_Duration = analogRead(m_DurationCVPin);
@@ -90,8 +83,7 @@ void CVClock::Tick()
   digitalWrite(m_GateOutPin, gateOut);
 }
 
-void CVClock::debugOut(uint32_t elapsed)
-{
+void CVClock::debugOut(uint32_t elapsed) {
   Serial.print(elapsed);
   Serial.print(" : ");
   Serial.print(m_State.Period());
@@ -104,8 +96,7 @@ CVClock g_Clock2(4, 5, A1);
 int g_DebugCntr;
 uint32_t g_DebugMillis;
 
-void setup()
-{
+void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   Serial.println("CVClock start...");
@@ -117,8 +108,7 @@ void setup()
   g_DebugMillis = 0;
 }
 
-void loop()
-{
+void loop() {
   // put your main code here, to run repeatedly:
   // TODO alternate?
   g_Clock.Tick();
@@ -127,8 +117,7 @@ void loop()
 
   // debug...
   ++g_DebugCntr;
-  if (1000 < g_DebugCntr)
-  {
+  if (1000 < g_DebugCntr) {
     uint32_t time = millis();
     g_Clock.debugOut(time - g_DebugMillis);
     g_Clock2.debugOut(time - g_DebugMillis);
