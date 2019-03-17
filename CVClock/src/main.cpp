@@ -13,7 +13,7 @@ uint32_t g_DebugMillis;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  Serial.println("CVClock start...");
+  Serial.println("CVClock 0.2 start...");
 
   g_Clock.Begin(2, 3, A0);
   g_Clock2.Begin(4, 5, A1);
@@ -45,6 +45,7 @@ void loop() {
   if (1000 < g_DebugCntr) {
     // TODO stopwatch class
     Serial.println();
+    Serial.println("-");
     uint32_t time = millis();
     uint32_t elapsed = time - g_DebugMillis;
     g_Clock.debugOut(elapsed);

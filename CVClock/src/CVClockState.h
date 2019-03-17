@@ -2,7 +2,8 @@
 
 #include <Arduino.h>
 
-class CVClockState {
+class CVClockState
+{
 public:
   static const int DurationScale = 1024;
 
@@ -11,6 +12,7 @@ public:
   int Tick(int clockIn, int duration);
 
   int Period() const { return m_Period; }
+  void DebugOut();
 
 private:
   int m_Cntr;
