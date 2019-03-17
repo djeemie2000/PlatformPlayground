@@ -1,22 +1,23 @@
 #pragma once
 
-#include <Arduino.h>
 #include "CVClockState.h"
+#include <Arduino.h>
 
-class CVClock
-{
-  public:
-    CVClock(int clockInPin, int gateOutPin, int durationCVPin);
 
-    void Begin();
-    void Tick();
+class CVClock {
+public:
+  CVClock();
 
-    void debugOut(uint32_t elapsed);
+  void Begin(int clockInPin, int gateOutPin, int durationCVPin);
+  void Tick();
+  void ReadDuration();
 
-  private:
-    const int m_ClockInPin;
-    const int m_GateOutPin;
-    const int m_DurationCVPin;
-    int m_Duration;
-    CVClockState m_State;
+  void debugOut(uint32_t elapsed);
+
+private:
+  int m_ClockInPin;
+  int m_GateOutPin;
+  int m_DurationCVPin;
+  int m_Duration;
+  CVClockState m_State;
 };
