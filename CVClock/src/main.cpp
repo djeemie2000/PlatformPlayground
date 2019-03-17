@@ -20,6 +20,7 @@ void setup() {
   g_Clock3.Begin(6, 7, A2);
   g_Clock4.Begin(8, 9, A3);
   g_Clock5.Begin(10, 11, A4);
+  pinMode(12, INPUT_PULLUP);
 
   g_DebugCntr = 0;
   g_DebugMillis = 0;
@@ -38,22 +39,24 @@ void loop() {
   g_Clock4.Tick();
   g_Clock5.ReadDuration();
   g_Clock5.Tick();
-  //  delay(1);
+  //  delay(1);//not needed
 
-  // debug...
-  ++g_DebugCntr;
-  if (1000 < g_DebugCntr) {
-    // TODO stopwatch class
-    Serial.println();
-    Serial.println("-");
-    uint32_t time = millis();
-    uint32_t elapsed = time - g_DebugMillis;
-    g_Clock.debugOut(elapsed);
-    g_Clock2.debugOut(elapsed);
-    g_Clock3.debugOut(elapsed);
-    g_Clock4.debugOut(elapsed);
-    g_Clock5.debugOut(elapsed);
-    g_DebugMillis = time;
-    g_DebugCntr = 0;
+  //  only debug if debug input is low (pullup digital in)
+  if (!digitalRead(12)) {
+    ++g_DebugCntr;
+    if (1000 < g_DebugCntr) {
+      // TODO stopwatch class
+      Serial.println();
+      Serial.println("-");
+      uint32_t time = millis();
+      uint32_t elapsed = time - g_DebugMillis;
+      g_Clock.debugOut(elapsed);
+      g_Clock2.debugOut(elapsed);
+      g_Clock3.debugOut(elapsed);
+      g_Clock4.debugOut(elapsed);
+      g_Clock5.debugOut(elapsed);
+      g_DebugMillis = time;
+      g_DebugCntr = 0;
+    }
   }
 }
