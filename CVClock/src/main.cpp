@@ -10,11 +10,14 @@ CVClock g_Clock5;
 int g_DebugCntr;
 uint32_t g_DebugMillis;
 
+int g_keepAliveLedCntr;
+int g_KeepAliveState;
+
 void setup()
 {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  Serial.println("CVClock 0.3 start...");
+  Serial.println("CVClock 0.5 start...");
 
   g_Clock.Begin(11, 2, A4);
   g_Clock2.Begin(10, 3, A3);
@@ -22,9 +25,13 @@ void setup()
   g_Clock4.Begin(8, 5, A1);
   g_Clock5.Begin(7, 6, A0);
   pinMode(12, INPUT_PULLUP);
-
+  pinMode(13, OUTPUT);
+  
   g_DebugCntr = 0;
   g_DebugMillis = 0;
+
+  g_keepAliveLedCntr = 0;
+  g_KeepAliveState = 0;
 }
 
 void loop()
@@ -42,6 +49,15 @@ void loop()
   g_Clock5.ReadDuration();
   g_Clock5.Tick();
   //  delay(1);//not needed
+
+  // 'keepalive' via blinking led 13
+  ++g_keepAliveLedCntr;
+  if(1000<g_keepAliveLedCntr)
+  {
+    g_KeepAliveState = 1-g_KeepAliveState;
+    g_keepAliveLedCntr = 0;
+    digitalWrite(13, g_KeepAliveState ? LOW : HIGH);
+  }
 
   //  only debug if debug input is low (pullup digital in)
   if (!digitalRead(12))
