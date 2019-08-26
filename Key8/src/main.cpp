@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include "CapacitiveTouchPad.h"
+#include "Sequence.h"
+#include "Stepper.h"
 
 CapacitiveTouchPad g_TouchPad;
 
@@ -51,10 +53,13 @@ public:
 
 TouchStateOut g_TouchStateOut;
 
+Sequence g_Sequence;
+Stepper g_Stepper;
+
 void setup() {
   // put your setup code here, to run once:
  Serial.begin(115200);
- Serial.println("Key8 v0.1...");
+ Serial.println("Key8 v0.2...");
 
   pinMode(LED_BUILTIN, OUTPUT);
 
@@ -89,9 +94,9 @@ void testTouchPad(CapacitiveTouchPad& touchPad)
   }
 }
 
-void updateTouchState(CapacitiveTouchPad& touchPad, TouchState& touchState)
+void updateTouchStateMonoMode(const CapacitiveTouchPad& touchPad, TouchState& touchState)
 {
-  // call read elsewhere?  touchPad.Read();
+  // call read elsewhere!  touchPad.Read();
   touchState.numPressed = 0;//reset num pressed count
   // hold selected pad when none are pushed
   // highest pad priority => count up and set selected
@@ -112,6 +117,32 @@ void debugTouchState(const TouchState& touchState)
   Serial.println(touchState.selectedPad);
 }
 
+void updateSequenceChordMemoryMode(const TouchState& prevState, const CapacitiveTouchPad& touchPad, Sequence& sequence)
+{
+  // check if first clicked => sequence.Clear();
+  bool clearUponClicked = (0==prevState.numPressed);
+
+  for(int pad = 0; pad<8; ++pad)
+  {
+    if(touchPad.IsClicked(pad))
+    {
+      if(clearUponClicked)
+      {
+        sequence.Clear();
+        clearUponClicked = false;
+      }
+      const int gate = 1;//no skips in this mode
+      sequence.Append(pad, gate);
+    }
+  }
+}
+
+void debugSequence(const Sequence& sequence)
+{
+  Serial.print("Seq l=");
+  Serial.println(sequence.Length());
+}
+
 void loop() {
   // put your main code here, to run repeatedly:
   blinkLed(300);
@@ -123,13 +154,17 @@ void loop() {
   {
    g_TouchPad.Read();
 //   testTouchPad(g_TouchPad);
-   updateTouchState(g_TouchPad, g_TouchState);
+
+   updateSequenceChordMemoryMode(g_TouchState, g_TouchPad, g_Sequence);
+
+   updateTouchStateMonoMode(g_TouchPad, g_TouchState);
    g_TouchStateOut.Write(g_TouchState);
 
    ++debugCounter;
    if(500<debugCounter)
    {
      debugTouchState(g_TouchState);
+     debugSequence(g_Sequence);
      debugCounter = 0;
    }
    delay(1);// TODO what delay is needed??
