@@ -9,7 +9,9 @@ CapacitiveTouchPad g_TouchPad;
 TouchInState g_TouchInState;
 TouchInState g_TouchInStateChordMem;
 TouchOutState g_TouchOutState;
+TouchOutState g_TouchOutStateArp;
 TouchStateOut g_TouchStateOut;
+TouchStateOut g_TouchStateOutArp;
 
 Sequence g_Sequence;
 Stepper g_Stepper;
@@ -23,6 +25,7 @@ void setup() {
 
   g_TouchPad.Begin(PIND2);//IRQ pin D2
   g_TouchStateOut.Begin(11, 8, 9, 10);
+  g_TouchStateOutArp.Begin(7, 4, 5, 6);
 }
 
 void blinkLed(int period)
@@ -200,8 +203,15 @@ void loop() {
    updateTouchInState(g_TouchPad, g_TouchInState);
    updateTouchInStateChordMem(g_TouchInState, g_TouchInStateChordMem);
 
+  //TODO gate in
+  if(debugCounter==200)
+  {
+    advanceTouchOutStateArp(g_TouchInStateChordMem, g_TouchOutStateArp);
+  }
    updateTouchOutStateMono(g_TouchInState, g_TouchOutState);
+   
    g_TouchStateOut.Write(g_TouchOutState);
+   g_TouchStateOutArp.Write(g_TouchOutStateArp);
 
    ++debugCounter;
    if(500<debugCounter)
@@ -209,6 +219,7 @@ void loop() {
      debugTouchInState(g_TouchInState);
      debugTouchInState(g_TouchInStateChordMem);
      debugTouchOutState(g_TouchOutState);
+     debugTouchOutState(g_TouchOutStateArp);
      //debugSequence(g_Sequence);
      debugCounter = 0;
    }
