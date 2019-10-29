@@ -5,16 +5,122 @@
 #include "TouchStateOut.h"
 #include "TouchInState.h"
 
+struct ChordMem
+{
+  TouchInState m_State;
+  int m_NumPressed;
+
+  ChordMem();
+  void update(const TouchInState& inState);
+};
+
+ChordMem::ChordMem() : m_State(), m_NumPressed(0) 
+{
+}
+
+void ChordMem::update(const TouchInState& inState)
+{
+  int prevNumPressed = m_NumPressed;
+  int m_NumPressed = 0;
+  for(int pad = 0; pad<TouchInState::Size; ++pad)
+  {
+    if(inState.m_State[pad])
+    {
+      ++m_NumPressed;
+    }
+  }
+  bool resetHold = 0==prevNumPressed && 0<m_NumPressed;
+
+  for(int pad = 0; pad<TouchInState::Size; ++pad)
+  {
+    // hold any previously pressed until 'reset' by pressing a first key again
+    if(inState.m_State[pad])
+    {
+      m_State.m_State[pad] = true;
+    }
+    else if(resetHold)
+    {
+      m_State.m_State[pad] = false;
+    }
+  }
+
+  m_State.m_Gate = inState.m_Gate;
+}
+
+struct Arp
+{
+  TouchOutState m_OutState;
+  bool m_Gate;
+  
+  Arp();
+  void update(const TouchInState& inState);
+};
+
+Arp::Arp() : m_OutState(), m_Gate(false)
+{}
+
+void Arp::update(const TouchInState& inState)
+{
+  bool advance = inState.m_Gate && !m_Gate;
+  m_OutState.numPressed  = inState.m_Gate?1:0;
+  m_Gate = inState.m_Gate;
+
+  if(advance)
+  {
+    // advance outState to next selected 
+    int selected = m_OutState.selectedPad;
+    for(int idx = 1; idx<TouchInState::Size; ++idx)
+    {
+      ++selected;
+      if(TouchInState::Size<=selected)
+      {
+        selected = 0;
+      }
+      if(inState.m_State[selected])
+      {
+        m_OutState.selectedPad = selected;
+        break;
+      }
+    }
+  }
+}
+
+struct MonoHighestPriority
+{
+  TouchOutState m_OutState;
+
+  MonoHighestPriority();
+  void update(const TouchInState& inState);
+};
+
+MonoHighestPriority::MonoHighestPriority() : m_OutState()
+{}
+
+void MonoHighestPriority::update(const TouchInState& inState)
+{
+  m_OutState.numPressed = 0;//reset num pressed count
+  // hold selected pad when none are pushed
+  // highest pad priority => count up and set selected
+  for(int pad = 0; pad<TouchInState::Size; ++pad)
+  {
+    if(inState.m_State[pad])
+    {
+      ++m_OutState.numPressed;
+      m_OutState.selectedPad = pad;
+    }
+  }
+}
+
+
 CapacitiveTouchPad g_TouchPad;
 TouchInState g_TouchInState;
-TouchInState g_TouchInStateChordMem;
-TouchOutState g_TouchOutState;
-TouchOutState g_TouchOutStateArp;
+ChordMem g_ChordMem;
+MonoHighestPriority g_Mono;
+Arp g_Arp;
 TouchStateOut g_TouchStateOut;
 TouchStateOut g_TouchStateOutArp;
+const int gateInPin = 3;
 
-Sequence g_Sequence;
-Stepper g_Stepper;
 
 void setup() {
   // put your setup code here, to run once:
@@ -22,6 +128,7 @@ void setup() {
  Serial.println("Key8 v0.2...");
 
   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(gateInPin, INPUT_PULLUP);
 
   g_TouchPad.Begin(PIND2);//IRQ pin D2
   g_TouchStateOut.Begin(11, 8, 9, 10);
@@ -64,82 +171,6 @@ void updateTouchInState(const CapacitiveTouchPad& touchPad, TouchInState& touchS
   }
 }
 
-void updateTouchOutStateMono(const TouchInState& inState, TouchOutState& outState)
-{
-  outState.numPressed = 0;//reset num pressed count
-  // hold selected pad when none are pushed
-  // highest pad priority => count up and set selected
-  for(int pad = 0; pad<TouchInState::Size; ++pad)
-  {
-    if(inState.m_State[pad])
-    {
-      ++outState.numPressed;
-      outState.selectedPad = pad;
-    }
-  }
-}
-
-void updateTouchInStateChordMem(int prevNumPressed, const TouchInState& inState, TouchInState& outState)
-{
-  int currNumPressed = 0;//TODO member?
-  for(int pad = 0; pad<TouchInState::Size; ++pad)
-  {
-    if(inState.m_State[pad])
-    {
-      ++currNumPressed;
-    }
-  }
-  bool ForgetHold = 0==prevNumPressed && 0<currNumPressed;
-
-  for(int pad = 0; pad<TouchInState::Size; ++pad)
-  {
-    // hold any previously pressed until 'reset' by pressing a first key again
-    if(inState.m_State[pad])
-    {
-      outState.m_State[pad] = true;
-    }
-    else if(ForgetHold)
-    {
-      outState.m_State[pad] = false;
-    }
-  }
-}
-
-void advanceTouchOutStateArp(const TouchInState& inState, TouchOutState& outState)
-{
-  outState.numPressed  = 1;
-  // advance outState to next selected 
-  int selected = outState.selectedPad;
-  for(int idx = 1; idx<TouchInState::Size; ++idx)
-  {
-    ++selected;
-    if(TouchInState::Size<=selected)
-    {
-      selected = 0;
-    }
-    if(inState.m_State[selected])
-    {
-      outState.selectedPad = selected;
-      break;
-    }
-  }
-}
-
-// void updateTouchStateMonoMode(const CapacitiveTouchPad& touchPad, TouchOutState& touchState)
-// {
-//   // call read elsewhere!  touchPad.Read();
-//   touchState.numPressed = 0;//reset num pressed count
-//   // hold selected pad when none are pushed
-//   // highest pad priority => count up and set selected
-//   for(int pad = 0; pad<8; ++pad)//limit to pad [0-7]
-//   {
-//     if(touchPad.IsPushed(pad))
-//     {
-//       ++touchState.numPressed;
-//       touchState.selectedPad = pad;
-//     }
-//   }
-// }
 
 void debugTouchOutState(const TouchOutState& touchState)
 {
@@ -200,28 +231,25 @@ void loop() {
    g_TouchPad.Read();
 //   testTouchPad(g_TouchPad);
 
-   //updateSequenceChordMemoryMode(g_TouchOutState, g_TouchPad, g_Sequence);
-
+   g_TouchInState.m_Gate = 0<digitalRead(gateInPin);// debugCounter<250;
    updateTouchInState(g_TouchPad, g_TouchInState);
-   updateTouchInStateChordMem(g_TouchOutState.numPressed, g_TouchInState, g_TouchInStateChordMem);
 
-  //TODO gate in
-  if(debugCounter==200)
-  {
-    advanceTouchOutStateArp(g_TouchInStateChordMem, g_TouchOutStateArp);
-  }
-   updateTouchOutStateMono(g_TouchInState, g_TouchOutState);
+   g_ChordMem.update(g_TouchInState);
+   g_Arp.update(g_ChordMem.m_State);
+
+   g_Mono.update(g_TouchInState);
    
-   g_TouchStateOut.Write(g_TouchOutState);
-   g_TouchStateOutArp.Write(g_TouchOutStateArp);
+   g_TouchStateOut.Write(g_Mono.m_OutState);
+   g_TouchStateOutArp.Write(g_Arp.m_OutState);
 
    ++debugCounter;
    if(500<debugCounter)
    {
+     //TODO print debug ~ input low (pullup)
      debugTouchInState(g_TouchInState);
-     debugTouchInState(g_TouchInStateChordMem);
-     debugTouchOutState(g_TouchOutState);
-     debugTouchOutState(g_TouchOutStateArp);
+     debugTouchInState(g_ChordMem.m_State);
+     debugTouchOutState(g_Mono.m_OutState);
+     debugTouchOutState(g_Arp.m_OutState);
      //debugSequence(g_Sequence);
      debugCounter = 0;
    }
