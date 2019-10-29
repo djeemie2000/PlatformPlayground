@@ -4,118 +4,14 @@
 #include "Stepper.h"
 #include "TouchStateOut.h"
 #include "TouchInState.h"
-
-struct ChordMem
-{
-  TouchInState m_State;
-  int m_NumPressed;
-
-  ChordMem();
-  void update(const TouchInState& inState);
-};
-
-ChordMem::ChordMem() : m_State(), m_NumPressed(0) 
-{
-}
-
-void ChordMem::update(const TouchInState& inState)
-{
-  int prevNumPressed = m_NumPressed;
-  int m_NumPressed = 0;
-  for(int pad = 0; pad<TouchInState::Size; ++pad)
-  {
-    if(inState.m_State[pad])
-    {
-      ++m_NumPressed;
-    }
-  }
-  bool resetHold = 0==prevNumPressed && 0<m_NumPressed;
-
-  for(int pad = 0; pad<TouchInState::Size; ++pad)
-  {
-    // hold any previously pressed until 'reset' by pressing a first key again
-    if(inState.m_State[pad])
-    {
-      m_State.m_State[pad] = true;
-    }
-    else if(resetHold)
-    {
-      m_State.m_State[pad] = false;
-    }
-  }
-
-  m_State.m_Gate = inState.m_Gate;
-}
-
-struct Arp
-{
-  TouchOutState m_OutState;
-  bool m_Gate;
-  
-  Arp();
-  void update(const TouchInState& inState);
-};
-
-Arp::Arp() : m_OutState(), m_Gate(false)
-{}
-
-void Arp::update(const TouchInState& inState)
-{
-  bool advance = inState.m_Gate && !m_Gate;
-  m_OutState.numPressed  = inState.m_Gate?1:0;
-  m_Gate = inState.m_Gate;
-
-  if(advance)
-  {
-    // advance outState to next selected 
-    int selected = m_OutState.selectedPad;
-    for(int idx = 1; idx<TouchInState::Size; ++idx)
-    {
-      ++selected;
-      if(TouchInState::Size<=selected)
-      {
-        selected = 0;
-      }
-      if(inState.m_State[selected])
-      {
-        m_OutState.selectedPad = selected;
-        break;
-      }
-    }
-  }
-}
-
-struct MonoHighestPriority
-{
-  TouchOutState m_OutState;
-
-  MonoHighestPriority();
-  void update(const TouchInState& inState);
-};
-
-MonoHighestPriority::MonoHighestPriority() : m_OutState()
-{}
-
-void MonoHighestPriority::update(const TouchInState& inState)
-{
-  m_OutState.numPressed = 0;//reset num pressed count
-  // hold selected pad when none are pushed
-  // highest pad priority => count up and set selected
-  for(int pad = 0; pad<TouchInState::Size; ++pad)
-  {
-    if(inState.m_State[pad])
-    {
-      ++m_OutState.numPressed;
-      m_OutState.selectedPad = pad;
-    }
-  }
-}
-
+#include "MonoHighestNotePrio.h"
+#include "ChordMem.h"
+#include "Arp.h"
 
 CapacitiveTouchPad g_TouchPad;
 TouchInState g_TouchInState;
 ChordMem g_ChordMem;
-MonoHighestPriority g_Mono;
+MonoHighestNotePrio g_Mono;
 Arp g_Arp;
 TouchStateOut g_TouchStateOut;
 TouchStateOut g_TouchStateOutArp;
@@ -125,7 +21,7 @@ const int gateInPin = 3;
 void setup() {
   // put your setup code here, to run once:
  Serial.begin(115200);
- Serial.println("Key8 v0.2...");
+ Serial.println("Key8 v0.4...");
 
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(gateInPin, INPUT_PULLUP);
