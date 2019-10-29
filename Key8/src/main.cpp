@@ -79,16 +79,17 @@ void updateTouchOutStateMono(const TouchInState& inState, TouchOutState& outStat
   }
 }
 
-void updateTouchInStateChordMem(const TouchInState& inState, TouchInState& outState)
+void updateTouchInStateChordMem(int prevNumPressed, const TouchInState& inState, TouchInState& outState)
 {
-  int prevNumPressed = 0;//TODO member?
+  int currNumPressed = 0;//TODO member?
   for(int pad = 0; pad<TouchInState::Size; ++pad)
   {
     if(inState.m_State[pad])
     {
-      ++prevNumPressed;
+      ++currNumPressed;
     }
   }
+  bool ForgetHold = 0==prevNumPressed && 0<currNumPressed;
 
   for(int pad = 0; pad<TouchInState::Size; ++pad)
   {
@@ -97,7 +98,7 @@ void updateTouchInStateChordMem(const TouchInState& inState, TouchInState& outSt
     {
       outState.m_State[pad] = true;
     }
-    else if(0==prevNumPressed)
+    else if(ForgetHold)
     {
       outState.m_State[pad] = false;
     }
@@ -106,6 +107,7 @@ void updateTouchInStateChordMem(const TouchInState& inState, TouchInState& outSt
 
 void advanceTouchOutStateArp(const TouchInState& inState, TouchOutState& outState)
 {
+  outState.numPressed  = 1;
   // advance outState to next selected 
   int selected = outState.selectedPad;
   for(int idx = 1; idx<TouchInState::Size; ++idx)
@@ -201,7 +203,7 @@ void loop() {
    //updateSequenceChordMemoryMode(g_TouchOutState, g_TouchPad, g_Sequence);
 
    updateTouchInState(g_TouchPad, g_TouchInState);
-   updateTouchInStateChordMem(g_TouchInState, g_TouchInStateChordMem);
+   updateTouchInStateChordMem(g_TouchOutState.numPressed, g_TouchInState, g_TouchInStateChordMem);
 
   //TODO gate in
   if(debugCounter==200)
