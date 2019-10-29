@@ -61,9 +61,11 @@ void testTouchPad(CapacitiveTouchPad& touchPad)
 void updateTouchInState(const CapacitiveTouchPad& touchPad, TouchInState& touchState)
 {
   //TODO gate in
+  touchState.m_Num = 0;
   for(int idx = 0; idx<TouchInState::Size; ++idx)
   {
     touchState.m_State[idx] = touchPad.Get(idx);
+    ++touchState.m_Num;
   }
 }
 
