@@ -18,7 +18,7 @@ ChordMem::ChordMem() : m_State(), m_NumPressed(0)
 void ChordMem::update(const TouchInState& inState)
 {
   int prevNumPressed = m_NumPressed;
-  int m_NumPressed = inState.m_Num;
+  m_NumPressed = inState.m_Num;
   bool resetHold = 0==prevNumPressed && 0<m_NumPressed;
 
   m_State.m_Num = 0;
