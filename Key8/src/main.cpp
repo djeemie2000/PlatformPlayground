@@ -11,6 +11,7 @@
 //MPR121TouchPad g_TouchPad;
 TTP8229TouchPad g_TouchPad;
 TouchInState g_TouchInState;
+TouchInState g_TouchInState2;
 ChordMem g_ChordMem;
 MonoHighestNotePrio g_Mono;
 Arp g_Arp;
@@ -63,13 +64,13 @@ void testTouchPad(MPR121TouchPad& touchPad)
 }
 
 template<class TP>
-void updateTouchInState(const TP& touchPad, TouchInState& touchState)
+void updateTouchInState(const TP& touchPad, TouchInState& touchState, int offset = 0)
 {
   //TODO gate in
   touchState.m_Num = 0;
   for(int idx = 0; idx<TouchInState::Size; ++idx)
   {
-    touchState.m_State[idx] = touchPad.Get(idx);
+    touchState.m_State[idx] = touchPad.Get(idx+offset);
     if(touchState.m_State[idx])
     {
       ++touchState.m_Num;
@@ -153,6 +154,8 @@ void loop() {
 
    g_TouchInState.m_Gate = debugCounter<250;// 0<digitalRead(gateInPin);// debugCounter<250;
    updateTouchInState(g_TouchPad, g_TouchInState);
+   g_TouchInState2.m_Gate = debugCounter<250;// 0<digitalRead(gateInPin);// debugCounter<250;
+   updateTouchInState(g_TouchPad, g_TouchInState2, 8);
 
    g_ChordMem.update(g_TouchInState);
    g_Arp.update(g_ChordMem.m_State);
@@ -168,6 +171,7 @@ void loop() {
      //TODO print debug ~ input low (pullup)
      debugTouchInState(g_TouchInState);
      debugTouchInState(g_ChordMem.m_State);
+     debugTouchInState(g_TouchInState2);
      debugTouchOutState(g_Mono.m_OutState);
      debugTouchOutState(g_Arp.m_OutState);
      //debugSequence(g_Sequence);
