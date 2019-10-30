@@ -1,16 +1,15 @@
-#ifndef CCAPACITIVETOUCHPAD_H
-#define CCAPACITIVETOUCHPAD_H
+#pragma once 
 
 #include <Arduino.h>
 
-class CapacitiveTouchPad
+class MPR121TouchPad
 {
 public:
     static const uint8_t DefaultAddress = 0x5A;
     static const uint8_t DefaultTouchThreshold = 0x06;
     static const uint8_t DefaultReleaseThreshold = 0x0A;
 
-    CapacitiveTouchPad();
+    MPR121TouchPad();
 
     void Begin(int IrqPin,
                 uint8_t TouchThreshold = DefaultTouchThreshold,
@@ -31,5 +30,3 @@ private:
     uint16_t m_TouchState;// bit = 1 => touched, bit is 0 => not touched
     uint16_t m_PrevTouchState;
 };
-
-#endif // CCAPACITIVETOUCHPAD_H

@@ -1,8 +1,8 @@
-#include "CapacitiveTouchPad.h"
+#include "MPR121TouchPad.h"
 #include <Wire.h>
 #include "mpr121.h"
 
-CapacitiveTouchPad::CapacitiveTouchPad()
+MPR121TouchPad::MPR121TouchPad()
     : m_IrqPin(2)
     , m_Address(0x5A)
     , m_TouchState(0)
@@ -22,7 +22,7 @@ void SetRegister(int Address, uint8_t Register, uint8_t Value)
 }
 
 }
-void CapacitiveTouchPad::Begin(int IrqPin, uint8_t TouchThreshold, uint8_t ReleaseThreshold, uint8_t Address)
+void MPR121TouchPad::Begin(int IrqPin, uint8_t TouchThreshold, uint8_t ReleaseThreshold, uint8_t Address)
 {
     m_IrqPin = IrqPin;
     m_Address = Address;
@@ -102,7 +102,7 @@ void CapacitiveTouchPad::Begin(int IrqPin, uint8_t TouchThreshold, uint8_t Relea
     SetRegister(m_Address, ELE_CFG, 0x0C);
 }
 
-void CapacitiveTouchPad::Read()
+void MPR121TouchPad::Read()
 {
     m_PrevTouchState = m_TouchState;
 
@@ -119,12 +119,12 @@ void CapacitiveTouchPad::Read()
     }
 }
 
-int CapacitiveTouchPad::GetNumPads() const
+int MPR121TouchPad::GetNumPads() const
 {
     return 12;
 }
 
-bool CapacitiveTouchPad::Get(int Pad) const
+bool MPR121TouchPad::Get(int Pad) const
 {
     if(0<=Pad && Pad<GetNumPads())
     {
@@ -133,7 +133,7 @@ bool CapacitiveTouchPad::Get(int Pad) const
     return false;
 }
 
-bool CapacitiveTouchPad::IsPushed(int Pad) const
+bool MPR121TouchPad::IsPushed(int Pad) const
 {
 	if(0<=Pad && Pad<GetNumPads())
     {
@@ -142,7 +142,7 @@ bool CapacitiveTouchPad::IsPushed(int Pad) const
     return false;
 }
 
-bool CapacitiveTouchPad::IsClicked(int Pad) const
+bool MPR121TouchPad::IsClicked(int Pad) const
 {
     if(0<=Pad && Pad<GetNumPads())
     {
@@ -151,7 +151,7 @@ bool CapacitiveTouchPad::IsClicked(int Pad) const
     return false;
 }
 
-bool CapacitiveTouchPad::IsReleased(int Pad) const
+bool MPR121TouchPad::IsReleased(int Pad) const
 {
     if(0<=Pad && Pad<GetNumPads())
     {

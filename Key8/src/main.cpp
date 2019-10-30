@@ -1,14 +1,15 @@
 #include <Arduino.h>
-#include "CapacitiveTouchPad.h"
-#include "Sequence.h"
-#include "Stepper.h"
+#include "MPR121TouchPad.h"
+#include "TTP8229TouchPad.h"
 #include "TouchStateOut.h"
 #include "TouchInState.h"
 #include "MonoHighestNotePrio.h"
 #include "ChordMem.h"
 #include "Arp.h"
 
-CapacitiveTouchPad g_TouchPad;
+
+//MPR121TouchPad g_TouchPad;
+TTP8229TouchPad g_TouchPad;
 TouchInState g_TouchInState;
 ChordMem g_ChordMem;
 MonoHighestNotePrio g_Mono;
@@ -23,25 +24,28 @@ void setup() {
  Serial.begin(115200);
  Serial.println("Key8 v0.4...");
 
-  pinMode(LED_BUILTIN, OUTPUT);
+  // SPI uses pins 13=LED and 12 
+  //  pinMode(LED_BUILTIN, OUTPUT);
   pinMode(gateInPin, INPUT_PULLUP);
 
-  g_TouchPad.Begin(PIND2);//IRQ pin D2
+  //g_TouchPad.Begin(PIND2);//IRQ pin D2
+  g_TouchPad.Begin();
+  
   g_TouchStateOut.Begin(11, 8, 9, 10);
   g_TouchStateOutArp.Begin(7, 4, 5, 6);
 }
 
 void blinkLed(int period)
 {
-  digitalWrite(LED_BUILTIN, 1);
+  //digitalWrite(LED_BUILTIN, 1);
   Serial.println("Led ON");
   delay(period);
-  digitalWrite(LED_BUILTIN, 0);
+  //digitalWrite(LED_BUILTIN, 0);
   Serial.println("Led OFF");
   delay(period);
 }
 
-void testTouchPad(CapacitiveTouchPad& touchPad)
+void testTouchPad(MPR121TouchPad& touchPad)
 {
   for(int pad = 0; pad<touchPad.GetNumPads(); ++pad)
   {
@@ -58,14 +62,18 @@ void testTouchPad(CapacitiveTouchPad& touchPad)
   }
 }
 
-void updateTouchInState(const CapacitiveTouchPad& touchPad, TouchInState& touchState)
+template<class TP>
+void updateTouchInState(const TP& touchPad, TouchInState& touchState)
 {
   //TODO gate in
   touchState.m_Num = 0;
   for(int idx = 0; idx<TouchInState::Size; ++idx)
   {
     touchState.m_State[idx] = touchPad.Get(idx);
-    ++touchState.m_Num;
+    if(touchState.m_State[idx])
+    {
+      ++touchState.m_Num;
+    }
   }
 }
 
@@ -80,7 +88,9 @@ void debugTouchOutState(const TouchOutState& touchState)
 
 void debugTouchInState(const TouchInState& touchState)
 {
-  Serial.print("TouchIn : pressed");
+  Serial.print("TouchIn : ");
+  Serial.print(touchState.m_Num);
+  Serial.print(" pressed ");
   for(int idx = 0; idx<TouchInState::Size; ++idx)
   {
     if(touchState.m_State[idx])
@@ -91,7 +101,7 @@ void debugTouchInState(const TouchInState& touchState)
   Serial.println();
 }
 
-// void updateSequenceChordMemoryMode(const TouchOutState& prevState, const CapacitiveTouchPad& touchPad, Sequence& sequence)
+// void updateSequenceChordMemoryMode(const TouchOutState& prevState, const MPR121TouchPad& touchPad, Sequence& sequence)
 // {
 //   // check if first clicked => sequence.Clear();
 //   bool clearUponClicked = (0==prevState.numPressed);
@@ -123,13 +133,25 @@ void loop() {
   blinkLed(300);
   blinkLed(800);
 
+//   while(true)
+//   {
+//     //FindI2CDevices();
+//     uint16_t keys = SPI.transfer16(0);
+//     uint16_t invKeys = ~keys;
+//     Serial.println(keys, BIN);
+//     Serial.println(invKeys, BIN);
+
+//     blinkLed(300);
+// //    blinkLed(300);
+//   }
+
   int debugCounter = 0;
   while(true)
   {
    g_TouchPad.Read();
 //   testTouchPad(g_TouchPad);
 
-   g_TouchInState.m_Gate = 0<digitalRead(gateInPin);// debugCounter<250;
+   g_TouchInState.m_Gate = debugCounter<250;// 0<digitalRead(gateInPin);// debugCounter<250;
    updateTouchInState(g_TouchPad, g_TouchInState);
 
    g_ChordMem.update(g_TouchInState);
