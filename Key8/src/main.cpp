@@ -10,15 +10,21 @@
 
 //MPR121TouchPad g_TouchPad;
 TTP8229TouchPad g_TouchPad;
-TouchInState g_TouchInState;
+TouchInState g_TouchInState1;
 TouchInState g_TouchInState2;
-ChordMem g_ChordMem;
-MonoHighestNotePrio g_Mono;
-Arp g_Arp;
-TouchStateOut g_TouchStateOut;
-TouchStateOut g_TouchStateOutArp;
-const int gateInPin = 3;
-
+ChordMem g_ChordMem1;
+ChordMem g_ChordMem2;
+MonoHighestNotePrio g_Mono1;
+MonoHighestNotePrio g_Mono2;
+Arp g_Arp1;
+Arp g_Arp2;
+TouchStateOut g_TouchStateOut1;
+TouchStateOut g_TouchStateOut2;
+const int gateInPin1 = A0;
+const int modeInPin1 = A1;
+const int gateInPin2 = A2;
+const int modeInPin2 = A3;
+const int debugOutPin = 3;
 
 void setup() {
   // put your setup code here, to run once:
@@ -26,14 +32,22 @@ void setup() {
  Serial.println("Key8 v0.4...");
 
   // SPI uses pins 13=LED and 12 
-  //  pinMode(LED_BUILTIN, OUTPUT);
-  pinMode(gateInPin, INPUT_PULLUP);
+  // so no led -> pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(gateInPin1, INPUT_PULLUP);
+  pinMode(modeInPin1, INPUT_PULLUP);
+  pinMode(gateInPin2, INPUT_PULLUP);
+  pinMode(modeInPin2, INPUT_PULLUP);
+
+  // debug pin 
+  //  low => print debug out
+  //  high (default) => no debug print
+  pinMode(debugOutPin, INPUT_PULLUP);
 
   //g_TouchPad.Begin(PIND2);//IRQ pin D2
   g_TouchPad.Begin();
   
-  g_TouchStateOut.Begin(11, 8, 9, 10);
-  g_TouchStateOutArp.Begin(7, 4, 5, 6);
+  g_TouchStateOut1.Begin(11, 8, 9, 10);
+  g_TouchStateOut2.Begin(7, 4, 5, 6);
 }
 
 void blinkLed(int period)
@@ -134,49 +148,54 @@ void loop() {
   blinkLed(300);
   blinkLed(800);
 
-//   while(true)
-//   {
-//     //FindI2CDevices();
-//     uint16_t keys = SPI.transfer16(0);
-//     uint16_t invKeys = ~keys;
-//     Serial.println(keys, BIN);
-//     Serial.println(invKeys, BIN);
-
-//     blinkLed(300);
-// //    blinkLed(300);
-//   }
-
   int debugCounter = 0;
   while(true)
   {
    g_TouchPad.Read();
 //   testTouchPad(g_TouchPad);
 
-   g_TouchInState.m_Gate = debugCounter<250;// 0<digitalRead(gateInPin);// debugCounter<250;
-   updateTouchInState(g_TouchPad, g_TouchInState);
-   g_TouchInState2.m_Gate = debugCounter<250;// 0<digitalRead(gateInPin);// debugCounter<250;
+   g_TouchInState1.m_Gate = debugCounter<250;// 0<digitalRead(gateInPin1);// debugCounter<250;
+   updateTouchInState(g_TouchPad, g_TouchInState1);
+   g_TouchInState2.m_Gate = debugCounter<250;// 0<digitalRead(gateInPin1);// debugCounter<250;
    updateTouchInState(g_TouchPad, g_TouchInState2, 8);
 
-   g_ChordMem.update(g_TouchInState);
-   g_Arp.update(g_ChordMem.m_State);
-
-   g_Mono.update(g_TouchInState);
+   g_ChordMem1.update(g_TouchInState1);
+   g_ChordMem2.update(g_TouchInState2);
+   g_Arp1.update(g_ChordMem1.m_State);
+   g_Arp2.update(g_ChordMem2.m_State);
+   g_Mono1.update(g_TouchInState1);
+   g_Mono2.update(g_TouchInState2);
    
-   g_TouchStateOut.Write(g_Mono.m_OutState);
-   g_TouchStateOutArp.Write(g_Arp.m_OutState);
-
-   ++debugCounter;
-   if(500<debugCounter)
+   if(digitalRead(modeInPin1))
    {
-     //TODO print debug ~ input low (pullup)
-     debugTouchInState(g_TouchInState);
-     debugTouchInState(g_ChordMem.m_State);
+     g_TouchStateOut1.Write(g_Mono1.m_OutState);
+   }
+   else
+   {
+     g_TouchStateOut1.Write(g_Arp1.m_OutState);     
+   }
+   
+   if(digitalRead(modeInPin2))
+   {
+     g_TouchStateOut2.Write(g_Mono2.m_OutState);
+   }
+   else
+   {
+     g_TouchStateOut2.Write(g_Arp2.m_OutState);     
+   }
+   
+   ++debugCounter;
+   if(500<debugCounter && !digitalRead(debugOutPin))
+   {
+     // print debug only ~ input low (pullup)
+     debugTouchInState(g_TouchInState1);
+     debugTouchInState(g_ChordMem1.m_State);
      debugTouchInState(g_TouchInState2);
-     debugTouchOutState(g_Mono.m_OutState);
-     debugTouchOutState(g_Arp.m_OutState);
-     //debugSequence(g_Sequence);
+     debugTouchOutState(g_Mono1.m_OutState);
+     debugTouchOutState(g_Arp1.m_OutState);
      debugCounter = 0;
    }
+
    delay(1);// TODO what delay is needed??
   }
 }
