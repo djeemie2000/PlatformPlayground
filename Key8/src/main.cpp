@@ -24,7 +24,7 @@ const int gateInPin1 = A0;
 const int modeInPin1 = A1;
 const int gateInPin2 = A2;
 const int modeInPin2 = A3;
-const int debugOutPin = 3;
+const int debugOutPin = 2;
 
 void setup() {
   // put your setup code here, to run once:
@@ -46,8 +46,8 @@ void setup() {
   //g_TouchPad.Begin(PIND2);//IRQ pin D2
   g_TouchPad.Begin();
   
-  g_TouchStateOut1.Begin(11, 8, 9, 10);
-  g_TouchStateOut2.Begin(7, 4, 5, 6);
+  g_TouchStateOut1.Begin(7, 8, 9, 10);
+  g_TouchStateOut2.Begin(3, 4, 5, 6);
 }
 
 void blinkLed(int period)
@@ -78,13 +78,13 @@ void testTouchPad(MPR121TouchPad& touchPad)
 }
 
 template<class TP>
-void updateTouchInState(const TP& touchPad, TouchInState& touchState, int offset = 0)
+void updateTouchInState(const TP& touchPad, TouchInState& touchState, const int* offsets)
 {
   //TODO gate in
   touchState.m_Num = 0;
   for(int idx = 0; idx<TouchInState::Size; ++idx)
   {
-    touchState.m_State[idx] = touchPad.Get(idx+offset);
+    touchState.m_State[idx] = touchPad.Get(offsets[idx]);
     if(touchState.m_State[idx])
     {
       ++touchState.m_Num;
@@ -154,10 +154,13 @@ void loop() {
    g_TouchPad.Read();
 //   testTouchPad(g_TouchPad);
 
+   // touchpad left vs right
    g_TouchInState1.m_Gate = debugCounter<250;// 0<digitalRead(gateInPin1);// debugCounter<250;
-   updateTouchInState(g_TouchPad, g_TouchInState1);
+   const int offsets1[] = {0,1,4,5,8,9,12,13};
+   updateTouchInState(g_TouchPad, g_TouchInState1,offsets1);
    g_TouchInState2.m_Gate = debugCounter<250;// 0<digitalRead(gateInPin1);// debugCounter<250;
-   updateTouchInState(g_TouchPad, g_TouchInState2, 8);
+   const int offsets2[] = {2,3,6,7,10,11,14,15};
+   updateTouchInState(g_TouchPad, g_TouchInState2, offsets2);
 
    g_ChordMem1.update(g_TouchInState1);
    g_ChordMem2.update(g_TouchInState2);
