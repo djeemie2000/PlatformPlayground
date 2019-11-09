@@ -116,6 +116,13 @@ void debugTouchInState(const TouchInState& touchState)
   Serial.println();
 }
 
+void debugMode(int mode1, int mode2)
+{
+  Serial.print("Mode : ");
+  Serial.print(mode1);
+  Serial.print(mode2);
+  Serial.println();
+}
 // void updateSequenceChordMemoryMode(const TouchOutState& prevState, const MPR121TouchPad& touchPad, Sequence& sequence)
 // {
 //   // check if first clicked => sequence.Clear();
@@ -155,21 +162,26 @@ void loop() {
 //   testTouchPad(g_TouchPad);
 
    // touchpad left vs right
-   g_TouchInState1.m_Gate = debugCounter<250;// 0<digitalRead(gateInPin1);// debugCounter<250;
+//   g_TouchInState1.m_Gate = debugCounter<250;
+   g_TouchInState1.m_Gate = 0<digitalRead(gateInPin1);
    const int offsets1[] = {0,1,4,5,8,9,12,13};
    updateTouchInState(g_TouchPad, g_TouchInState1,offsets1);
-   g_TouchInState2.m_Gate = debugCounter<250;// 0<digitalRead(gateInPin1);// debugCounter<250;
+//   g_TouchInState2.m_Gate = debugCounter<250;
+   g_TouchInState2.m_Gate = 0<digitalRead(gateInPin1);
    const int offsets2[] = {2,3,6,7,10,11,14,15};
    updateTouchInState(g_TouchPad, g_TouchInState2, offsets2);
 
    g_ChordMem1.update(g_TouchInState1);
    g_ChordMem2.update(g_TouchInState2);
+
    g_Arp1.update(g_ChordMem1.m_State);
    g_Arp2.update(g_ChordMem2.m_State);
+
    g_Mono1.update(g_TouchInState1);
    g_Mono2.update(g_TouchInState2);
-   
-   if(digitalRead(modeInPin1))
+
+   int mode1 = 0<digitalRead(modeInPin1) ? 1:0;   
+   if(mode1)
    {
      g_TouchStateOut1.Write(g_Mono1.m_OutState);
    }
@@ -178,7 +190,8 @@ void loop() {
      g_TouchStateOut1.Write(g_Arp1.m_OutState);     
    }
    
-   if(digitalRead(modeInPin2))
+   int mode2 = 0<digitalRead(modeInPin2) ? 1:0;   
+   if(mode2)
    {
      g_TouchStateOut2.Write(g_Mono2.m_OutState);
    }
@@ -193,9 +206,16 @@ void loop() {
      // print debug only ~ input low (pullup)
      debugTouchInState(g_TouchInState1);
      debugTouchInState(g_ChordMem1.m_State);
-     debugTouchInState(g_TouchInState2);
      debugTouchOutState(g_Mono1.m_OutState);
      debugTouchOutState(g_Arp1.m_OutState);
+
+     debugTouchInState(g_TouchInState2);
+     debugTouchInState(g_ChordMem2.m_State);
+     debugTouchOutState(g_Mono2.m_OutState);
+     debugTouchOutState(g_Arp2.m_OutState);
+
+     debugMode(mode1, mode2);
+
      debugCounter = 0;
    }
 
