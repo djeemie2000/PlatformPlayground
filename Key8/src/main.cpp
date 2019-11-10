@@ -46,8 +46,8 @@ void setup() {
   //g_TouchPad.Begin(PIND2);//IRQ pin D2
   g_TouchPad.Begin();
   
-  g_TouchStateOut1.Begin(7, 8, 9, 10);
-  g_TouchStateOut2.Begin(3, 4, 5, 6);
+  g_TouchStateOut1.Begin(3, 4, 5, 6);
+  g_TouchStateOut2.Begin(7, 8, 9, 10);
 }
 
 void blinkLed(int period)
@@ -167,7 +167,7 @@ void loop() {
    const int offsets1[] = {0,1,4,5,8,9,12,13};
    updateTouchInState(g_TouchPad, g_TouchInState1,offsets1);
 //   g_TouchInState2.m_Gate = debugCounter<250;
-   g_TouchInState2.m_Gate = 0<digitalRead(gateInPin1);
+   g_TouchInState2.m_Gate = 0<digitalRead(gateInPin2);
    const int offsets2[] = {2,3,6,7,10,11,14,15};
    updateTouchInState(g_TouchPad, g_TouchInState2, offsets2);
 
