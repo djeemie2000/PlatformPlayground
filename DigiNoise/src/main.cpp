@@ -1,5 +1,5 @@
 
-#include <Arduino.h>
+//#include <Arduino.h>
 
 #include "library/include/attiny.h"
 #include "library/include/attiny_digital.h"
@@ -29,8 +29,8 @@
 
 void setup() {
   // put your setup code here, to run once:
-  pin_mode(LED_PIN, OUTPUT);
-	digital_write(LED_PIN, LOW);
+  pin_mode(LED_PIN, ATTINY_OUTPUT);
+	digital_write(LED_PIN, ATTINY_LOW);
   //?needed? pin_mode(ADC1, OUTPUT);
 
   attiny_random_init(500);//TODO random from EEPROM!!!
@@ -61,14 +61,14 @@ void loop() {
 //  g_test.update();
 }
 
-// int main()
-// {
-//   setup();
+int main()
+{
+  setup();
 
-//   while(true)
-//   {
-//     loop();
-//   }
+  while(true)
+  {
+    loop();
+  }
 
-//   return 0;
-// }
+  return 0;
+}
