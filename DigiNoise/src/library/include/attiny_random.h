@@ -12,7 +12,7 @@
 # define	RANDOM_EEPROM_SEED_ADDR	(0x00)
 #endif	/* !USE_RANDOM_EEPROM_SEED */
 
-void random_init(uint16_t seed);
-uint16_t random(void);
+void attiny_random_init(uint16_t seed);
+uint16_t attiny_random(void);
 
 #endif	/* !_ATTINY_RANDOM_H_ */

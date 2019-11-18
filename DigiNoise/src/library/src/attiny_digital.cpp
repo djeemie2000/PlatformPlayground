@@ -12,9 +12,9 @@ digital_read(uint8_t pin)
 {
 
         if ((PINB & (1 << pin)) > 0)
-                return HIGH;
+                return ATTINY_HIGH;
 
-        return LOW;
+        return ATTINY_LOW;
 }
 
 void
@@ -22,7 +22,7 @@ digital_write(uint8_t pin, uint8_t value)
 {
 	uint8_t sreg;
 
-	if (value == HIGH) {
+	if (value == ATTINY_HIGH) {
 		sreg = SREG;
 		cli();
 		sbi(PORTB, pin);

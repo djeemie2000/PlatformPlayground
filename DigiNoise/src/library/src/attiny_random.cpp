@@ -16,7 +16,7 @@ lfsr16_next(uint16_t n)
 }
 
 void
-random_init(uint16_t seed)
+attiny_random_init(uint16_t seed)
 {
 #ifdef	USE_RANDOM_EEPROM_SEED
 	random_number = lfsr16_next(eeprom_read_word((uint16_t *)RANDOM_EEPROM_SEED_ADDR) ^ seed);
@@ -27,8 +27,8 @@ random_init(uint16_t seed)
 }
 
 uint16_t
-random(void)
+attiny_random()
 {
-
-	return (random_number = lfsr16_next(random_number));
+	random_number = lfsr16_next(random_number);
+	return (random_number);
 }

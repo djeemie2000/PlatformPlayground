@@ -8,10 +8,10 @@
 #include <avr/io.h>
 #include "attiny.h"
 
-#define	LOW	(0)
-#define	HIGH 	(1)
-#define	INPUT	(0)
-#define	OUTPUT	(1)
+ #define	ATTINY_LOW	(0)
+ #define	ATTINY_HIGH 	(1)
+ #define	ATTINY_INPUT	(0)
+ #define	ATTINY_OUTPUT	(1)
 
 #define	D0	PB0
 #define	D1	PB1
