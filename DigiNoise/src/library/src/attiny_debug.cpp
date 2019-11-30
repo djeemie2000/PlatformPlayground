@@ -10,7 +10,7 @@
 // static FILE uart_stdin = FDEV_SETUP_STREAM(uart_fgetc, NULL, _FDEV_SETUP_READ);
 
 void
-debug_init()
+attiny_debug_init()
 {
 
 	//stdin = &uart_stdin;

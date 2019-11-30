@@ -7,7 +7,7 @@
 #include "../include/attiny_timer.h"
 
 void
-timer_prescale(uint16_t value)
+attiny_timer_prescale(uint16_t value)
 {
 	TCCR0B &= ~((1<<CS02)|(1<<CS01)|(1<<CS00));		// prescale 0 (clear)
 	switch (value) {
@@ -21,7 +21,7 @@ timer_prescale(uint16_t value)
 }
 
 void
-timer_mode(wgm_t mode)
+attiny_timer_mode(wgm_t mode)
 {
 	TCCR0A &= ~((1<<WGM01)|(1<<WGM00));
 	TCCR0B &= ~(1<<WGM02);

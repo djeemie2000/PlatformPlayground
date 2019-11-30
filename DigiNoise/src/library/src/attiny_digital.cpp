@@ -8,7 +8,7 @@
 #include "../include/attiny_digital.h"
 
 uint8_t
-digital_read(uint8_t pin)
+attiny_digital_read(uint8_t pin)
 {
 
         if ((PINB & (1 << pin)) > 0)
@@ -18,7 +18,7 @@ digital_read(uint8_t pin)
 }
 
 void
-digital_write(uint8_t pin, uint8_t value)
+attiny_digital_write(uint8_t pin, uint8_t value)
 {
 	uint8_t sreg;
 
@@ -36,7 +36,7 @@ digital_write(uint8_t pin, uint8_t value)
 }
 
 void
-digital_toggle(uint8_t pin)
+attiny_digital_toggle(uint8_t pin)
 {
 
 	PORTB ^= 1 << (pin);

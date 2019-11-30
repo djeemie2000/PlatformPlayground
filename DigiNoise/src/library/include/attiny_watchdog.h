@@ -8,8 +8,8 @@
 #include <avr/interrupt.h>
 #include "attiny.h"
 
-void watchdog_prescale(uint16_t);
-#define	watchdog_handler()	ISR(WDT_vect)
-#define	watchdog_enable()	WDTCR |= 1<<WDTIE;
+void attiny_watchdog_prescale(uint16_t);
+#define	attiny_watchdog_handler()	ISR(WDT_vect)
+#define	attiny_watchdog_enable()	WDTCR |= 1<<WDTIE;
 
 #endif	/* !_ATTINY_WATCHDOG_H_ */

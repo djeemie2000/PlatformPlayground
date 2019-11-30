@@ -7,7 +7,7 @@
 #include "../include/attiny_analog.h"
 
 int
-analog_read(uint8_t pin)
+attiny_analog_read(uint8_t pin)
 {
 	uint8_t low, high;
 
@@ -32,9 +32,9 @@ analog_read(uint8_t pin)
 }
 
 void
-analog_write(uint8_t pin, int value)
+attiny_analog_write(uint8_t pin, int value)
 {
-	pin_mode(pin, ATTINY_OUTPUT);					// Make sure the PWM output is enabled for this pin
+	attiny_pin_mode(pin, ATTINY_OUTPUT);					// Make sure the PWM output is enabled for this pin
 	if (pin == DAC0) {
 		sbi(TCCR0A, COM0A1); 				// connect pwm to pin on timer 0, channel A
 		OCR0A = value; 					// set pwm duty

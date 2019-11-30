@@ -7,7 +7,7 @@
 #include "../include/attiny_watchdog.h"
 
 void
-watchdog_prescale(uint16_t value)
+attiny_watchdog_prescale(uint16_t value)
 {
 	WDTCR &= ~((1<<WDP3)|(1<<WDP2)|(1<<WDP1)|(1<<WDP0));
 	switch (value) {

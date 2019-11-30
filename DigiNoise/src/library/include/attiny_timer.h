@@ -17,22 +17,22 @@ typedef enum {
 	FAST_PWMX = 5
 } wgm_t;
 
-void timer_prescale(uint16_t value);
-void timer_mode(wgm_t mode);
+void attiny_timer_prescale(uint16_t value);
+void attiny_timer_mode(wgm_t mode);
 
 // TIMER0 OVF
-#define	timer_ovf_handler()	ISR(TIM0_OVF_vect)
-#define	timer_ovf_enable() 	TIMSK0 |= 1 << TOIE0
-#define	timer_ovf_disable()	TIMSK0 &= ~(1 << TOIE0)
+#define	attiny_timer_ovf_handler()	ISR(TIM0_OVF_vect)
+#define	attiny_timer_ovf_enable() 	TIMSK0 |= 1 << TOIE0
+#define	attiny_timer_ovf_disable()	TIMSK0 &= ~(1 << TOIE0)
 
 // TIMER0 COMPA
-#define timer_compa_handler()	ISR(TIM0_COMPA_vect)
-#define	timer_compa_enable()	TIMSK0 |= 1 << OCIE0A
-#define	timer_compa_disable()	TIMSK0 &= ~(1 << OCIE0A)
+#define attiny_timer_compa_handler()	ISR(TIM0_COMPA_vect)
+#define	attiny_timer_compa_enable()	TIMSK0 |= 1 << OCIE0A
+#define	attiny_timer_compa_disable()	TIMSK0 &= ~(1 << OCIE0A)
 
 // TIMER0 COMPB
-#define timer_compb_handler()	ISR(TIM0_COMPB_vect)
-#define timer_compb_enable()	TIMSK0 |= 1 << OCIE0B
-#define timer_compb_disable()	TIMSK0 &= ~(1 << OCIE0B)
+#define attiny_timer_compb_handler()	ISR(TIM0_COMPB_vect)
+#define attiny_timer_compb_enable()	TIMSK0 |= 1 << OCIE0B
+#define attiny_timer_compb_disable()	TIMSK0 &= ~(1 << OCIE0B)
 
 #endif	/* !_ATTINY_TIMER_H_ */

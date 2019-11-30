@@ -7,6 +7,6 @@
 
 #include <stdio.h>
 
-void debug_init();
+void attiny_debug_init();
 
 #endif	/* !_ATTINY_DEBUG_H_ */

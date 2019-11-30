@@ -7,7 +7,7 @@
 
 #include "attiny_io.h"
 
-int analog_read(uint8_t pin);
-void analog_write(uint8_t pin, int value);
+int attiny_analog_read(uint8_t pin);
+void attiny_analog_write(uint8_t pin, int value);
 
 #endif	/* !_ATTINY_ANALOG_H_ */

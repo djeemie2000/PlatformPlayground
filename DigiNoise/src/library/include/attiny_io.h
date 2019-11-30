@@ -28,6 +28,6 @@
 #define	DAC0	PB0
 #define	DAC1	PB1
 
-void pin_mode(uint8_t pin, uint8_t mode);
+void attiny_pin_mode(uint8_t pin, uint8_t mode);
 
 #endif	/* !_ATTINY_IO_H_ */

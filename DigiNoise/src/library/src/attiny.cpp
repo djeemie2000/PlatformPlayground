@@ -8,7 +8,7 @@
 #include "../include/attiny_utils.h"
 
 void
-pin_mode(uint8_t pin, uint8_t mode)
+attiny_pin_mode(uint8_t pin, uint8_t mode)
 {
 	uint8_t sreg;
 
