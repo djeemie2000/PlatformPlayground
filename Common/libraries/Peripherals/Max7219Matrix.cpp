@@ -62,11 +62,11 @@ void Max7219Matrix::Test()
 {
   //test
   m_LedMatrix.set_display_test();
-  wait_ms(500);
+  wait_us(500000);
   m_LedMatrix.clear_display_test();
-  wait_ms(500);
+  wait_us(500000);
   m_LedMatrix.display_all_off();
-  wait_ms(1000);
+  wait_us(1000000);
 }
 
 bool Max7219Matrix::Set(int row, int col)
@@ -174,7 +174,7 @@ void TestExtended(Max7219Matrix& matrix, Serial& pc)
                 {
                     pc.printf("set r %d c %d r -> %d wirte %d\r\n", row, col, ok?1:0, retval);
                 }
-                wait_ms(100);
+                wait_us(100000);
             }
         }
     }

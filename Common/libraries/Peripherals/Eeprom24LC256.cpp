@@ -30,7 +30,7 @@ int Eeprom24LC256::writeBank(int bank, const uint8_t* data, int size)
 
     //TODO prevent write for approx 5 milliseconds after a write
     // but without blocking the whole application
-    // wait_ms(6);
+    // wait_us(6000);
 }
 
 int Eeprom24LC256::readBank(int bank, uint8_t* data, int size)
