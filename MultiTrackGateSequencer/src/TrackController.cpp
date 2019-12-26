@@ -3,21 +3,20 @@
 #include "BitWise.h"
 #include "DigitalOutMatrix.h"
 
-TrackController::TrackController(MidiHandler& midiHandler, uint8_t MidiNote, uint8_t MidiChannel, int trackIdx, DigitalOutMatrix& ledMatrix)
+TrackController::TrackController(GateHandler& handler, int trackIdx, DigitalOutMatrix& ledMatrix)
  : m_TrackBtn()
  , m_AllTrackBtn()
- , m_Player(midiHandler, 32)
+ , m_Track(32)
+ , m_Player(handler, m_Track)
  , m_TrackIdx(trackIdx)
  , m_LedMatrix(ledMatrix)
 {
     m_GateOut.SetDuration(0.5f);
-    m_Player.LearnNote(MidiNote);
-    m_Player.LearnChannel(MidiChannel);
 }
 
 void TrackController::SetStep(int step)
 {
-    m_Player.SetStep(step);
+    m_Track.SetStep(step);
     if(step<m_LedMatrix.NumCols())
     {
         m_LedMatrix.Set(m_TrackIdx, step);
@@ -26,7 +25,7 @@ void TrackController::SetStep(int step)
 
 void TrackController::ClearStep(int step)
 {
-    m_Player.ClearStep(step);
+    m_Track.ClearStep(step);
     if(step<m_LedMatrix.NumCols())
     {
         m_LedMatrix.Clear(m_TrackIdx, step);
@@ -50,7 +49,7 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
         if(commonState.mutePressed)
         {
             //toggle mute
-            m_Player.Mute(!m_Player.IsMuted());
+            m_Track.Mute(!m_Track.IsMuted());
         } 
         else if(commonState.setPressed)
         {
@@ -59,28 +58,18 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
                 // set next step (do not play, wait until step)
             // in step mode : 
                 // always set current step (and play)
-            if(commonState.playMode)
-            {
-                if(commonState.clockCntr<commonState.clockPeriod/2)
-                {
-                    //set current Step
-                    SetStep(m_Player.GetCurrentStep());
-                    //play note as well
-                    m_Player.PlayOn();
-                }
-                else 
-                {
-                    SetStep(m_Player.GetNextStep());
-                    // do not play (yet)
-                }
-            }
-            else
+            if(commonState.clockCntr<commonState.clockPeriod/2)
             {
                 //set current Step
                 SetStep(m_Player.GetCurrentStep());
                 //play note as well
                 m_Player.PlayOn();
             }
+            else 
+            {
+                SetStep(m_Player.GetNextStep());
+                // do not play (yet)
+            } 
         } 
         else if(commonState.clearPressed)
         {
@@ -89,29 +78,9 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
             // stop note as well
             m_Player.PlayOff(); 
         }
-        else if(commonState.learnMode==1)
-        {
-            //learn midi note ~ pot analog in
-            uint8_t midiNote = 32+commonState.learnValue*64;
-            m_Player.LearnNote(midiNote);
-            m_Player.PlayOn();
-        }
-        else if(commonState.learnMode==2)
-        {
-            //learn midi channel ~ pot analog in [0,1[
-            // midi channel [0,15]
-            uint8_t midiChannel = commonState.learnValue*16;
-            m_Player.LearnChannel(midiChannel);
-            m_Player.PlayOn();
-        }
-        else if(commonState.learnMode==3)
-        {
-            // crop to min length, 1.0f TODO
-            m_GateOut.SetDuration(commonState.learnValue);
-        }
         else
         {
-            //play note on
+            // 'live' play note on
             m_Player.PlayOn();
         }
     }
@@ -133,7 +102,7 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
     if(m_GateOut.IsRising())//TODO clock rising in case of gate length 1??
     {
         //clear previous step if needed
-        if(!m_Player.GetStep(m_Player.GetCurrentStep()))
+        if(!m_Track.GetStep(m_Player.GetCurrentStep()))
         {        
             m_LedMatrix.Clear(m_TrackIdx, m_Player.GetCurrentStep());
         }
@@ -142,9 +111,9 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
         m_Player.StepOn();
         // display : invert current step to indicate current step is playing
         // if muted: no change 
-        if(!m_Player.IsMuted())
+        if(!m_Track.IsMuted())
         {
-            if(m_Player.GetStep(m_Player.GetCurrentStep()))
+            if(m_Track.GetStep(m_Player.GetCurrentStep()))
             {
                 m_LedMatrix.Clear(m_TrackIdx, m_Player.GetCurrentStep());
             }
@@ -160,7 +129,7 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
         m_Player.StepOff();
         // display: if set, non inverted current step 
         //          if clear, show during whole step
-        if(m_Player.GetStep(m_Player.GetCurrentStep()))
+        if(m_Track.GetStep(m_Player.GetCurrentStep()))
         {
             m_LedMatrix.Set(m_TrackIdx, m_Player.GetCurrentStep());
         }
@@ -169,6 +138,9 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
 
 void TrackController::SetPattern(uint32_t pattern, int length)
 {
+    // TODO 
+    // first, set pattern/length on m_Track
+    // then, apply on led matrix
     for(uint32_t step = 0; step<32u; ++step)
     {
         if(BitRead(pattern, step))
@@ -180,5 +152,5 @@ void TrackController::SetPattern(uint32_t pattern, int length)
             ClearStep(step);
         }
     }
-    m_Player.SetNumSteps(length);
+    m_Track.SetNumSteps(length);
 }

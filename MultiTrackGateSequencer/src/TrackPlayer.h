@@ -1,18 +1,21 @@
 #pragma once
 
 #include <mbed.h>
-#include "MidiHandler.h"
+#include "GateHandler.h"
 
-class TrackPlayer
+struct GSTrack
+{
+    uint32_t m_Pattern;
+    int m_NumSteps;
+    bool m_Muted;
+    float m_GateDuration;
+};
+
+// Wrapper around GSTrack struct with (member) functions
+class Track
 {
 public:
-    TrackPlayer(MidiHandler& handler, int NumSteps = 16);
-
-    void PlayOn();
-    void PlayOff();
-
-    void StepOn();
-    void StepOff();
+    Track(int NumSteps = 16);
 
     void Mute(bool mute);
     bool IsMuted() const;
@@ -20,28 +23,46 @@ public:
     void SetStep(int step);
     void ClearStep(int step);
     bool GetStep(int step) const;
+
     void SetNumSteps(int numSteps);
+    int GetNumSteps() const;
+
+    GSTrack m_Track;
+};
+
+class TrackPlayer
+{
+public:
+    TrackPlayer(GateHandler& handler, Track& track);
+
+    void PlayOn();
+    void PlayOff();
+
+    void StepOn();
+    void StepOff();
+
+    // void Mute(bool mute);
+    // bool IsMuted() const;
+
+    // void SetStep(int step);
+    // void ClearStep(int step);
+    // bool GetStep(int step) const;
+    // void SetNumSteps(int numSteps);
     void ResetStep();
 
     int GetCurrentStep() const;//position of current step
     int GetNextStep() const;//position of next step
 
-    void Learn(uint8_t MidiNote, uint8_t Channel);
-    void LearnNote(uint8_t MidiNote);
-    void LearnChannel(uint8_t Channel);
-
 private:
     int AdvanceStep(int step) const;
     
-    int m_NumSteps;
-    MidiHandler& m_Handler;
-    uint8_t m_Channel;
-    uint8_t m_MidiNote;
+//    int m_NumSteps;
+    GateHandler& m_Handler;
+    Track& m_Track;
+
     bool m_NoteOn;
-
-    bool m_Muted;
-
+  //  bool m_Muted;
     int m_CurrentStep;
     bool m_ResetStep;
-    uint32_t m_Pattern;
+    //uint32_t m_Pattern;
 };

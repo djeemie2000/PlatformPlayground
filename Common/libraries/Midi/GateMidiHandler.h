@@ -15,7 +15,6 @@ public:
 
 private:
   DigitalOut& m_GateOut;
-  //MidiNoteState m_State;
   int m_NoteOnCount;//{0};
 };
 

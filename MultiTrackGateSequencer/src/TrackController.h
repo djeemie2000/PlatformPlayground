@@ -6,13 +6,13 @@
 #include "ClockOutQuantizer.h"
 
 class CommonState;
-class MidiHandler;
+class GateHandler;
 class DigitalOutMatrix;
 
 class TrackController
 {
 public:
-    TrackController(MidiHandler& midiHandler, uint8_t MidiNote, uint8_t MidiChannel, int trackIdx, DigitalOutMatrix& ledMatrix);
+    TrackController(GateHandler& handler, int trackIdx, DigitalOutMatrix& ledMatrix);
 
     void Tick(const CommonState& commonState, int btn, int allBtn);
     void SetPattern(uint32_t pattern, int length);//presets, ...
@@ -24,6 +24,7 @@ private:
     GateState m_TrackBtn;
     GateState m_AllTrackBtn;
     ClockOutState m_GateOut;
+    Track m_Track;
     TrackPlayer m_Player;
     int m_TrackIdx;
     DigitalOutMatrix& m_LedMatrix;

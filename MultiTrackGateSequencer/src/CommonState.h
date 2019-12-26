@@ -7,8 +7,8 @@ struct CommonState
     bool clearPressed;
     bool resetStepPressed;
     
-    int learnMode;
-    bool playMode;//true = play mode, false = step mode
+    // int learnMode;
+    // bool playMode;//true = play mode, false = step mode
 
     bool clockIsRising;
     bool clockIsFalling;
@@ -16,5 +16,5 @@ struct CommonState
     int clockCntr;
     int clockPeriod;
     
-    float learnValue;
+    // float learnValue;
 };
