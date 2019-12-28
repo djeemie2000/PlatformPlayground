@@ -11,6 +11,7 @@
 
 //#include "MBedUnit.h"
 
+
 int main() {
 
   // put your setup code here, to run once:
@@ -49,20 +50,21 @@ int main() {
   
   I2C i2c(PB_11, PB_10);
   ScanI2C(i2c, debugSerial);
-  // set, mute, clear btn, unused, 8x track button 
+  // set, mute, clear, reset btn, 8x track button 
   Mpr121InBank touchPad(&i2c, PB_1);
 
   // multiple tracks
   debugSerial.printf("Init tracks\r\n");
+
   const int NumTracks = 8;
   const int PatternLength = 32;
   //default note, pattern, channel, gate outputs, midi handlers
-  const uint32_t patterns[] = {0x11111111, 0x00000000, 0xFFFFFFFF, 0x00000000, 0x55555555, 0xAAAAAAAA, 0x00000000, 0xAA88AA88};
+  const uint32_t patterns[] = {0x11111111, 0x10101010, 0x00000000, 0x55555555, 0xAAAAAAAA, 0x00000000, 0x10001000 ,0xFFFFFFFF};
   const PinName outPins[] = {PA_11, PA_12, PA_15, PB_3, PB_4, PB_5, PB_6, PB_7 };
   DigitalOut* midiOutputs[NumTracks];
   DigitalOutGateHandler* multis[NumTracks];//needed???
-
   TrackController* tracks[NumTracks];
+
   for(int idx = 0; idx<NumTracks; ++idx)
   {
     // yes, these are memory leaks (if we would ever destruct)
@@ -75,7 +77,7 @@ int main() {
   // 
   Timer timer;
   int counter = 0;
-  const int fakeClockPeriod = 220;
+  const int fakeClockPeriod = 110;
   ClockInState clockInState(fakeClockPeriod);
 
   wait_us(500000l);
@@ -99,6 +101,7 @@ int main() {
           commonState.mutePressed = touchPad.Get(10);
           commonState.resetStepPressed = touchPad.Get(11);
           
+//          clockInState.Tick(repeat==0, true);
           clockInState.Tick(clockIn.IsRising(), true);
           commonState.clockCntr = clockInState.Cntr();
           commonState.clockPeriod = clockInState.Period();
@@ -110,8 +113,7 @@ int main() {
 
           for(int idx = 0; idx<NumTracks; ++idx)
           {
-            const int allTrackBtn = 0;// not yet HW support for 'all track' button 
-            tracks[idx]->Tick(commonState, touchPad.Get(idx), allTrackBtn);
+            tracks[idx]->Tick(commonState, touchPad.Get(idx));
           }          
 
           // update display takes some time => update alternating rows

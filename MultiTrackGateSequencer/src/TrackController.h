@@ -14,7 +14,7 @@ class TrackController
 public:
     TrackController(GateHandler& handler, int trackIdx, DigitalOutMatrix& ledMatrix);
 
-    void Tick(const CommonState& commonState, int btn, int allBtn);
+    void Tick(const CommonState& commonState, int btn);
     void SetPattern(uint32_t pattern, int length);//presets, ...
 
 private:
@@ -22,7 +22,6 @@ private:
     void ClearStep(int step);
 
     GateState m_TrackBtn;
-    GateState m_AllTrackBtn;
     ClockOutState m_GateOut;
     Track m_Track;
     TrackPlayer m_Player;

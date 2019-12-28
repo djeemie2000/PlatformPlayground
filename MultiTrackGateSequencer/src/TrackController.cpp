@@ -5,7 +5,6 @@
 
 TrackController::TrackController(GateHandler& handler, int trackIdx, DigitalOutMatrix& ledMatrix)
  : m_TrackBtn()
- , m_AllTrackBtn()
  , m_Track(32)
  , m_Player(handler, m_Track)
  , m_TrackIdx(trackIdx)
@@ -32,10 +31,9 @@ void TrackController::ClearStep(int step)
     }
 }
 
-void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
+void TrackController::Tick(const CommonState& commonState, int btn)
 {
     m_TrackBtn.Tick(btn);
-    m_AllTrackBtn.Tick(allBtn);
 
     if(commonState.resetStepPressed)
     {
@@ -44,7 +42,7 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
     }
 
     m_GateOut.Tick(commonState.clockCntr, commonState.clockPeriod);
-    if(m_TrackBtn.IsRising() || m_AllTrackBtn.IsRising())
+    if(m_TrackBtn.IsRising())
     {
         if(commonState.mutePressed)
         {
@@ -84,12 +82,12 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
             m_Player.PlayOn();
         }
     }
-    else if(m_TrackBtn.IsFalling() || m_AllTrackBtn.IsFalling())
+    else if(m_TrackBtn.IsFalling())
     {
         //play note off (if note is on)
         m_Player.PlayOff();
     }
-    else if((m_TrackBtn.Get() || m_AllTrackBtn.Get()) && commonState.clearPressed)
+    else if(m_TrackBtn.Get() && commonState.clearPressed)
     {
         //clear current step
         ClearStep(m_Player.GetCurrentStep());
@@ -105,6 +103,10 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
         if(!m_Track.GetStep(m_Player.GetCurrentStep()))
         {        
             m_LedMatrix.Clear(m_TrackIdx, m_Player.GetCurrentStep());
+        }
+        else
+        {
+            m_LedMatrix.Set(m_TrackIdx, m_Player.GetCurrentStep());
         }
 
         // step on
@@ -129,10 +131,10 @@ void TrackController::Tick(const CommonState& commonState, int btn, int allBtn)
         m_Player.StepOff();
         // display: if set, non inverted current step 
         //          if clear, show during whole step
-        if(m_Track.GetStep(m_Player.GetCurrentStep()))
-        {
-            m_LedMatrix.Set(m_TrackIdx, m_Player.GetCurrentStep());
-        }
+        // if(m_Track.GetStep(m_Player.GetCurrentStep()))
+        // {
+        //     m_LedMatrix.Set(m_TrackIdx, m_Player.GetCurrentStep());
+        // }
     }
 }
 
