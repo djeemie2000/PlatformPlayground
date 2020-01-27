@@ -1,5 +1,6 @@
 #include "TTP8229TouchPad.h"
 #include <SPI.h>
+#include <Wire.h>
 
 TTP8229TouchPad::TTP8229TouchPad()
     : m_TouchState(0)
@@ -7,20 +8,44 @@ TTP8229TouchPad::TTP8229TouchPad()
 {
 }
 
-void TTP8229TouchPad::Begin()
+void TTP8229TouchPad::Begin(int mode)
 {
-  // SPI uses pins 13=LED and 12 
-  SPI.begin();
-  SPI.beginTransaction(SPISettings(14000000, MSBFIRST, SPI_MODE3));
-  delay(500); // Allow 500ms for the 8229BSF to get ready after turn-on
+    m_Mode = mode;
+    if(m_Mode==SPIMode)
+    {
+      // SPI uses pins 13=LED and 12 
+      SPI.begin();
+      SPI.beginTransaction(SPISettings(14000000, MSBFIRST, SPI_MODE3));
+    }
+    else
+    {
+        Wire.begin();
+    }
+    delay(500); // Allow 500ms for the 8229BSF to get ready after turn-on
 }
 
 void TTP8229TouchPad::Read()
 {
   m_PrevTouchState = m_TouchState;
-  // bit = 0 => touched, bit  1 => not touched
-  m_TouchState = ~ SPI.transfer16(0);
-  //TODO inverse bit order!!
+  if(m_Mode == SPIMode)
+  {
+    // bit = 0 => touched, bit  1 => not touched
+    m_TouchState = ~ SPI.transfer16(0);
+    //TODO inverse bit order!!
+  }
+  else
+  {
+    m_TouchState = 0;
+    Wire.requestFrom(0x57, 2, true);
+    if (Wire.available()) 
+    {
+        m_TouchState = Wire.read() << 8;
+        if (Wire.available()) 
+        {
+            m_TouchState |= Wire.read();
+        }
+    }
+  }  
 }
 
 int TTP8229TouchPad::GetNumPads() const

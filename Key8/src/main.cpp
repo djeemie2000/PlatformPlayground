@@ -26,10 +26,37 @@ const int gateInPin2 = A2;
 const int modeInPin2 = A3;
 const int debugOutPin = 2;
 
+// void print_key_states(uint16_t data)
+// {
+//     int bit_nr = 15;
+
+//     do {
+//         Serial.print(data >> bit_nr & 1 ? "1" : "0"); 
+//     } while (bit_nr--);
+//     Serial.println("");
+// }
+
+// void ReadI2CModule()
+// {
+// Serial.println("read module");
+
+//   uint16_t key_data;
+//   Wire.requestFrom(0x57, 2, true);
+//   if (Wire.available()) 
+//   {
+//       key_data = Wire.read() << 8;
+//       if (Wire.available()) 
+//       {
+//           key_data |= Wire.read();
+//           print_key_states(key_data);
+//       }
+//   }
+// }
+
 void setup() {
   // put your setup code here, to run once:
  Serial.begin(115200);
- Serial.println("Key8 v0.4...");
+ Serial.println("Key8 v0.5...");
 
   // SPI uses pins 13=LED and 12 
   // so no led -> pinMode(LED_BUILTIN, OUTPUT);
@@ -44,7 +71,7 @@ void setup() {
   pinMode(debugOutPin, INPUT_PULLUP);
 
   //g_TouchPad.Begin(PIND2);//IRQ pin D2
-  g_TouchPad.Begin();
+  g_TouchPad.Begin(TTP8229TouchPad::I2CMode);
   
   g_TouchStateOut1.Begin(3, 4, 5, 6);
   g_TouchStateOut2.Begin(7, 8, 9, 10);
@@ -154,6 +181,7 @@ void loop() {
   blinkLed(300);
   blinkLed(300);
   blinkLed(800);
+
 
   int debugCounter = 0;
   while(true)
