@@ -8,23 +8,22 @@
 class CommonState;
 class GateHandler;
 class DigitalOutMatrix;
+class GSTrack;
 
 class TrackController
 {
 public:
-    TrackController(GateHandler& handler, int trackIdx, DigitalOutMatrix& ledMatrix);
+    TrackController(GateHandler& handler, int trackIdx, GSTrack* track);
 
     void Tick(const CommonState& commonState, int btn);
-    void SetPattern(uint32_t pattern, int length);//presets, ...
+    void SetTrack(GSTrack* track);
+
+    void Update(DigitalOutMatrix& ledMatrix);
 
 private:
-    void SetStep(int step);
-    void ClearStep(int step);
-
     GateState m_TrackBtn;
     ClockOutState m_GateOut;
     Track m_Track;
     TrackPlayer m_Player;
     int m_TrackIdx;
-    DigitalOutMatrix& m_LedMatrix;
 };

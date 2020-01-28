@@ -56,22 +56,25 @@ int main() {
   // multiple tracks
   debugSerial.printf("Init tracks\r\n");
 
-  const int NumTracks = 8;
   const int PatternLength = 32;
-  //default note, pattern, channel, gate outputs, midi handlers
+  //default pattern, gate outputs & handlers
   const uint32_t patterns[] = {0x11111111, 0x10101010, 0x00000000, 0x55555555, 0xAAAAAAAA, 0x00000000, 0x10001000 ,0xFFFFFFFF};
   const PinName outPins[] = {PA_11, PA_12, PA_15, PB_3, PB_4, PB_5, PB_6, PB_7 };
-  DigitalOut* midiOutputs[NumTracks];
-  DigitalOutGateHandler* multis[NumTracks];//needed???
-  TrackController* tracks[NumTracks];
+  // track (pointers) allow preset/load/save of tracks
+  GSPattern gsPattern;
+  DigitalOut* gateOuts[GSPattern::NumTracks];
+  DigitalOutGateHandler* gateOutHandlers[GSPattern::NumTracks];
+  TrackController* trackControllers[GSPattern::NumTracks];
 
-  for(int idx = 0; idx<NumTracks; ++idx)
+    Init(gsPattern, PatternLength);
+
+  for(int idx = 0; idx<GSPattern::NumTracks; ++idx)
   {
+    gsPattern.m_Track[idx].m_Pattern = patterns[idx];
     // yes, these are memory leaks (if we would ever destruct)
-    midiOutputs[idx] = new DigitalOut(outPins[idx]);
-    multis[idx] = new DigitalOutGateHandler(*midiOutputs[idx]);
-    tracks[idx] = new TrackController(*multis[idx], idx, ledMatrix);
-    tracks[idx]->SetPattern(patterns[idx], PatternLength);
+    gateOuts[idx] = new DigitalOut(outPins[idx]);
+    gateOutHandlers[idx] = new DigitalOutGateHandler(*gateOuts[idx]);
+    trackControllers[idx] = new TrackController(*gateOutHandlers[idx], idx, &(gsPattern.m_Track[idx]));
   }
 
   // 
@@ -106,18 +109,14 @@ int main() {
           commonState.clockCntr = clockInState.Cntr();
           commonState.clockPeriod = clockInState.Period();
 
-          // clock
-          commonState.clockIsRising = clockIn.IsRising();
-          commonState.clockIsFalling = clockIn.IsFalling();
-          commonState.clockOn = clockIn.Get();
-
-          for(int idx = 0; idx<NumTracks; ++idx)
+          for(int idx = 0; idx<GSPattern::NumTracks; ++idx)
           {
-            tracks[idx]->Tick(commonState, touchPad.Get(idx));
+            trackControllers[idx]->Tick(commonState, touchPad.Get(idx));
           }          
 
           // update display takes some time => update alternating rows
-          ledMatrix.Write(repeat%NumTracks);
+          trackControllers[repeat%GSPattern::NumTracks]->Update(ledMatrix);
+          ledMatrix.Write(repeat%GSPattern::NumTracks);
 
           // clock
           clockLed = clockIn.Get();
