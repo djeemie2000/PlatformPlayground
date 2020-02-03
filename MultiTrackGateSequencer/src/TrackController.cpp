@@ -26,7 +26,11 @@ void TrackController::Tick(const CommonState& commonState, int btn)
     m_GateOut.Tick(commonState.clockCntr, commonState.clockPeriod);
     if(m_TrackBtn.IsRising())
     {
-        if(commonState.mutePressed)
+        if(commonState.selectPatternPressed || commonState.selectBankPressed || commonState.savePatternsPressed)
+        {
+            //ignore
+        }
+        else if(commonState.mutePressed)
         {
             //toggle mute
             m_Track.Mute(!m_Track.IsMuted());

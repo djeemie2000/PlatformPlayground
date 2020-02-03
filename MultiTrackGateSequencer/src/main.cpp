@@ -103,7 +103,11 @@ int main() {
           commonState.clearPressed = touchPad.Get(9);
           commonState.mutePressed = touchPad.Get(10);
           commonState.resetStepPressed = touchPad.Get(11);
-          
+
+          commonState.selectPatternPressed = touchPad.Get(12);
+          commonState.selectBankPressed = touchPad.Get(13);
+          commonState.savePatternsPressed = touchPad.Get(14);
+
 //          clockInState.Tick(repeat==0, true);
           clockInState.Tick(clockIn.IsRising(), true);
           commonState.clockCntr = clockInState.Cntr();

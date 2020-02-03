@@ -6,6 +6,11 @@ struct CommonState
     bool setPressed;
     bool clearPressed;
     bool resetStepPressed;
+
+    bool selectPatternPressed;
+    bool selectBankPressed;
+    bool savePatternsPressed;
+    //TODO change step duration button??
     
     int clockCntr;
     int clockPeriod;
