@@ -4,6 +4,10 @@
 
 struct GSTrack
 {
+    //ID and version bytes for storage
+    uint8_t m_ID;
+    uint8_t m_Version;
+
     uint32_t m_Pattern;
     int m_NumSteps;
     bool m_Muted;

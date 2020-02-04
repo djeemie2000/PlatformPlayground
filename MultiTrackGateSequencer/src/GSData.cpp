@@ -2,6 +2,9 @@
 
 void Init(GSTrack& track, int NumSteps)
 {
+    track.m_ID = 0x01;
+    track.m_Version = 0x01;
+    // payload
     track.m_Pattern = 0x00000000;
     track.m_NumSteps = NumSteps<=32 ? NumSteps : 32;
     track.m_Muted = false;

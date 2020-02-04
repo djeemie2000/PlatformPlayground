@@ -56,7 +56,6 @@ int main() {
 
   // multiple tracks
   debugSerial.printf("Init tracks\r\n");
-
   MemController memController;
 
   const int PatternLength = 32;
