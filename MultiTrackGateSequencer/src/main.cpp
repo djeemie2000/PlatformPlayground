@@ -61,20 +61,20 @@ int main() {
   const uint32_t patterns[] = {0x11111111, 0x10101010, 0x00000000, 0x55555555, 0xAAAAAAAA, 0x00000000, 0x10001000 ,0xFFFFFFFF};
   const PinName outPins[] = {PA_11, PA_12, PA_15, PB_3, PB_4, PB_5, PB_6, PB_7 };
   // track (pointers) allow preset/load/save of tracks
-  GSPattern gsPattern;
+  GSPattern selectedPattern;
   DigitalOut* gateOuts[GSPattern::NumTracks];
   DigitalOutGateHandler* gateOutHandlers[GSPattern::NumTracks];
   TrackController* trackControllers[GSPattern::NumTracks];
 
-    Init(gsPattern, PatternLength);
+    Init(selectedPattern, PatternLength);
 
   for(int idx = 0; idx<GSPattern::NumTracks; ++idx)
   {
-    gsPattern.m_Track[idx].m_Pattern = patterns[idx];
+    selectedPattern.m_Track[idx].m_Pattern = patterns[idx];
     // yes, these are memory leaks (if we would ever destruct)
     gateOuts[idx] = new DigitalOut(outPins[idx]);
     gateOutHandlers[idx] = new DigitalOutGateHandler(*gateOuts[idx]);
-    trackControllers[idx] = new TrackController(*gateOutHandlers[idx], idx, &(gsPattern.m_Track[idx]));
+    trackControllers[idx] = new TrackController(*gateOutHandlers[idx], idx, &(selectedPattern.m_Track[idx]));
   }
 
   // 

@@ -15,3 +15,24 @@ void Init(GSPattern& pattern, int NumSteps)
         Init(pattern.m_Track[idx], NumSteps);
     }
 }
+
+void Init(GSBank& bank, int NumSteps)
+{
+    for(int idx = 0; idx<GSBank::NumPatterns; ++idx)
+    {
+        Init(bank.m_Pattern[idx], NumSteps);
+    }
+}
+
+void Copy(const GSPattern& source, GSPattern& dest)
+{
+    std::memcpy(&dest, &source, sizeof(GSPattern));
+}
+
+void Init(GSMem& mem, int NumSteps)
+{
+    for(int idx = 0; idx<GSMem::NumBanks; ++idx)
+    {
+        Init(mem.m_Bank[idx], NumSteps);
+    }
+}

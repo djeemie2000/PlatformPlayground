@@ -20,6 +20,7 @@ struct GSPattern
 };
 
 void Init(GSPattern& pattern, int NumSteps);
+void Copy(const GSPattern& source, GSPattern& dest);
 
 struct GSBank
 {
@@ -28,4 +29,13 @@ struct GSBank
     GSPattern m_Pattern[NumPatterns];
 };
 
+void Init(GSBank& bank, int NumSteps);
 
+struct GSMem
+{
+    static const int NumBanks = 8;
+
+    GSBank m_Bank[NumBanks];
+};
+
+void Init(GSMem& mem, int NumSteps);
