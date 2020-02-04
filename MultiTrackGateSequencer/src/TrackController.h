@@ -9,13 +9,14 @@ class CommonState;
 class GateHandler;
 class DigitalOutMatrix;
 class GSTrack;
+class MemController;
 
 class TrackController
 {
 public:
     TrackController(GateHandler& handler, int trackIdx, GSTrack* track);
 
-    void Tick(const CommonState& commonState, int btn);
+    void Tick(const CommonState& commonState, int btn, MemController& memController);
     void SetTrack(GSTrack* track);
 
     void Update(DigitalOutMatrix& ledMatrix);

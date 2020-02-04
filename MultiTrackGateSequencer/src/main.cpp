@@ -8,6 +8,7 @@
 #include "BitWise.h"
 #include "ScanI2C.h"
 #include "ClockInQuantizer.h"
+#include "MemController.h"
 
 //#include "MBedUnit.h"
 
@@ -56,25 +57,26 @@ int main() {
   // multiple tracks
   debugSerial.printf("Init tracks\r\n");
 
+  MemController memController;
+
   const int PatternLength = 32;
   //default pattern, gate outputs & handlers
   const uint32_t patterns[] = {0x11111111, 0x10101010, 0x00000000, 0x55555555, 0xAAAAAAAA, 0x00000000, 0x10001000 ,0xFFFFFFFF};
   const PinName outPins[] = {PA_11, PA_12, PA_15, PB_3, PB_4, PB_5, PB_6, PB_7 };
   // track (pointers) allow preset/load/save of tracks
-  GSPattern selectedPattern;
   DigitalOut* gateOuts[GSPattern::NumTracks];
   DigitalOutGateHandler* gateOutHandlers[GSPattern::NumTracks];
   TrackController* trackControllers[GSPattern::NumTracks];
 
-    Init(selectedPattern, PatternLength);
+  Init(*memController.GetCurrentPattern(), PatternLength);
 
   for(int idx = 0; idx<GSPattern::NumTracks; ++idx)
   {
-    selectedPattern.m_Track[idx].m_Pattern = patterns[idx];
+    memController.GetCurrentPattern()->m_Track[idx].m_Pattern = patterns[idx];
     // yes, these are memory leaks (if we would ever destruct)
     gateOuts[idx] = new DigitalOut(outPins[idx]);
     gateOutHandlers[idx] = new DigitalOutGateHandler(*gateOuts[idx]);
-    trackControllers[idx] = new TrackController(*gateOutHandlers[idx], idx, &(selectedPattern.m_Track[idx]));
+    trackControllers[idx] = new TrackController(*gateOutHandlers[idx], idx, &(memController.GetCurrentPattern()->m_Track[idx]));
   }
 
   // 
@@ -115,7 +117,7 @@ int main() {
 
           for(int idx = 0; idx<GSPattern::NumTracks; ++idx)
           {
-            trackControllers[idx]->Tick(commonState, touchPad.Get(idx));
+            trackControllers[idx]->Tick(commonState, touchPad.Get(idx), memController);
           }          
 
           // update display takes some time => update alternating rows

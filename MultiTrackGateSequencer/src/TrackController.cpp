@@ -2,6 +2,7 @@
 #include "CommonState.h"
 #include "DigitalOutMatrix.h"
 #include "GSData.h"
+#include "MemController.h"
 
 TrackController::TrackController(GateHandler& handler, int trackIdx, GSTrack* track)
  : m_TrackBtn()
@@ -12,7 +13,7 @@ TrackController::TrackController(GateHandler& handler, int trackIdx, GSTrack* tr
     SetTrack(track);
 }
 
-void TrackController::Tick(const CommonState& commonState, int btn)
+void TrackController::Tick(const CommonState& commonState, int btn, MemController& memController)
 {
     m_GateOut.SetDuration(m_Track.m_Track->m_GateDuration);
     m_TrackBtn.Tick(btn);
@@ -26,7 +27,15 @@ void TrackController::Tick(const CommonState& commonState, int btn)
     m_GateOut.Tick(commonState.clockCntr, commonState.clockPeriod);
     if(m_TrackBtn.IsRising())
     {
-        if(commonState.selectPatternPressed || commonState.selectBankPressed || commonState.savePatternsPressed)
+        if(commonState.selectPatternPressed)
+        {
+            memController.SelectPattern(m_TrackIdx);
+        }
+        else if(commonState.selectBankPressed)
+        {
+            memController.SelectBank(m_TrackIdx);
+        }
+        else if(commonState.savePatternsPressed)
         {
             //ignore
         }
