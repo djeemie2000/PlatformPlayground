@@ -15,6 +15,4 @@ public:
 private:
     GSMem m_Memory;
     GSPattern m_CurrentPattern;
-    int m_SelectedBank;
-    int m_SelectedPattern;
 };

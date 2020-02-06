@@ -1,8 +1,9 @@
 #pragma once
 
 #include <mbed.h>
+#include "MemoryBank.h"
 
-class Eeprom24LC256
+class Eeprom24LC256 : public MemoryBank
 {
 public:
     enum Address{
@@ -20,8 +21,8 @@ public:
 
     int BankSize() const    {   return 64;      }
     int NumBanks() const    {   return 4096;    }
-    int writeBank(int bank, const uint8_t* data, int size);//returns actual # written
-    int readBank(int bank, uint8_t* data, int size);//returns actual # read
+    int WriteBank(int bank, const uint8_t* data, int size);//returns actual # written
+    int ReadBank(int bank, uint8_t* data, int size);//returns actual # read
     //TODO offset support in bank
 
 private:

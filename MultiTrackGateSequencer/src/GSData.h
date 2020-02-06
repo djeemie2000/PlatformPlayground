@@ -25,6 +25,7 @@ struct GSPattern
 
 void Init(GSPattern& pattern, int NumSteps);
 void Copy(const GSPattern& source, GSPattern& dest);
+bool Equals(const GSPattern& a, GSPattern& b);
 
 struct GSBank
 {
@@ -35,10 +36,23 @@ struct GSBank
 
 void Init(GSBank& bank, int NumSteps);
 
+struct GSCommon
+{
+    //ID and version bytes for storage
+    uint8_t m_Id;
+    uint8_t m_Version;
+
+    int m_SelectedPattern;
+    int m_SelectedBank;
+};
+
+void Init(GSCommon& common);
+
 struct GSMem
 {
     static const int NumBanks = 8;
 
+    GSCommon m_Common;
     GSBank m_Bank[NumBanks];
 };
 

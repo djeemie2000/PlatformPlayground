@@ -14,7 +14,7 @@ void Eeprom24LC256::WriteAdress(int eepromAddress)
     m_I2c->write(m_Address, (char*)buffer, 2, false);
 }
 
-int Eeprom24LC256::writeBank(int bank, const uint8_t* data, int size)
+int Eeprom24LC256::WriteBank(int bank, const uint8_t* data, int size)
 {
     // no check on bank
 
@@ -25,15 +25,16 @@ int Eeprom24LC256::writeBank(int bank, const uint8_t* data, int size)
     int croppedSize = size<BankSize()?size:BankSize();
     m_I2c->write(m_Address, (char*)data, croppedSize);
     
-    //returns actual # written
-    return croppedSize;
 
     //TODO prevent write for approx 5 milliseconds after a write
     // but without blocking the whole application
-    // wait_us(6000);
+    wait_us(6000);
+
+    //returns actual # written
+    return croppedSize;
 }
 
-int Eeprom24LC256::readBank(int bank, uint8_t* data, int size)
+int Eeprom24LC256::ReadBank(int bank, uint8_t* data, int size)
 {
     int eepromAddress = bank<<6;//*64
     WriteAdress(eepromAddress);

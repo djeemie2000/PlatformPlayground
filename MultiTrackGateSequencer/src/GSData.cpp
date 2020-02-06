@@ -32,8 +32,23 @@ void Copy(const GSPattern& source, GSPattern& dest)
     std::memcpy(&dest, &source, sizeof(GSPattern));
 }
 
+bool Equals(const GSPattern& a, GSPattern& b)
+{
+    return 0==std::memcmp(&a, &b, sizeof(GSPattern));
+}
+
+void Init(GSCommon& common)
+{
+    common.m_Id = 0x02;
+    common.m_Version = 0x01;
+    //payload
+    common.m_SelectedPattern = 0;
+    common.m_SelectedBank = 0;
+}
+
 void Init(GSMem& mem, int NumSteps)
 {
+    Init(mem.m_Common);
     for(int idx = 0; idx<GSMem::NumBanks; ++idx)
     {
         Init(mem.m_Bank[idx], NumSteps);
