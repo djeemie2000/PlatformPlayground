@@ -2,7 +2,7 @@
 
 void Init(GSTrack& track, int NumSteps)
 {
-    track.m_ID = 0x01;
+    track.m_ID = GSId::GSTrackId;
     track.m_Version = 0x01;
     // payload
     track.m_Pattern = 0x00000000;
@@ -39,7 +39,7 @@ bool Equals(const GSPattern& a, GSPattern& b)
 
 void Init(GSCommon& common)
 {
-    common.m_Id = 0x02;
+    common.m_Id = GSId::GSCommonId;
     common.m_Version = 0x01;
     //payload
     common.m_SelectedPattern = 0;

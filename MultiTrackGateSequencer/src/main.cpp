@@ -9,6 +9,7 @@
 #include "ScanI2C.h"
 #include "ClockInQuantizer.h"
 #include "MemController.h"
+#include "Eeprom24LC256.h"
 
 //#include "MBedUnit.h"
 
@@ -56,7 +57,8 @@ int main() {
 
   // multiple tracks
   debugSerial.printf("Init tracks\r\n");
-  MemController memController;
+  Eeprom24LC256 memBank(&i2c, Eeprom24LC256::AllLow);
+  MemController memController(memBank);
 
   const int PatternLength = 32;
   //default pattern, gate outputs & handlers

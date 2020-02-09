@@ -2,6 +2,14 @@
 
 #include <mbed.h>
 
+class GSId
+{
+public:
+    static const uint8_t GSTrackId = 0x01;
+    static const uint8_t GSCommonId = 0x02;
+};
+
+
 struct GSTrack
 {
     //ID and version bytes for storage
