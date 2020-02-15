@@ -1,0 +1,21 @@
+
+
+TODOs
+
+test serial out 
+
+test functions
+Test(... , SerialOut& ) for digital out -> Blinker loop
+Test(..., SerialOut& ) for digital in
+
+I2C helpers : read multiple bytes to a buffer 
+    -> I2CDevice (adress) ?, write / write register + value (uint8_t or uinT_16_t ) / write n bytes / read n bytes / read uint16_t, ...
+
+implement peripherals
+    led matrix !
+    mem bank -> done
+
+Test(.., SeriaOut& ) functions for all peripherals (via interfaces)
+ TouchPad / DigitalInBank
+ LedOutMatrix (blink all leds?)
+ MemBank
