@@ -20,6 +20,11 @@ public:
     Serial.println(content);
   }
 
+  void println()
+  {
+    Serial.println();
+  }
+
   int printf(const char *format, ...)
   {
     va_list ap;
