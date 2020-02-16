@@ -4,6 +4,7 @@
 
 void TestDigitalOutMatrix(DigitalOutMatrix& matrix, SerialOut& debugSerial)
 {
+    debugSerial.println("Testing led matrix...");
     for(int row = 0; row<matrix.NumRows(); ++row)
     {
         debugSerial.printf("Row %d...", row);
@@ -12,9 +13,10 @@ void TestDigitalOutMatrix(DigitalOutMatrix& matrix, SerialOut& debugSerial)
             debugSerial.print("x");
             matrix.Set(row, col);
             matrix.WriteAll();
-            delay(100);
+            delay(300);
             matrix.Clear(row, col);
         }
-        debugSerial.println("b");
+        debugSerial.println(" done");
     }
+    debugSerial.println("Testing led matrix ended");
 }

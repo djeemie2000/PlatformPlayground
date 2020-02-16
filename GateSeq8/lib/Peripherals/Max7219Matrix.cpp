@@ -28,15 +28,19 @@ Max7219Matrix::Max7219Matrix(int numDevices, uint8_t csPin)
 
 void Max7219Matrix::Configure(bool rotated)
 {
+    SPI.begin();//here??
+
     m_Rotated = rotated;
 
     WriteCommand(ShutdownCommand,0);//off
+
+    WriteCommand(DisplayTestCommand, 0x00);
 
     WriteCommand(ScanLimitCommand, 0x07);//scan limit 8 <=> all leds used
     WriteCommand(DecodeModeCommand, 0x00);//no decode mode
     WriteCommand(IntensityCommand, 0x01);//lowest intensity 
 
-    WriteCommand(ShutdownCommand,1);//off
+    WriteCommand(ShutdownCommand,1);//on
 }
 
 void Max7219Matrix::WriteCommand(uint8_t command, uint8_t value)
@@ -48,10 +52,17 @@ void Max7219Matrix::WriteCommand(uint8_t command, uint8_t value)
         buffer[2*device+1] = value;
     }
 
-    SPI.beginTransaction(SPISettings(8000000ul, MSBFIRST, SPI_MODE0));
+    SPI.beginTransaction(SPISettings(4000000ul, MSBFIRST, SPI_MODE0));
     digitalWrite(m_CsPin, LOW);
-    SPI.transfer(buffer, 2*m_NumDevices);
+    delayMicroseconds(5);
+    //    SPI.transfer(buffer, 2*m_NumDevices);
+    for(int device = 0; device<m_NumDevices; ++device)
+    {
+        SPI.transfer(command);
+        SPI.transfer(value);
+    }   
     digitalWrite(m_CsPin, HIGH);
+    delayMicroseconds(5);
     SPI.endTransaction();
 }
 
@@ -59,10 +70,18 @@ int Max7219Matrix::WriteRow(int row)
 {
     if(0<=row && row<Size)
     {
-        SPI.beginTransaction(SPISettings(8000000ul, MSBFIRST, SPI_MODE0));
+                                         //8000000
+        SPI.beginTransaction(SPISettings(4000000ul, MSBFIRST, SPI_MODE0));
         digitalWrite(m_CsPin, LOW);
-        SPI.transfer(m_Bits[row], 2*m_NumDevices);
+        delayMicroseconds(5);
+//        SPI.transfer(m_Bits[row], 2*m_NumDevices);
+        for(int dev = m_NumDevices-1; 0<=dev; --dev)
+        {
+            SPI.transfer(Digit0Command+row);
+            SPI.transfer(m_Bits[row][dev*2+1]);//1010
+        }
         digitalWrite(m_CsPin, HIGH);
+        delayMicroseconds(5);
         SPI.endTransaction();
     }
     return 0;

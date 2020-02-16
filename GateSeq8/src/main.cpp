@@ -7,7 +7,7 @@
 #include "TTP8229TouchPad.h"
 #include "Max7219Matrix.h"
 #include "BitWise.h"
-#include "I2CDetect.h"
+#include "ScanI2C.h"
 #include "ClockInQuantizer.h"
 #include "MemController.h"
 #include "Eeprom24LC256.h"
@@ -17,6 +17,8 @@
 #include "SerialOut.h"
 
 //#include "MBedUnit.h"
+#include "TestDigitalOutMatrix.h"
+#include "TestTouchPad.h"
 
 
 void setup()
@@ -45,22 +47,39 @@ void loop()
   debugSerial.begin(baudrate);
 
   // short pause before running
-  wait_ms(1000);
+  wait_ms(500);
 
   // start running
-  debugSerial.print("\r\n-\r\n-\r\nGateSeq8\r\nMulti track gate sequencer...\r\n-\r\n-\r\n");
-  debugSerial.print("version 0.2\r\n");
-  delay(1000);
+  debugSerial.println("GateSeq8");
+  debugSerial.println("Multi track gate sequencer...");
+  debugSerial.println("version 0.2");
+  delay(500);
+
+  //return;//Debug  
+  int tmp = 12345;
+  int tmp3 = 0x5A;
+  debugSerial.printf("test printf...\r\n int %d hex 0x%x --eol-\r\n", tmp, tmp3);
+
+  ScanI2C(debugSerial);
+  delay(2000);
+  
+  // set, mute, clear, reset btn 
+  // select bank,  select pattern, save, tbc 
+  // 8x track button 
+  debugSerial.println("Init touchpad...");
+  TTP8229TouchPad touchPad;
+  touchPad.Begin(TTP8229TouchPad::I2CMode);
+  //TestTouchPad(touchPad, debugSerial);
+  //return; //Debug
 
   //
-  debugSerial.print("Init led matrix...\r\n");
-//  SPI spiPort(PA_7, PA_6, PA_5, NC);
+  debugSerial.println("Init led matrix...");
   Max7219Matrix ledMatrix(4, PIN_SPI_SS);// chipselect pin 10 (SPI0_MOSI, SPI0_MISO, SPI0_SCK, SPI0_SS));//4 devices
   ledMatrix.Configure(false);
-  //debugSerial.printf("Test led matrix...\r\n");
-  //ledMatrix.Test();
-  //TestExtended(ledMatrix, debugSerial);
+  TestDigitalOutMatrix(ledMatrix, debugSerial);
   
+  return;
+
   // common
   debugSerial.print("Init common\r\n");
   //SerialMidiHandler midiSerial(pcMidi);
@@ -70,12 +89,6 @@ void loop()
   GateIn debugActiveIn(PIN_A1,true);//pullup => default on (????)
   CommonState commonState;
   
-  //I2C i2c(PB_11, PB_10);
-  ScanI2C(debugSerial);
-  // set, mute, clear, reset btn / select bank, select pattern, save, tbc / 8x track button 
-//  Mpr121InBank touchPad(&i2c, PB_1);
-  TTP8229TouchPad touchPad;
-  touchPad.Begin(TTP8229TouchPad::I2CMode);
 
   // multiple tracks
   debugSerial.print("Init tracks\r\n");

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Arduino.h>
+
 class SerialOut
 {
 public:
@@ -25,14 +27,23 @@ public:
     Serial.println();
   }
 
-  int printf(const char *format, ...)
-  {
-    va_list ap;
-    va_start(ap, format);
-    int retval = snprintf(buf, bufLength, format, ap);
-    Serial.println(buf);
-    return retval;
-  }
+  int printf(const char *format, ...);
+  // {
+  //   va_list arg;
+  //   va_start(arg, format);
+  //   int retval = vsnprintf(buf, bufLength, format, arg);
+  //   Serial.println(buf);
+  //   va_end(arg);
+  //   return retval;
+  // }
+
+//  int vprintf(const char* format, va_list args) 
+//  {
+//   int r = vsnprintf(buf, bufLength, format, args);
+//   Serial.println(buf);
+//   return r;
+// }
+
 private:
   static const int bufLength = 100;
   char buf[bufLength];
