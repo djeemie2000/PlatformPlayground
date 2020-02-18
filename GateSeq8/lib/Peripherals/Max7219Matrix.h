@@ -9,7 +9,7 @@ class Max7219Matrix : public DigitalOutMatrix
 public:
     Max7219Matrix(int numDevices, uint8_t csPin);
 
-    void Configure(bool rotated = false);
+    void Configure();
 
     int NumRows() const{return Size;}
     int NumCols() const{return Size*m_NumDevices;}
@@ -29,7 +29,6 @@ private:
     
     const int m_NumDevices;
     uint8_t m_CsPin;
-    uint8_t m_Bits[Size][2*MaxNumDevices];
-    bool m_Rotated;
+    uint8_t m_Bits[Size][MaxNumDevices];
 };
 

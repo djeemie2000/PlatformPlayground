@@ -75,7 +75,7 @@ void loop()
   //
   debugSerial.println("Init led matrix...");
   Max7219Matrix ledMatrix(4, PIN_SPI_SS);// chipselect pin 10 (SPI0_MOSI, SPI0_MISO, SPI0_SCK, SPI0_SS));//4 devices
-  ledMatrix.Configure(false);
+  ledMatrix.Configure();
   TestDigitalOutMatrix(ledMatrix, debugSerial);
   
   return;

@@ -13,24 +13,21 @@ Max7219Matrix::Max7219Matrix(int numDevices, uint8_t csPin)
  : m_NumDevices(numDevices)
  , m_CsPin(csPin)
 {
-    // init digit command, digit value for all rows
+    // init digit value for all rows
     for(int row = 0; row<Size;++row)
     {
         for(int device = 0; device<MaxNumDevices; ++device)
         {
-            m_Bits[row][2*device] = Digit0Command+row;
-            m_Bits[row][2*device+1] = 0x00;
+            m_Bits[row][device] = 0x00;
         }
     }
 
     pinMode(m_CsPin, OUTPUT);
 }
 
-void Max7219Matrix::Configure(bool rotated)
+void Max7219Matrix::Configure()
 {
     SPI.begin();//here??
-
-    m_Rotated = rotated;
 
     WriteCommand(ShutdownCommand,0);//off
 
@@ -45,17 +42,9 @@ void Max7219Matrix::Configure(bool rotated)
 
 void Max7219Matrix::WriteCommand(uint8_t command, uint8_t value)
 {
-    uint8_t buffer[2*m_NumDevices];
-    for(int device = 0; device<m_NumDevices; ++device)
-    {
-        buffer[2*device] = command;
-        buffer[2*device+1] = value;
-    }
-
     SPI.beginTransaction(SPISettings(4000000ul, MSBFIRST, SPI_MODE0));
     digitalWrite(m_CsPin, LOW);
     delayMicroseconds(5);
-    //    SPI.transfer(buffer, 2*m_NumDevices);
     for(int device = 0; device<m_NumDevices; ++device)
     {
         SPI.transfer(command);
@@ -74,11 +63,10 @@ int Max7219Matrix::WriteRow(int row)
         SPI.beginTransaction(SPISettings(4000000ul, MSBFIRST, SPI_MODE0));
         digitalWrite(m_CsPin, LOW);
         delayMicroseconds(5);
-//        SPI.transfer(m_Bits[row], 2*m_NumDevices);
         for(int dev = m_NumDevices-1; 0<=dev; --dev)
         {
             SPI.transfer(Digit0Command+row);
-            SPI.transfer(m_Bits[row][dev*2+1]);//1010
+            SPI.transfer(m_Bits[row][dev]);
         }
         digitalWrite(m_CsPin, HIGH);
         delayMicroseconds(5);
@@ -105,13 +93,13 @@ int Max7219Matrix::Write()
 void Max7219Matrix::SetBits(int device, int row, int col)
 {
     //no check on device,row, col
-    bitSet(m_Bits[row][2*device+1],col);
+    bitSet(m_Bits[row][device],col);
 }
 
 void Max7219Matrix::ClearBits(int device, int row, int col)
 {
     //no check on device,row, col
-    bitClear(m_Bits[row][2*device+1],col);
+    bitClear(m_Bits[row][device],col);
 }
 
 bool Max7219Matrix::Set(int row, int col)
@@ -120,18 +108,9 @@ bool Max7219Matrix::Set(int row, int col)
     int device = col/Size;
     if(0<=device && device<m_NumDevices)
     {
-        if(m_Rotated)
-        {
-            int r = row;
-            int c = col-device*Size;
-            SetBits(device,c,r);//rotated
-        }
-        else
-        {
-            int r = Size-1-row;
-            int c = col-device*Size;
-            SetBits(device,r,c);//not rotated
-        }
+        int r = Size-1-row;
+        int c = col-device*Size;
+        SetBits(device,r,c);//not rotated
         return true;
     }
     return false;
@@ -142,18 +121,10 @@ bool Max7219Matrix::Clear(int row, int col)
     int device = col/Size;
     if(0<=device && device<m_NumDevices)
     {
-        if(m_Rotated)
-        {
-            int r = row;
-            int c = col-device*Size;
-            ClearBits(device,c,r);//rotated
-        }
-        else
-        {
-            int r = Size-1-row;
-            int c = col-device*Size;
-            ClearBits(device,r,c);//not rotated
-        }
+       
+        int r = Size-1-row;
+        int c = col-device*Size;
+        ClearBits(device,r,c);//not rotated
         return true;
     }
     return false;
