@@ -23,6 +23,11 @@ void TestMemoryBank(MemoryBank& memBank, SerialOut& debugSerial, int bank)
         {
             ++numEquals;
         }
+        else
+        {
+            debugSerial.printf("expected 0x%x actual 0x%x\r\n", idx, (int)data[idx]);
+        }
+        
     }
 
     delete[] data;
@@ -30,4 +35,20 @@ void TestMemoryBank(MemoryBank& memBank, SerialOut& debugSerial, int bank)
     bool ok = (numWrite==bankSize) && (numRead==bankSize) && (numEquals==bankSize);
 
     debugSerial.printf("Test memoryBank : numWrite=%d numRead=%d numEquals=%d => ok=%d", numWrite, numRead, numEquals, ok?1:0);
+}
+
+void PrintMemoryBank(MemoryBank& memBank, SerialOut& debugSerial, int bank, int numBytes)
+{
+    uint8_t* data = new uint8_t[numBytes];
+    
+    int numRead = memBank.ReadBank(bank, data, numBytes);
+    debugSerial.printf("read %d bytes from bank %d\r\n", numRead, bank);
+    for(int idx = 0; idx<numRead; ++idx)
+    {
+        debugSerial.printf("(%d : 0x%x)", idx, (int)data[idx]);
+    }
+    debugSerial.println();
+    
+    delete[]data;
+    debugSerial.println();
 }
