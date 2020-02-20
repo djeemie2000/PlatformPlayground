@@ -4,6 +4,8 @@
 
 void TestMemoryBank(MemoryBank& memBank, SerialOut& debugSerial, int bank)
 {
+    debugSerial.printf("Test memory bank %d ...", bank);
+
     int bankSize = memBank.BankSize();
     uint8_t* data = new uint8_t[bankSize];
 
@@ -17,7 +19,7 @@ void TestMemoryBank(MemoryBank& memBank, SerialOut& debugSerial, int bank)
     int numRead = memBank.ReadBank(bank, data, bankSize);
     
     int numEquals = 0;
-    for(int idx = 0; idx<bankSize; ++idx)
+    for(int idx = 0; idx<numRead; ++idx)
     {
         if(data[idx] == idx)
         {
@@ -39,6 +41,8 @@ void TestMemoryBank(MemoryBank& memBank, SerialOut& debugSerial, int bank)
 
 void PrintMemoryBank(MemoryBank& memBank, SerialOut& debugSerial, int bank, int numBytes)
 {
+    debugSerial.printf("Test memory bank %d ...", bank);
+
     uint8_t* data = new uint8_t[numBytes];
     
     int numRead = memBank.ReadBank(bank, data, numBytes);

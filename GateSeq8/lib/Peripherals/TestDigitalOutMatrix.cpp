@@ -2,7 +2,7 @@
 #include "DigitalOutMatrix.h"
 #include "../IO/SerialOut.h"
 
-void TestDigitalOutMatrix(DigitalOutMatrix& matrix, SerialOut& debugSerial)
+void TestDigitalOutMatrix(DigitalOutMatrix& matrix, SerialOut& debugSerial, int period)
 {
     debugSerial.println("Testing led matrix...");
     for(int row = 0; row<matrix.NumRows(); ++row)
@@ -13,7 +13,7 @@ void TestDigitalOutMatrix(DigitalOutMatrix& matrix, SerialOut& debugSerial)
             debugSerial.print("x");
             matrix.Set(row, col);
             matrix.WriteAll();
-            delay(300);
+            delay(period);
             matrix.Clear(row, col);
         }
         debugSerial.println(" done");

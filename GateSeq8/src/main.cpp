@@ -19,6 +19,7 @@
 //#include "MBedUnit.h"
 #include "TestDigitalOutMatrix.h"
 #include "TestTouchPad.h"
+#include "TestMemoryBank.h"
 
 
 void setup()
@@ -76,25 +77,36 @@ void loop()
   debugSerial.println("Init led matrix...");
   Max7219Matrix ledMatrix(4, PIN_SPI_SS);// chipselect pin 10 (SPI0_MOSI, SPI0_MISO, SPI0_SCK, SPI0_SS));//4 devices
   ledMatrix.Configure();
-  TestDigitalOutMatrix(ledMatrix, debugSerial);
-  
-  return;
+  TestDigitalOutMatrix(ledMatrix, debugSerial,100);
+  //return;
 
   // common
   debugSerial.print("Init common\r\n");
-  //SerialMidiHandler midiSerial(pcMidi);
-
   DigitalOut clockLed(PIN_A3);
   GateIn clockIn(PIN_A0, true);//external clock input, pullup
   GateIn debugActiveIn(PIN_A1,true);//pullup => default on (????)
   CommonState commonState;
   
-
-  // multiple tracks
-  debugSerial.print("Init tracks\r\n");
+  // memory
+  debugSerial.println("Init memory bank");
   Eeprom24LC256 memBank(Eeprom24LC256::AllLow);
+  
+  for(int bank = 1000; bank<1050; ++bank)
+  {
+    TestMemoryBank(memBank, debugSerial, bank);
+    delay(500);
+  }
+  // for(int bank = 0; bank<memBank.NumBanks();++bank)
+  // {
+  //   PrintMemoryBank(memBank, debugSerial, bank, 16);
+  // }
+  return;
+
+  debugSerial.println("Init memory controller");
   MemController memController(memBank);
 
+  debugSerial.println("Init tracks");
+  // multiple tracks
   const int PatternLength = 32;
   //default pattern, gate outputs & handlers
   const uint32_t patterns[] = {0x11111111, 0x10101010, 0x00000000, 0x55555555, 0xAAAAAAAA, 0x00000000, 0x10001000 ,0xFFFFFFFF};
