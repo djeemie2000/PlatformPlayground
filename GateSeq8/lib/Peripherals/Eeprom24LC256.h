@@ -28,6 +28,9 @@ public:
 private:
     void WriteEepromAdress(int eepromAddress);
     void ack_pooling();
+    int WriteBlock(int eepromAddress, const uint8_t* data, int size);
+    int ReadBlock(int eepromAddress, uint8_t* data, int size);
+
 
     //I2C* m_I2c;
     int m_Address;

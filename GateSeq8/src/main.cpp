@@ -91,12 +91,12 @@ void loop()
   debugSerial.println("Init memory bank");
   Eeprom24LC256 memBank(Eeprom24LC256::AllLow);
   
-  for(int bank = 0; bank<8; ++bank)
+  for(int bank = 18; bank<20; ++bank)
   {
     TestMemoryBank(memBank, debugSerial, bank);
     delay(500);
   }
-  for(int bank = 0; bank<8; ++bank)
+  for(int bank = 18; bank<20; ++bank)
   {
     PrintMemoryBank(memBank, debugSerial, bank, 16, 0);
     PrintMemoryBank(memBank, debugSerial, bank, 16, 16);
