@@ -21,12 +21,13 @@ public:
 
     int BankSize() const    {   return 64;      }
     int NumBanks() const    {   return 512;    }
-    int WriteBank(int bank, const uint8_t* data, int size);//returns actual # written
-    int ReadBank(int bank, uint8_t* data, int size);//returns actual # read
+    int WriteBank(int bank, const uint8_t* data, int size, int offset);//returns actual # written
+    int ReadBank(int bank, uint8_t* data, int size, int offset);//returns actual # read
     //TODO offset support in bank
 
 private:
     void WriteEepromAdress(int eepromAddress);
+    void ack_pooling();
 
     //I2C* m_I2c;
     int m_Address;

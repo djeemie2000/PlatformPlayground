@@ -91,15 +91,18 @@ void loop()
   debugSerial.println("Init memory bank");
   Eeprom24LC256 memBank(Eeprom24LC256::AllLow);
   
-  for(int bank = 1000; bank<1050; ++bank)
+  for(int bank = 0; bank<8; ++bank)
   {
     TestMemoryBank(memBank, debugSerial, bank);
     delay(500);
   }
-  // for(int bank = 0; bank<memBank.NumBanks();++bank)
-  // {
-  //   PrintMemoryBank(memBank, debugSerial, bank, 16);
-  // }
+  for(int bank = 0; bank<8; ++bank)
+  {
+    PrintMemoryBank(memBank, debugSerial, bank, 16, 0);
+    PrintMemoryBank(memBank, debugSerial, bank, 16, 16);
+    PrintMemoryBank(memBank, debugSerial, bank, 16, 32);
+    PrintMemoryBank(memBank, debugSerial, bank, 16, 48);
+  }
   return;
 
   debugSerial.println("Init memory controller");
