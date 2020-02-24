@@ -16,6 +16,7 @@ public:
 private:
     GSPattern& GetSelectedPatternInternal();
     void SaveSelectedPatternInternal();
+    void LoadAllPatterns();
     
     MemoryBank& m_MemoryBank;
     GSMem m_Memory;

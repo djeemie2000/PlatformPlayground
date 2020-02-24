@@ -77,7 +77,7 @@ void loop()
   debugSerial.println("Init led matrix...");
   Max7219Matrix ledMatrix(4, PIN_SPI_SS);// chipselect pin 10 (SPI0_MOSI, SPI0_MISO, SPI0_SCK, SPI0_SS));//4 devices
   ledMatrix.Configure();
-  TestDigitalOutMatrix(ledMatrix, debugSerial,100);
+  //TestDigitalOutMatrix(ledMatrix, debugSerial,100);
   //return;
 
   // common
@@ -91,19 +91,19 @@ void loop()
   debugSerial.println("Init memory bank");
   Eeprom24LC256 memBank(Eeprom24LC256::AllLow);
   
-  for(int bank = 18; bank<20; ++bank)
-  {
-    TestMemoryBank(memBank, debugSerial, bank);
-    delay(500);
-  }
-  for(int bank = 18; bank<20; ++bank)
-  {
-    PrintMemoryBank(memBank, debugSerial, bank, 16, 0);
-    PrintMemoryBank(memBank, debugSerial, bank, 16, 16);
-    PrintMemoryBank(memBank, debugSerial, bank, 16, 32);
-    PrintMemoryBank(memBank, debugSerial, bank, 16, 48);
-  }
-  return;
+  // for(int bank = 18; bank<20; ++bank)
+  // {
+  //   TestMemoryBank(memBank, debugSerial, bank);
+  //   delay(500);
+  // }
+  // for(int bank = 18; bank<20; ++bank)
+  // {
+  //   PrintMemoryBank(memBank, debugSerial, bank, 16, 0);
+  //   PrintMemoryBank(memBank, debugSerial, bank, 16, 16);
+  //   PrintMemoryBank(memBank, debugSerial, bank, 16, 32);
+  //   PrintMemoryBank(memBank, debugSerial, bank, 16, 48);
+  // }
+  // return;
 
   debugSerial.println("Init memory controller");
   MemController memController(memBank);
@@ -183,25 +183,30 @@ void loop()
       }
       
       timer.stop();
-      debugSerial.printf("mute %d set %d clear %d ext %d", 
-                  commonState.mutePressed?1:0, 
-                  commonState.setPressed?1:0, 
-                  commonState.clearPressed?1:0, 
-                  clockInState.Period()
-                  );
-      debugSerial.printf("touchpad %d%d%d%d%d%d%d%d%d%d%d%d\r\n", 
-                  touchPad.Get(0), 
-                  touchPad.Get(1), 
-                  touchPad.Get(2), 
-                  touchPad.Get(3), 
-                  touchPad.Get(4), 
-                  touchPad.Get(5), 
-                  touchPad.Get(6), 
-                  touchPad.Get(7), 
-                  touchPad.Get(8), 
-                  touchPad.Get(9), 
-                  touchPad.Get(10), 
-                  touchPad.Get(11));
-      debugSerial.printf("%d : %d ms\r\n", counter++, timer.read_ms());
+
+      debugActiveIn.Read();
+//      if(debugActiveIn.Get())
+      {
+        debugSerial.printf("mute %d set %d clear %d ext %d", 
+                    commonState.mutePressed?1:0, 
+                    commonState.setPressed?1:0, 
+                    commonState.clearPressed?1:0, 
+                    clockInState.Period()
+                    );
+        debugSerial.printf("touchpad %d%d%d%d%d%d%d%d%d%d%d%d\r\n", 
+                    touchPad.Get(0), 
+                    touchPad.Get(1), 
+                    touchPad.Get(2), 
+                    touchPad.Get(3), 
+                    touchPad.Get(4), 
+                    touchPad.Get(5), 
+                    touchPad.Get(6), 
+                    touchPad.Get(7), 
+                    touchPad.Get(8), 
+                    touchPad.Get(9), 
+                    touchPad.Get(10), 
+                    touchPad.Get(11));
+        debugSerial.printf("%d : %d ms\r\n", counter++, timer.read_ms());
+      }
   }
 }

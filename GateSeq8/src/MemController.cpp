@@ -50,7 +50,7 @@ MemController::MemController(MemoryBank& memoryBank)
  , m_CurrentPattern()
 {
     Init(m_Memory, 32);
-    //TODO load all!
+    LoadAllPatterns();
     Copy(GetSelectedPatternInternal(), m_CurrentPattern);
 }
 
@@ -71,7 +71,8 @@ void MemController::SelectBank(int bank)
     {
         if(!Equals(m_CurrentPattern, GetSelectedPatternInternal()))
         {
-            //TODO save SaveSelectedPatternInternal();
+            //TODO save : 
+            SaveSelectedPatternInternal();
             Copy(m_CurrentPattern, GetSelectedPatternInternal());        
         }
         m_Memory.m_Common.m_SelectedBank = bank;
@@ -85,7 +86,8 @@ void MemController::SelectPattern(int pattern)
     {
         if(!Equals(m_CurrentPattern, GetSelectedPatternInternal()))
         {
-            //TODO save SaveSelectedPatternInternal();
+            //TODO save : 
+            SaveSelectedPatternInternal();
             Copy(m_CurrentPattern, GetSelectedPatternInternal());
         }
         m_Memory.m_Common.m_SelectedPattern = pattern;
@@ -99,11 +101,38 @@ void MemController::SaveSelectedPatternInternal()
     SaveGSCommon(m_MemoryBank, 0, 0, m_Memory.m_Common);
 
     //save pattern (tracks)
-    int bank = 1 + ((m_Memory.m_Common.m_SelectedBank*GSBank::NumPatterns)+m_Memory.m_Common.m_SelectedPattern)*GSPattern::NumTracks;
+    int selectedBank = m_Memory.m_Common.m_SelectedBank;
+    int selectedPattern = m_Memory.m_Common.m_SelectedPattern;
+    int selectedTrackIdx =  ((selectedBank*GSBank::NumPatterns)+selectedPattern)*GSPattern::NumTracks;
+    // half bank per track
+    int bank = 1 + selectedTrackIdx/2;
     GSPattern& pattern = GetSelectedPatternInternal();
     for(int idx = 0; idx<GSPattern::NumTracks; ++idx)
     {
-        //TODO half bank per track?
-        SaveGSTrack(m_MemoryBank, bank+idx, 0, pattern.m_Track[idx]);
+        int offset = (selectedTrackIdx%2)*m_MemoryBank.BankSize();
+        SaveGSTrack(m_MemoryBank, bank+idx/2, offset, pattern.m_Track[idx]);
     }
 }
+
+void MemController::LoadAllPatterns()
+{
+    // GSCommon contains current select => load from bank 0
+    LoadGSCommon(m_MemoryBank, 0, 0, m_Memory.m_Common);
+
+    for(int selectedBank = 0; selectedBank<GSMem::NumBanks; ++selectedBank)
+    {
+        for(int selectedPattern = 0; selectedPattern<GSBank::NumPatterns; ++selectedPattern)
+        {
+            int selectedTrackIdx =  ((selectedBank*GSBank::NumPatterns)+selectedPattern)*GSPattern::NumTracks;
+            // half bank per track
+            int bank = 1 + selectedTrackIdx/2;
+            GSPattern& pattern = m_Memory.m_Bank[selectedBank].m_Pattern[selectedPattern];
+            for(int idx = 0; idx<GSPattern::NumTracks; ++idx)
+            {
+                int offset = (selectedTrackIdx%2)*m_MemoryBank.BankSize();
+                LoadGSTrack(m_MemoryBank, bank+idx/2, offset, pattern.m_Track[idx]);
+            }
+        }
+    }
+}
+
