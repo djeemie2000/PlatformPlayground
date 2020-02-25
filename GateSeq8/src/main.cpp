@@ -107,7 +107,18 @@ void loop()
 
   debugSerial.println("Init memory controller");
   MemController memController(memBank);
-
+  //load all patterns -> indicator on led matrix
+  for(int selectedBank = 0; selectedBank<GSMem::NumBanks; ++selectedBank)
+  {
+      for(int selectedPattern = 0; selectedPattern<GSBank::NumPatterns; ++selectedPattern)
+      {
+          ledMatrix.Set(selectedBank,selectedPattern);
+          memController.LoadPattern(selectedBank, selectedPattern);
+          ledMatrix.WriteRow(selectedBank);
+      }
+  }
+  memController.LoadCommon();
+  
   debugSerial.println("Init tracks");
   // multiple tracks
   const int PatternLength = 32;
