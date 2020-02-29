@@ -61,15 +61,33 @@ void loop()
   DigitalOut clockLed(PIN_A3);
   GateIn clockIn(PIN_A0, true);//external clock input, pullup
   GateIn debugActiveIn(PIN_A1,true);//pullup => default on (????)
+  //TODO only do 'self test' if debug input is active
+
+  debugActiveIn.Read();
+  if(debugActiveIn.Get())
+  {
+    debugSerial.println("perform self tests");
+  }
+  else
+  {
+    debugSerial.println("no self tests");
+  }
+  
 
   //return;//Debug  
-  int tmp = 12345;
-  int tmp3 = 0x5A;
-  unsigned long tmp2 = 0x1234ABCD;
-  debugSerial.printf("test printf...\r\n int %d hex 0x%x hex_u32 %x --eol-\r\n", tmp, tmp3, tmp2);
+  if(debugActiveIn.Get())
+  {
+    int tmp = 12345;
+    int tmp3 = 0x5A;
+    unsigned long tmp2 = 0x1234ABCD;
+    debugSerial.printf("test printf...\r\n int %d hex 0x%x hex_u32 %x --eol-\r\n", tmp, tmp3, tmp2);
+  }
 
-  ScanI2C(debugSerial);
-  
+  if(debugActiveIn.Get())
+  {
+   ScanI2C(debugSerial);
+  }
+
   // set, mute, clear, reset btn 
   // select bank,  select pattern, save, tbc 
   // 8x track button 
@@ -83,45 +101,43 @@ void loop()
   debugSerial.println("Init led matrix...");
   Max7219Matrix ledMatrix(4, PIN_SPI_SS);// chipselect pin 10 (SPI0_MOSI, SPI0_MISO, SPI0_SCK, SPI0_SS));//4 devices
   ledMatrix.Configure();
-  TestDigitalOutMatrix(ledMatrix, debugSerial,10);
-  //return;
-  
+  if(debugActiveIn.Get())
+  {
+    TestDigitalOutMatrix(ledMatrix, debugSerial,10);
+  }
+
   // memory
   debugSerial.println("Init memory bank");
   Eeprom24LC256 memBank(Eeprom24LC256::AllLow);
   
-  // for(int bank = 18; bank<20; ++bank)
-  // {
-  //   TestMemoryBank(memBank, debugSerial, bank);
-  //   delay(500);
-  // }
-  for(int bank = 0; bank<5; ++bank)
+  if(debugActiveIn.Get())
   {
-    PrintMemoryBank(memBank, debugSerial, bank, 32, 0);
-    wait_ms(2000);
+    // for(int bank = 18; bank<20; ++bank)
+    // {
+    //   TestMemoryBank(memBank, debugSerial, bank);
+    //   delay(500);
+    // }
+    for(int bank = 0; bank<5; ++bank)
+    {
+      PrintMemoryBank(memBank, debugSerial, bank, 32, 0);
+    }
   }
-  // return;
 
-  debugSerial.println("test GS data memory...");
-  GSCommon testGSCommon;
-  LoadGSCommon(memBank, 0,0, testGSCommon);
-  PrintGSCommon(testGSCommon, debugSerial);
-  for(int idx = 0; idx<8; ++idx)
-  {
-    GSTrack testGSTrack;
-    LoadGSTrack(memBank, 1+idx, 0, testGSTrack);
-    PrintGSTrack(testGSTrack, debugSerial);
-//    testGSTrack.m_Pattern = 0xAA8C47F1;
- //   testGSTrack.m_NumSteps = 32;
- //   SaveGSTrack(memBank, 1+idx, 0, testGSTrack);
-//    Init(testGSTrack, 32);
-    LoadGSTrack(memBank, 1+idx, 32, testGSTrack);
-    PrintGSTrack(testGSTrack, debugSerial);
- //   testGSTrack.m_NumSteps = 32;
-   // SaveGSTrack(memBank, 1+idx, 32, testGSTrack);
+  if(debugActiveIn.Get())
+  { 
+    debugSerial.println("test GS data memory...");
+    GSCommon testGSCommon;
+    LoadGSCommon(memBank, 0,0, testGSCommon);
+    PrintGSCommon(testGSCommon, debugSerial);
+    for(int idx = 0; idx<8; ++idx)
+    {
+      GSTrack testGSTrack;
+      LoadGSTrack(memBank, 1+idx, 0, testGSTrack);
+      PrintGSTrack(testGSTrack, debugSerial);
+      LoadGSTrack(memBank, 1+idx, 32, testGSTrack);
+      PrintGSTrack(testGSTrack, debugSerial);
+    }
   }
-  //wait_ms(8000);
-  //return;
 
   debugSerial.println("Init memory controller");
   MemController memController(memBank);
@@ -149,7 +165,6 @@ void loop()
   const int fakeClockPeriod = 110;
   ClockInState clockInState(fakeClockPeriod);
 
-  //wait_ms(500);
   debugSerial.println("start processing");
   debugSerial.println();
 
@@ -166,7 +181,7 @@ void loop()
           touchPad.Read();
 
           // use pad 8-11 for set/clear/mute(toggle)/reset
-          // use pad 12-15 for select pattern/select bank/save/ advance??
+          // use pad 12-15 for select pattern/select bank/save/manual advance
           //TODO duration HW support
           commonState.setPressed = touchPad.Get(8);
           commonState.clearPressed = touchPad.Get(9);
@@ -175,6 +190,15 @@ void loop()
           commonState.selectPatternPressed = touchPad.Get(12);
           commonState.selectBankPressed = touchPad.Get(13);
           commonState.savePatternsPressed = touchPad.Get(14);
+
+          // support for save upon pressing save button
+          if(touchPad.IsClicked(14))
+          {
+            memController.Save();
+          }
+          // use remaining pad as manual advance
+          commonState.forceAdvanceOn = touchPad.IsClicked(15);
+          commonState.forceAdvanceOff = touchPad.IsReleased(15);
 
 //          clockInState.Tick(repeat==0, true);
           clockInState.Tick(clockIn.IsRising(), true);

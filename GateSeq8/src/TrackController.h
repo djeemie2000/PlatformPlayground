@@ -16,7 +16,7 @@ class TrackController
 public:
     TrackController(GateHandler& handler, int trackIdx, GSTrack* track);
 
-    void Tick(const CommonState& commonState, int btn, MemController& memController);
+    void Tick(const CommonState& commonState, int trackBtn, MemController& memController);
     void SetTrack(GSTrack* track);
 
     void Update(DigitalOutMatrix& ledMatrix);

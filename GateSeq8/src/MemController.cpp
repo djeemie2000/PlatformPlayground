@@ -65,6 +65,7 @@ void MemController::SelectBank(int bank)
         SavePattern(m_Common.m_SelectedBank, m_Common.m_SelectedPattern, m_CurrentPattern);
         SaveGSCommon(m_MemoryBank, 0, 0, m_Common);
         m_Common.m_SelectedBank = bank;
+        Init(m_CurrentPattern,32);
         LoadPattern(m_Common.m_SelectedBank, m_Common.m_SelectedPattern, m_CurrentPattern);
     }
 }
@@ -76,6 +77,7 @@ void MemController::SelectPattern(int pattern)
         SavePattern(m_Common.m_SelectedBank, m_Common.m_SelectedPattern, m_CurrentPattern);
         SaveGSCommon(m_MemoryBank, 0, 0, m_Common);
         m_Common.m_SelectedPattern = pattern;
+        Init(m_CurrentPattern,32);
         LoadPattern(m_Common.m_SelectedBank, m_Common.m_SelectedPattern, m_CurrentPattern);
     }
 }

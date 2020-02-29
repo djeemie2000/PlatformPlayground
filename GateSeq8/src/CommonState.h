@@ -9,8 +9,12 @@ struct CommonState
 
     bool selectPatternPressed;
     bool selectBankPressed;
+
     bool savePatternsPressed;
     //TODO change step duration button??
+
+    bool forceAdvanceOn;
+    bool forceAdvanceOff;
     
     int clockCntr;
     int clockPeriod;

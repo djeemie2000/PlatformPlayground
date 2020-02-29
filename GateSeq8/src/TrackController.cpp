@@ -13,18 +13,19 @@ TrackController::TrackController(GateHandler& handler, int trackIdx, GSTrack* tr
     SetTrack(track);
 }
 
-void TrackController::Tick(const CommonState& commonState, int btn, MemController& memController)
+void TrackController::Tick(const CommonState& commonState, int trackBtn, MemController& memController)
 {
-    m_GateOut.SetDuration(m_Track.m_Track->m_GateDuration);
-    m_TrackBtn.Tick(btn);
-
     if(commonState.resetStepPressed)
     {
         // trigger reset step on player
         m_Player.ResetStep();
     }
 
+    m_GateOut.SetDuration(m_Track.m_Track->m_GateDuration);
     m_GateOut.Tick(commonState.clockCntr, commonState.clockPeriod);
+
+    m_TrackBtn.Tick(trackBtn);
+
     if(m_TrackBtn.IsRising())
     {
         if(commonState.selectPatternPressed)
@@ -93,12 +94,13 @@ void TrackController::Tick(const CommonState& commonState, int btn, MemControlle
 
 
     // 
-    if(m_GateOut.IsRising())//TODO clock rising in case of gate length 1??
+    //TODO clock rising in case of gate length 1??
+    if(m_GateOut.IsRising() || commonState.forceAdvanceOn)
     {
         // step on
         m_Player.StepOn();
     }
-    else if(m_GateOut.IsFalling())
+    else if(m_GateOut.IsFalling() || commonState.forceAdvanceOff)
     {
         // step off
         m_Player.StepOff();
