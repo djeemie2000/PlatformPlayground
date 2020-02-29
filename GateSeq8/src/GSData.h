@@ -37,7 +37,7 @@ bool Equals(const GSPattern& a, GSPattern& b);
 
 struct GSBank
 {
-    static const int NumPatterns = 2;
+    static const int NumPatterns = 8;
 
     GSPattern m_Pattern[NumPatterns];
 };
@@ -58,7 +58,7 @@ void Init(GSCommon& common);
 
 struct GSMem
 {
-    static const int NumBanks = 1;
+    static const int NumBanks = 8;
 
     GSCommon m_Common;
     GSBank m_Bank[NumBanks];

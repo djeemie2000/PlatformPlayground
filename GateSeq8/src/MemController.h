@@ -18,16 +18,17 @@ public:
     void SelectBank(int bank);
     void SelectPattern(int pattern);
 
-    void LoadPattern(int bank, int pattern);
-    void LoadCommon();
+    void Load();//load common, load selected pattern into current pattern
+    void Save();//save current pattern and common
 
-private:
-    GSPattern& GetSelectedPatternInternal();
-    void SaveSelectedPatternInternal();
-    void LoadAllPatterns();
-    void SavePattern(int bank, int pattern);
-    
+    // not private for test purposes
+    void LoadCommon(GSCommon& common);
+    void SaveCommon(const GSCommon& common);
+    void LoadPattern(int bank, int pattern, GSPattern& gsPattern);
+    void SavePattern(int bank, int pattern, const GSPattern& gsPattern);
+
+private:    
     MemoryBank& m_MemoryBank;
-    GSMem m_Memory;
+    GSCommon m_Common;
     GSPattern m_CurrentPattern;
 };

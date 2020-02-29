@@ -55,7 +55,12 @@ void loop()
   debugSerial.println("GateSeq8");
   debugSerial.println("Multi track gate sequencer...");
   debugSerial.println("version 0.2");
-  delay(500);
+  wait_ms(500);
+
+  debugSerial.print("Init common\r\n");
+  DigitalOut clockLed(PIN_A3);
+  GateIn clockIn(PIN_A0, true);//external clock input, pullup
+  GateIn debugActiveIn(PIN_A1,true);//pullup => default on (????)
 
   //return;//Debug  
   int tmp = 12345;
@@ -64,7 +69,6 @@ void loop()
   debugSerial.printf("test printf...\r\n int %d hex 0x%x hex_u32 %x --eol-\r\n", tmp, tmp3, tmp2);
 
   ScanI2C(debugSerial);
-  delay(2000);
   
   // set, mute, clear, reset btn 
   // select bank,  select pattern, save, tbc 
@@ -79,15 +83,8 @@ void loop()
   debugSerial.println("Init led matrix...");
   Max7219Matrix ledMatrix(4, PIN_SPI_SS);// chipselect pin 10 (SPI0_MOSI, SPI0_MISO, SPI0_SCK, SPI0_SS));//4 devices
   ledMatrix.Configure();
-  TestDigitalOutMatrix(ledMatrix, debugSerial,30);
+  TestDigitalOutMatrix(ledMatrix, debugSerial,10);
   //return;
-
-  // common
-  debugSerial.print("Init common\r\n");
-  DigitalOut clockLed(PIN_A3);
-  GateIn clockIn(PIN_A0, true);//external clock input, pullup
-  GateIn debugActiveIn(PIN_A1,true);//pullup => default on (????)
-  CommonState commonState;
   
   // memory
   debugSerial.println("Init memory bank");
@@ -101,7 +98,7 @@ void loop()
   for(int bank = 0; bank<5; ++bank)
   {
     PrintMemoryBank(memBank, debugSerial, bank, 32, 0);
-    delay(2000);
+    wait_ms(2000);
   }
   // return;
 
@@ -109,48 +106,32 @@ void loop()
   GSCommon testGSCommon;
   LoadGSCommon(memBank, 0,0, testGSCommon);
   PrintGSCommon(testGSCommon, debugSerial);
-  delay(2000);
   for(int idx = 0; idx<8; ++idx)
   {
     GSTrack testGSTrack;
     LoadGSTrack(memBank, 1+idx, 0, testGSTrack);
     PrintGSTrack(testGSTrack, debugSerial);
 //    testGSTrack.m_Pattern = 0xAA8C47F1;
-    testGSTrack.m_NumSteps = 32;
-    SaveGSTrack(memBank, 1+idx, 0, testGSTrack);
+ //   testGSTrack.m_NumSteps = 32;
+ //   SaveGSTrack(memBank, 1+idx, 0, testGSTrack);
 //    Init(testGSTrack, 32);
     LoadGSTrack(memBank, 1+idx, 32, testGSTrack);
     PrintGSTrack(testGSTrack, debugSerial);
-    testGSTrack.m_NumSteps = 32;
-    SaveGSTrack(memBank, 1+idx, 32, testGSTrack);
-    delay(2000);
+ //   testGSTrack.m_NumSteps = 32;
+   // SaveGSTrack(memBank, 1+idx, 32, testGSTrack);
   }
-  //delay(8000);
+  //wait_ms(8000);
   //return;
 
   debugSerial.println("Init memory controller");
   MemController memController(memBank);
-  debugSerial.println("Init memory controller done");
-  //load all patterns -> indicator on led matrix
-  for(int selectedBank = 0; selectedBank<GSMem::NumBanks; ++selectedBank)
-  {
-      for(int selectedPattern = 0; selectedPattern<GSBank::NumPatterns; ++selectedPattern)
-      {
-//          debugSerial.printf("load pattern bank %d pattern %d\r\n", selectedBank, selectedPattern);
-          ledMatrix.Set(selectedBank,selectedPattern);
-          memController.LoadPattern(selectedBank, selectedPattern);
-          ledMatrix.WriteAll();//WriteRow(selectedBank);
-      }
-  }
-  debugSerial.println("load common");
-  memController.LoadCommon();
+  debugSerial.println("load current pattern from memory");
+  memController.Load();
   
-  debugSerial.println("Init tracks");
+  debugSerial.println("Init track controllers");
   // multiple tracks
-  const int PatternLength = 32;
-  //default pattern, gate outputs & handlers
   //  const unsigned long patterns[] = {0x11111111, 0x10101010, 0x00000000, 0x55555555, 0xAAAAAAAA, 0x00000000, 0x10001000 ,0xFFFFFFFF};
-
+  CommonState commonState;
   const uint8_t outPins[] = {2, 3, 4, 5, 6, 7, 8, 9 };
   DigitalOutGateHandler* gateOutHandlers[GSPattern::NumTracks];
   TrackController* trackControllers[GSPattern::NumTracks];
@@ -168,8 +149,10 @@ void loop()
   const int fakeClockPeriod = 110;
   ClockInState clockInState(fakeClockPeriod);
 
-  wait_ms(500);
-  debugSerial.printf("start processing\r\n");
+  //wait_ms(500);
+  debugSerial.println("start processing");
+  debugSerial.println();
+
   while(1) {
     // put your main code here, to run repeatedly:
       timer.reset();
@@ -183,12 +166,12 @@ void loop()
           touchPad.Read();
 
           // use pad 8-11 for set/clear/mute(toggle)/reset
+          // use pad 12-15 for select pattern/select bank/save/ advance??
           //TODO duration HW support
           commonState.setPressed = touchPad.Get(8);
           commonState.clearPressed = touchPad.Get(9);
           commonState.mutePressed = touchPad.Get(10);
           commonState.resetStepPressed = touchPad.Get(11);
-
           commonState.selectPatternPressed = touchPad.Get(12);
           commonState.selectBankPressed = touchPad.Get(13);
           commonState.savePatternsPressed = touchPad.Get(14);
@@ -212,7 +195,7 @@ void loop()
           //ledOut = 1-clockIn.Get();//inverted
 
           // 
-          wait_ms(1);
+          wait_ms(1);//needed??
         }
       }
       
