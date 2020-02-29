@@ -20,6 +20,7 @@
 #include "TestDigitalOutMatrix.h"
 #include "TestTouchPad.h"
 #include "TestMemoryBank.h"
+#include "TestGSData.h"
 
 
 void setup()
@@ -59,7 +60,8 @@ void loop()
   //return;//Debug  
   int tmp = 12345;
   int tmp3 = 0x5A;
-  debugSerial.printf("test printf...\r\n int %d hex 0x%x --eol-\r\n", tmp, tmp3);
+  unsigned long tmp2 = 0x1234ABCD;
+  debugSerial.printf("test printf...\r\n int %d hex 0x%x hex_u32 %x --eol-\r\n", tmp, tmp3, tmp2);
 
   ScanI2C(debugSerial);
   delay(2000);
@@ -77,7 +79,7 @@ void loop()
   debugSerial.println("Init led matrix...");
   Max7219Matrix ledMatrix(4, PIN_SPI_SS);// chipselect pin 10 (SPI0_MOSI, SPI0_MISO, SPI0_SCK, SPI0_SS));//4 devices
   ledMatrix.Configure();
-  //TestDigitalOutMatrix(ledMatrix, debugSerial,100);
+  TestDigitalOutMatrix(ledMatrix, debugSerial,30);
   //return;
 
   // common
@@ -96,44 +98,65 @@ void loop()
   //   TestMemoryBank(memBank, debugSerial, bank);
   //   delay(500);
   // }
-  // for(int bank = 18; bank<20; ++bank)
-  // {
-  //   PrintMemoryBank(memBank, debugSerial, bank, 16, 0);
-  //   PrintMemoryBank(memBank, debugSerial, bank, 16, 16);
-  //   PrintMemoryBank(memBank, debugSerial, bank, 16, 32);
-  //   PrintMemoryBank(memBank, debugSerial, bank, 16, 48);
-  // }
+  for(int bank = 0; bank<5; ++bank)
+  {
+    PrintMemoryBank(memBank, debugSerial, bank, 32, 0);
+    delay(2000);
+  }
   // return;
+
+  debugSerial.println("test GS data memory...");
+  GSCommon testGSCommon;
+  LoadGSCommon(memBank, 0,0, testGSCommon);
+  PrintGSCommon(testGSCommon, debugSerial);
+  delay(2000);
+  for(int idx = 0; idx<8; ++idx)
+  {
+    GSTrack testGSTrack;
+    LoadGSTrack(memBank, 1+idx, 0, testGSTrack);
+    PrintGSTrack(testGSTrack, debugSerial);
+//    testGSTrack.m_Pattern = 0xAA8C47F1;
+    testGSTrack.m_NumSteps = 32;
+    SaveGSTrack(memBank, 1+idx, 0, testGSTrack);
+//    Init(testGSTrack, 32);
+    LoadGSTrack(memBank, 1+idx, 32, testGSTrack);
+    PrintGSTrack(testGSTrack, debugSerial);
+    testGSTrack.m_NumSteps = 32;
+    SaveGSTrack(memBank, 1+idx, 32, testGSTrack);
+    delay(2000);
+  }
+  //delay(8000);
+  //return;
 
   debugSerial.println("Init memory controller");
   MemController memController(memBank);
+  debugSerial.println("Init memory controller done");
   //load all patterns -> indicator on led matrix
   for(int selectedBank = 0; selectedBank<GSMem::NumBanks; ++selectedBank)
   {
       for(int selectedPattern = 0; selectedPattern<GSBank::NumPatterns; ++selectedPattern)
       {
+//          debugSerial.printf("load pattern bank %d pattern %d\r\n", selectedBank, selectedPattern);
           ledMatrix.Set(selectedBank,selectedPattern);
           memController.LoadPattern(selectedBank, selectedPattern);
-          ledMatrix.WriteRow(selectedBank);
+          ledMatrix.WriteAll();//WriteRow(selectedBank);
       }
   }
+  debugSerial.println("load common");
   memController.LoadCommon();
   
   debugSerial.println("Init tracks");
   // multiple tracks
   const int PatternLength = 32;
   //default pattern, gate outputs & handlers
-  const uint32_t patterns[] = {0x11111111, 0x10101010, 0x00000000, 0x55555555, 0xAAAAAAAA, 0x00000000, 0x10001000 ,0xFFFFFFFF};
+  //  const unsigned long patterns[] = {0x11111111, 0x10101010, 0x00000000, 0x55555555, 0xAAAAAAAA, 0x00000000, 0x10001000 ,0xFFFFFFFF};
+
   const uint8_t outPins[] = {2, 3, 4, 5, 6, 7, 8, 9 };
-  // track (pointers) allow preset/load/save of tracks
   DigitalOutGateHandler* gateOutHandlers[GSPattern::NumTracks];
   TrackController* trackControllers[GSPattern::NumTracks];
-
-  Init(*memController.GetCurrentPattern(), PatternLength);
-
+ 
   for(int idx = 0; idx<GSPattern::NumTracks; ++idx)
   {
-    memController.GetCurrentPattern()->m_Track[idx].m_Pattern = patterns[idx];
     // yes, these are memory leaks (if we would ever destruct)
     gateOutHandlers[idx] = new DigitalOutGateHandler(outPins[idx]);
     trackControllers[idx] = new TrackController(*gateOutHandlers[idx], idx, &(memController.GetCurrentPattern()->m_Track[idx]));
@@ -196,15 +219,18 @@ void loop()
       timer.stop();
 
       debugActiveIn.Read();
-//      if(debugActiveIn.Get())
+      if(debugActiveIn.Get())
       {
-        debugSerial.printf("mute %d set %d clear %d ext %d", 
+        debugSerial.printf("mute %d set %d clear %d bank %d ptrn %d save %d clk %d", 
                     commonState.mutePressed?1:0, 
                     commonState.setPressed?1:0, 
                     commonState.clearPressed?1:0, 
+                    commonState.selectBankPressed?1:0,
+                    commonState.selectPatternPressed?1:0,
+                    commonState.savePatternsPressed?1:0,
                     clockInState.Period()
                     );
-        debugSerial.printf("touchpad %d%d%d%d%d%d%d%d%d%d%d%d\r\n", 
+        debugSerial.printf("touchpad %d%d%d%d%d%d%d%d%d%d%d%d%d%d%d", 
                     touchPad.Get(0), 
                     touchPad.Get(1), 
                     touchPad.Get(2), 
@@ -216,7 +242,10 @@ void loop()
                     touchPad.Get(8), 
                     touchPad.Get(9), 
                     touchPad.Get(10), 
-                    touchPad.Get(11));
+                    touchPad.Get(11),
+                    touchPad.Get(12),
+                    touchPad.Get(13),
+                    touchPad.Get(14));
         debugSerial.printf("%d : %d ms\r\n", counter++, timer.read_ms());
       }
   }

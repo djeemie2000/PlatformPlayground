@@ -2,7 +2,9 @@
 
 DigitalOutGateHandler::DigitalOutGateHandler(uint8_t outPin) 
 : m_OutPin(outPin)
-{}
+{
+    pinMode(m_OutPin, OUTPUT);
+}
 
 void DigitalOutGateHandler::On() 
 { 

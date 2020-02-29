@@ -16,20 +16,20 @@ bool Track::IsMuted() const
 
 void Track::SetStep(int step)
 {
-    uint32_t noteMask = 1<<step;
+    unsigned long noteMask = 1ul<<step;
     m_Track->m_Pattern |= noteMask;
 }
 
 void Track::ClearStep(int step)
 {
-    uint32_t noteMask = 1<<step;
+    unsigned long noteMask = 1ul<<step;
     m_Track->m_Pattern &= (~noteMask);
 
 }
 
 bool Track::GetStep(int step) const
 {
-//    uint32_t bit = step;//TODO check boundaries
+//    unsigned long bit = step;//TODO check boundaries
     return (m_Track->m_Pattern>>step)&0x01;
 }
 

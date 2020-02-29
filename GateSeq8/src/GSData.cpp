@@ -12,6 +12,16 @@ void Init(GSTrack& track, int NumSteps)
     track.m_GateDuration = 0.5f;
 }
 
+bool Equals(const GSTrack& a, GSTrack& b)
+{
+    return a.m_ID == b.m_ID 
+    && a.m_Version == b.m_Version 
+    && a.m_Pattern==b.m_Pattern 
+    && a.m_NumSteps == b.m_NumSteps 
+    && a.m_Muted == b.m_Muted 
+    && a.m_GateDuration==b.m_GateDuration;
+}
+
 void Init(GSPattern& pattern, int NumSteps)
 {
     for(int idx = 0; idx<GSPattern::NumTracks; ++idx)
@@ -35,7 +45,19 @@ void Copy(const GSPattern& source, GSPattern& dest)
 
 bool Equals(const GSPattern& a, GSPattern& b)
 {
-    return 0==memcmp(&a, &b, sizeof(GSPattern));
+    for(int track = 0; track<GSPattern::NumTracks; ++track)
+    {
+        if(!Equals(a.m_Track[track],b.m_Track[track]))
+        {
+            return false;
+        }
+        // if(0!=memcmp(a.m_Track[track], b.m_Track[track], sizeof(GSTrack)))
+        // {
+        //     return false;
+        // }
+    }
+    return true;
+    //return 0==memcmp(&a, &b, sizeof(GSPattern));
 }
 
 void Init(GSCommon& common)

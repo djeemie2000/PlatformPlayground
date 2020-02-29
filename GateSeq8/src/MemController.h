@@ -3,6 +3,12 @@
 #include "GSData.h"
 #include "MemoryBank.h"
 
+bool LoadGSTrack(MemoryBank& memBank, int bank, int offset, GSTrack& track);
+bool LoadGSCommon(MemoryBank& memBank, int bank, int offset, GSCommon& common);
+bool SaveGSTrack(MemoryBank& memBank, int bank, int offset, const GSTrack& track);
+bool SaveGSCommon(MemoryBank& memBank, int bank, int offset, const GSCommon& common);
+
+
 class MemController
 {
 public:

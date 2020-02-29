@@ -16,7 +16,7 @@ struct GSTrack
     uint8_t m_ID;
     uint8_t m_Version;
 
-    uint32_t m_Pattern;
+    unsigned long m_Pattern;
     int m_NumSteps;
     bool m_Muted;
     float m_GateDuration;
@@ -37,7 +37,7 @@ bool Equals(const GSPattern& a, GSPattern& b);
 
 struct GSBank
 {
-    static const int NumPatterns = 8;
+    static const int NumPatterns = 2;
 
     GSPattern m_Pattern[NumPatterns];
 };
@@ -58,7 +58,7 @@ void Init(GSCommon& common);
 
 struct GSMem
 {
-    static const int NumBanks = 8;
+    static const int NumBanks = 1;
 
     GSCommon m_Common;
     GSBank m_Bank[NumBanks];

@@ -50,6 +50,7 @@ MemController::MemController(MemoryBank& memoryBank)
  , m_CurrentPattern()
 {
     Init(m_Memory, 32);
+    
     //LoadAllPatterns();
     //Copy(GetSelectedPatternInternal(), m_CurrentPattern);
 }
@@ -61,19 +62,20 @@ GSPattern* MemController::GetCurrentPattern()
 
 GSPattern& MemController::GetSelectedPatternInternal()
 {
-    return GetSelectedPatternInternal();   
+    int bank = m_Memory.m_Common.m_SelectedBank;
+    int pattern = m_Memory.m_Common.m_SelectedPattern;
+    return m_Memory.m_Bank[bank].m_Pattern[pattern];   
 }
-
 
 void MemController::SelectBank(int bank)
 {
     if(0<=bank && bank<GSMem::NumBanks)
     {
-        if(!Equals(m_CurrentPattern, GetSelectedPatternInternal()))
+        //if(!Equals(m_CurrentPattern, GetSelectedPatternInternal()))
         {
             //TODO save : 
-            SaveSelectedPatternInternal();
             Copy(m_CurrentPattern, GetSelectedPatternInternal());        
+            SaveSelectedPatternInternal();
         }
         m_Memory.m_Common.m_SelectedBank = bank;
         Copy(GetSelectedPatternInternal(), m_CurrentPattern);
@@ -84,11 +86,11 @@ void MemController::SelectPattern(int pattern)
 {
     if(0<=pattern && pattern<GSBank::NumPatterns)
     {
-        if(!Equals(m_CurrentPattern, GetSelectedPatternInternal()))
+//        if(!Equals(m_CurrentPattern, GetSelectedPatternInternal()))
         {
             //TODO save : 
-            SaveSelectedPatternInternal();
             Copy(m_CurrentPattern, GetSelectedPatternInternal());
+            SaveSelectedPatternInternal();
         }
         m_Memory.m_Common.m_SelectedPattern = pattern;
         Copy(GetSelectedPatternInternal(), m_CurrentPattern);
