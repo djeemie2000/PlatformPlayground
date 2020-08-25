@@ -39,24 +39,15 @@ public:
         m_Recording = !m_Recording;
     }
 
-    // uint8_t recordingStep(const MidiLooperTicker &ticker) const
-    // {
-    //     //TODO divider
+    void StartRecording()
+    {
+        m_Recording = true;
+    }
 
-    //     // 'quantized' recording step:
-    //     // clock on => use current step for recording
-    //     // clock off => use next step for recording
-    //     uint8_t step = ticker.m_Counter;
-    //     if (!ticker.m_Clock)
-    //     {
-    //         ++step;
-    //         if (ticker.m_MaxCounter <= step)
-    //         {
-    //             step = 0;
-    //         }
-    //     }
-    //     return step;
-    // }
+    void StopRecording()
+    {
+        m_Recording = false;
+    }
 
     void onTick(const MidiLooperTicker &ticker, MidiOut &midiOut)
     {
@@ -101,22 +92,13 @@ public:
         }
         if (midiChannel == m_MidiChannel)
         {
-            //TODO play
-            if (m_Recording && m_NumItems + 1 < ItemCapacity)
+            if (m_Recording && m_NumItems < ItemCapacity)
             {
-                ++m_NumItems;
                 m_Items[m_NumItems].m_MidiNote = midiNote;
                 m_Items[m_NumItems].m_Velocity = velocity;
-                // uint8_t step = ticker.m_Counter;
-                // if(!ticker.m_Clock)
-                // {
-                //     ++step;
-                //     if(ticker.m_MaxCounter<=step)
-                //     {
-                //         step = 0;
-                //     }
-                // }
+
                 m_Items[m_NumItems].m_Step = ticker.recordingStep(1);
+                ++m_NumItems;
             }
         }
     }
@@ -125,22 +107,28 @@ public:
     {
         if (midiChannel == m_MidiChannel)
         {
-            if (m_Recording && m_NumItems + 1 < ItemCapacity)
+            if (m_Recording && m_NumItems < ItemCapacity)
             {
-                ++m_NumItems;
                 m_Items[m_NumItems].m_MidiNote = midiNote;
                 m_Items[m_NumItems].m_Velocity = 0x00; //note off <=> item velocity zero
-                // uint8_t step = ticker.m_Counter;
-                // if(!ticker.m_Clock)
-                // {
-                //     ++step;
-                //     if(ticker.m_MaxCounter<=step)
-                //     {
-                //         step = 0;
-                //     }
-                // }
                 m_Items[m_NumItems].m_Step = ticker.recordingStep(1);
+                ++m_NumItems;
             }
+        }
+    }
+
+    void printItems(HardwareSerial &serial)
+    {
+        serial.print("items # ");
+        serial.println(m_NumItems);
+
+        for (int idx = 0; idx < m_NumItems; ++idx)
+        {
+            serial.print(m_Items[idx].m_Step);
+            serial.print(" ");
+            serial.print(m_Items[idx].m_MidiNote, HEX);
+            serial.print(" ");
+            serial.println(m_Items[idx].m_Velocity, HEX);
         }
     }
 
@@ -150,7 +138,7 @@ public:
     bool m_Muted;
     //TODO int m_ClockDivider;
 
-    static const int ItemCapacity = 64;
+    static const int ItemCapacity = 128;
     MidiLooperItem m_Items[ItemCapacity];
     int m_NumItems;
 };

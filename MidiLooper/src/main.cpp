@@ -13,6 +13,10 @@ public:
   void begin(HardwareSerial *midiSerial)
   {
     m_MidiOut.begin(midiSerial);
+    m_Track.m_MidiLearn = false;
+    m_Track.m_MidiChannel = 0x00;
+    m_Track2.m_MidiLearn = false;
+    m_Track2.m_MidiChannel = 0x09;
   }
 
   void onTick(int clock, int reset)
@@ -20,30 +24,38 @@ public:
     m_Ticker.onTick(clock, reset);
     m_Metronome.OnTick(m_Ticker, m_MidiOut);
     m_Track.onTick(m_Ticker, m_MidiOut);
+    m_Track2.onTick(m_Ticker, m_MidiOut);
   }
 
   void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
   {
     m_MidiOut.NoteOn(Channel, MidiNote, Velocity);
     m_Track.onNoteOn(m_Ticker, Channel, MidiNote, Velocity);
+    m_Track2.onNoteOn(m_Ticker, Channel, MidiNote, Velocity);
   }
   void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
   {
     m_MidiOut.NoteOff(Channel, MidiNote, Velocity);
     m_Track.onNoteOff(m_Ticker, Channel, MidiNote, Velocity);
+    m_Track2.onNoteOff(m_Ticker, Channel, MidiNote, Velocity);
   }
   void MidiStart()
   {
     m_Metronome.Start();
+    m_Track.StartRecording();
+    m_Track2.StartRecording();
   }
   void MidiStop()
   {
     m_Metronome.Stop();
+    m_Track.StopRecording();
+    m_Track2.StopRecording();
   }
 
   MidiOut m_MidiOut;
   MidiLooperTicker m_Ticker;
   MidiLooperTrack m_Track;   //TODO multiple tracks
+  MidiLooperTrack m_Track2;  //TODO multiple tracks
   MidiMetronome m_Metronome; //TODO learn channel + note
 };
 
@@ -133,7 +145,7 @@ void loop()
   while (true)
   {
     //fake clock
-    const int fakeClockPeriod = 200;
+    const int fakeClockPeriod = 125;
     if (clockCounter < fakeClockPeriod)
     {
       ++clockCounter;
@@ -158,6 +170,8 @@ void loop()
       SerialDebug.print("D: ");
       SerialDebug.println(millis()); //TODO elapsed
       debugCounter = 0;
+
+      //midiLooper.m_Track.printItems(SerialDebug);
     }
 
     delay(1); //TODO check if needed
