@@ -3,6 +3,7 @@
 #include "MidiLooperTicker.h"
 #include "MidiLooperTrack.h"
 #include "MidiParser.h"
+#include "MidiMetronome.h"
 
 class MidiLooper : public MidiHandler
 {
@@ -17,6 +18,7 @@ public:
   void onTick(int clock, int reset)
   {
     m_Ticker.onTick(clock, reset);
+    m_Metronome.OnTick(m_Ticker, m_MidiOut);
     m_Track.onTick(m_Ticker, m_MidiOut);
   }
 
@@ -30,10 +32,19 @@ public:
     m_MidiOut.NoteOff(Channel, MidiNote, Velocity);
     m_Track.onNoteOff(m_Ticker, Channel, MidiNote, Velocity);
   }
+  void MidiStart()
+  {
+    m_Metronome.Start();
+  }
+  void MidiStop()
+  {
+    m_Metronome.Stop();
+  }
 
   MidiOut m_MidiOut;
   MidiLooperTicker m_Ticker;
-  MidiLooperTrack m_Track; //TODO multiple tracks
+  MidiLooperTrack m_Track;   //TODO multiple tracks
+  MidiMetronome m_Metronome; //TODO learn channel + note
 };
 
 HardwareSerial SerialDebug(PA10, PA9);
@@ -86,7 +97,8 @@ void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &han
     uint8_t byte = serialMidi.read();
     parser.Parse(byte, handler);
 
-    SerialDebug.println(byte, HEX); //TODO debug ~~ DigitalIn
+    // SerialDebug.print(byte, HEX); //TODO debug ~~ DigitalIn
+    // SerialDebug.print(" ");
 
     --numBytesIn;
   }
@@ -138,27 +150,6 @@ void loop()
 
     // read midi in but limit # bytes for performance issues
     readMidiIn(SerialMidi, midiParser, midiLooper, 3);
-    // int numBytesIn = SerialMidi.available();
-    // const int maxNumBytesIn = 3;
-    // if (maxNumBytesIn < numBytesIn)
-    // {
-    //   numBytesIn = maxNumBytesIn;
-    // }
-    // while (0 < numBytesIn)
-    // {
-    //   uint8_t byte = SerialMidi.read();
-    //   midiParser.Parse(byte, midiLooper);
-    //   // TODO midiOut + MidiLooper should handle note on/off
-    //   // TODO parser to MidiOut (midi thru!) + looper!
-    //   SerialDebug.println(byte, HEX); //TODO debug ~~ DigitalIn
-    //   --numBytesIn;
-    // }
-
-    // //TODO clock rising => update midi looper tracks
-    // if (midiLooperTicker.clockIsRising())
-    // {
-    //   midiLooper.onClockTick(midiLooperTicker, midiOut);
-    // }
 
     ++debugCounter;
     if (debugCounter >= 1000)
