@@ -12,7 +12,7 @@ public:
     void Start();
     void Stop();
     void OnTick(MidiLooperTicker &ticker, MidiOut &midiOut);
-    //TODO learn channel base note
+    //TODO learn channel + base note
 
 private:
     uint8_t m_MidiChannel;
