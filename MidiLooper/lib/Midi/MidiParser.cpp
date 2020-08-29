@@ -23,7 +23,7 @@ bool MidiParser::HandleSystemRealtime(uint8_t byte, MidiHandler &handler)
   {
     if (byte == 0xF8)
     {
-      handler.MidiContinue();
+      handler.MidiClock();
     }
     else if (byte == 0xFA)
     {

@@ -12,14 +12,21 @@ public:
     void Start();
     void Stop();
     void OnTick(MidiLooperTicker &ticker, MidiOut &midiOut);
-    //TODO learn channel + base note
+    void StartMidiLearn();
+    void onToggleMuted()
+    {
+        m_Playing = !m_Playing;
+    }
+    void OnNoteOn(uint8_t channel, uint8_t midiNote, uint8_t velocity);
 
 private:
+    bool m_MidiLearn;
     uint8_t m_MidiChannel;
     uint8_t m_BaseNote;
     int m_Divider;
     int m_Divider2;
     bool m_Playing;
 
+    uint8_t m_LastChannel;
     uint8_t m_LastNote;
 };

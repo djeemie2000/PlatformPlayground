@@ -1,71 +1,16 @@
 #include <Arduino.h>
-#include "MidiOut.h"
-#include "MidiLooperTicker.h"
-#include "MidiLooperTrack.h"
+#include <Wire.h>
 #include "MidiParser.h"
-#include "MidiMetronome.h"
-
-class MidiLooper : public MidiHandler
-{
-public:
-  MidiLooper() : m_MidiOut(), m_Ticker(), m_Track() {}
-
-  void begin(HardwareSerial *midiSerial)
-  {
-    m_MidiOut.begin(midiSerial);
-    m_Track.m_MidiLearn = false;
-    m_Track.m_MidiChannel = 0x00;
-    m_Track2.m_MidiLearn = false;
-    m_Track2.m_MidiChannel = 0x09;
-  }
-
-  void onTick(int clock, int reset)
-  {
-    m_Ticker.onTick(clock, reset);
-    m_Metronome.OnTick(m_Ticker, m_MidiOut);
-    m_Track.onTick(m_Ticker, m_MidiOut);
-    m_Track2.onTick(m_Ticker, m_MidiOut);
-  }
-
-  void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
-  {
-    m_MidiOut.NoteOn(Channel, MidiNote, Velocity);
-    m_Track.onNoteOn(m_Ticker, Channel, MidiNote, Velocity);
-    m_Track2.onNoteOn(m_Ticker, Channel, MidiNote, Velocity);
-  }
-  void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
-  {
-    m_MidiOut.NoteOff(Channel, MidiNote, Velocity);
-    m_Track.onNoteOff(m_Ticker, Channel, MidiNote, Velocity);
-    m_Track2.onNoteOff(m_Ticker, Channel, MidiNote, Velocity);
-  }
-  void MidiStart()
-  {
-    m_Metronome.Start();
-    m_Track.StartRecording();
-    m_Track2.StartRecording();
-  }
-  void MidiStop()
-  {
-    m_Metronome.Stop();
-    m_Track.StopRecording();
-    m_Track2.StopRecording();
-  }
-
-  MidiOut m_MidiOut;
-  MidiLooperTicker m_Ticker;
-  MidiLooperTrack m_Track;   //TODO multiple tracks
-  MidiLooperTrack m_Track2;  //TODO multiple tracks
-  MidiMetronome m_Metronome; //TODO learn channel + note
-};
+#include "MidiLooper.h"
+#include "MPR121TouchPad.h"
+#include "ScanI2C.h"
+#include "TestTouchPad.h"
 
 HardwareSerial SerialDebug(PA10, PA9);
 HardwareSerial SerialMidi(PB11, PB10);
-//MidiOut midiOut;
-//MidiLooperTrack midiLooper;
 MidiParser midiParser;
-//MidiLooperTicker midiLooperTicker;
 MidiLooper midiLooper;
+MPR121TouchPad touchPad;
 
 void setup()
 {
@@ -75,6 +20,14 @@ void setup()
   midiLooper.begin(&SerialMidi);
 
   pinMode(PC13, OUTPUT);
+
+  // setup I2C for MPR121 touchpad
+  // Wire.begin() is called inside touchpad.begin()
+  Wire.setSDA(PB7);
+  Wire.setSCL(PB6);
+  touchPad.Begin(PB0); //irq pin
+
+  SerialDebug.println("MidiLooper v0.2");
 }
 
 void ledOn()
@@ -116,6 +69,57 @@ void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &han
   }
 }
 
+void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad)
+{
+  const int MidiLearnPad = 0;
+  const int ToggleRecordingPad = 1;
+  const int UndoRecordingPad = 2;
+  const int MutePad = 3;
+  const int Track0Pad = 8;
+  const int MetronomePad = 7;
+
+  touchPad.Read();
+
+  // metronome!!
+  if (touchPad.IsClicked(MetronomePad))
+  {
+    // => check which function(s) is pressed
+    if (touchPad.Get(MidiLearnPad))
+    {
+      midiLooper.m_Metronome.StartMidiLearn();
+    }
+    if (touchPad.Get(MutePad))
+    {
+      midiLooper.m_Metronome.onToggleMuted();
+    }
+  }
+
+  for (int idx = 0; idx < MidiLooper::NumTracks; ++idx)
+  {
+    // track is clicked?
+    if (touchPad.IsClicked(Track0Pad + idx))
+    {
+      // => check which function(s) is pressed
+      if (touchPad.Get(MidiLearnPad))
+      {
+        midiLooper.m_Track[idx].StartMidiLearn();
+      }
+      if (touchPad.Get(ToggleRecordingPad))
+      {
+        midiLooper.m_Track[idx].ToggleRecording();
+      }
+      if (touchPad.Get(UndoRecordingPad))
+      {
+        midiLooper.m_Track[idx].onUndo(midiLooper.m_MidiOut); //?
+      }
+      if (touchPad.Get(MutePad))
+      {
+        midiLooper.m_Track[idx].onToggleMuted(); //midiLooper.m_MidiOut); //?
+      }
+    }
+  }
+}
+
 void loop()
 {
   // put your main code here, to run repeatedly:
@@ -135,6 +139,10 @@ void loop()
   //   ledOff();
   //   delay(800);
   // }
+  ScanI2C(SerialDebug);
+  // remove/limit in time test touchpad
+  const int numRepeats = 5;
+  TestTouchPad(touchPad, SerialDebug, numRepeats);
 
   allNotesOff(midiLooper.m_MidiOut, 0x00);
 
@@ -163,6 +171,8 @@ void loop()
     // read midi in but limit # bytes for performance issues
     readMidiIn(SerialMidi, midiParser, midiLooper, 3);
 
+    updateMidiLooper(midiLooper, touchPad);
+
     ++debugCounter;
     if (debugCounter >= 1000)
     {
@@ -171,6 +181,7 @@ void loop()
       SerialDebug.println(millis()); //TODO elapsed
       debugCounter = 0;
 
+      midiLooper.printState(SerialDebug);
       //midiLooper.m_Track.printItems(SerialDebug);
     }
 

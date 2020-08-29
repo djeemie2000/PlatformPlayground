@@ -49,6 +49,11 @@ public:
         m_Recording = false;
     }
 
+    void StartMidiLearn()
+    {
+        m_MidiLearn = true;
+    }
+
     void onTick(const MidiLooperTicker &ticker, MidiOut &midiOut)
     {
         if (ticker.clockIsRising())
@@ -85,6 +90,7 @@ public:
     void onNoteOn(const MidiLooperTicker &ticker, uint8_t midiChannel, uint8_t midiNote, uint8_t velocity)
     {
         //TODO if midi learn changes channels, need to note off all open notes!
+        //TODO midi learn also learns 2 cc sliders!
         if (m_MidiLearn)
         {
             m_MidiChannel = midiChannel;
@@ -130,6 +136,20 @@ public:
             serial.print(" ");
             serial.println(m_Items[idx].m_Velocity, HEX);
         }
+    }
+
+    void printState(HardwareSerial &serial)
+    {
+        serial.print("Ch");
+        serial.print(m_MidiChannel, HEX);
+        serial.print(" L");
+        serial.print(m_MidiLearn ? 1 : 0);
+        serial.print(" R");
+        serial.print(m_Recording ? 1 : 0);
+        serial.print(" P");
+        serial.print(m_Muted ? 0 : 1);
+        serial.print(" items#");
+        serial.println(m_NumItems);
     }
 
     uint8_t m_MidiChannel;
