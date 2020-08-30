@@ -6,6 +6,7 @@
 #include "ScanI2C.h"
 #include "TestTouchPad.h"
 #include "StopWatch.h"
+#include "DigitalOutBank.h"
 
 // RX1 TX1 PA10 PA9
 // RX2 TX2 PA3 PA2
@@ -16,6 +17,7 @@ HardwareSerial serialMidi(PA3, PA2);
 MidiParser midiParser;
 MidiLooper midiLooper;
 MPR121TouchPad touchPad;
+DigitalOutBank recordingLeds(PA11, PA12, PA15, PB3, PB4, PB5);
 
 void setup()
 {
@@ -31,6 +33,7 @@ void setup()
   Wire.setSDA(PB11);   //SDA2
   Wire.setSCL(PB10);   //SCL2
   touchPad.Begin(PB0); //irq pin
+  recordingLeds.begin();
 
   serialDebug.println("MidiLooper v0.3");
 }
@@ -52,7 +55,7 @@ void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &han
   }
 }
 
-void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad)
+void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, DigitalOutBank &recordingLeds)
 {
   const int MidiLearnPad = 0;
   const int ToggleRecordingPad = 1;
@@ -108,6 +111,24 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad)
       }
     }
   }
+
+  for (int idx = 0; idx < MidiLooper::NumTracks; ++idx)
+  {
+    if (touchPad.Get(MutePad))
+    {
+      recordingLeds.set(idx, midiLooper.m_Track[idx].m_Muted ? 0 : 1);
+    }
+    else if (touchPad.Get(MidiLearnPad))
+    {
+      recordingLeds.set(idx, midiLooper.m_Track[idx].m_MidiLearn ? 1 : 0);
+    }
+    else
+    {
+      recordingLeds.set(idx, midiLooper.m_Track[idx].m_Recording ? 1 : 0);
+    }
+  }
+
+  recordingLeds.update();
 }
 
 void loop()
@@ -119,6 +140,8 @@ void loop()
   // remove/limit in time test touchpad
   const int numRepeats = 5;
   TestTouchPad(touchPad, serialDebug, numRepeats);
+
+  testDigitalOutBank(recordingLeds, 2);
 
   midiLooper.allNotesOff(); //?? all channels???
 
@@ -150,7 +173,7 @@ void loop()
     // read midi in but limit # bytes for performance issues
     readMidiIn(serialMidi, midiParser, midiLooper, 3);
 
-    updateMidiLooper(midiLooper, touchPad);
+    updateMidiLooper(midiLooper, touchPad, recordingLeds);
 
     ++debugCounter;
     if (debugCounter >= 1000) //TODO stopwatch 1 sec + # runs

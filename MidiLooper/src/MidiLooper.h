@@ -17,10 +17,10 @@ public:
         for (int idx = 0; idx < NumTracks; ++idx)
         {
             m_Track[idx].m_MidiLearn = false;
-            m_Track[idx].m_MidiLearn = idx;
+            m_Track[idx].m_MidiChannel = idx;
         }
-        m_Track[4].m_MidiChannel = 0x09;
-        m_Track[5].m_MidiChannel = 0x0A;
+        m_Track[0].m_MidiChannel = 0x09;
+        m_Track[1].m_MidiChannel = 0x0A;
         //TODO default channel for m_Metronome
     }
 
