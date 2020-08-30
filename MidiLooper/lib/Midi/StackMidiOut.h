@@ -1,12 +1,13 @@
 #pragma once
 
 #include <Arduino.h>
-#include "MidiHandler.h"
+#include "MidiOut.h"
+#include "MidiNoteStack.h"
 
-class MidiOut
+class StackMidiOut
 {
 public:
-    MidiOut();
+    StackMidiOut();
 
     void begin(HardwareSerial *serial);
 
@@ -17,5 +18,6 @@ public:
     void allNotesOff(uint8_t channel);
 
 private:
-    HardwareSerial *m_Serial;
+    MidiOut m_MidiOut;
+    MidiNoteStack m_NoteStack;
 };

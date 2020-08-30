@@ -29,16 +29,8 @@ void MidiOut::ContinuousController(uint8_t channel, uint8_t controller, uint8_t 
     m_Serial->write(msg, 3);
 }
 
-// void MidiOut::allNotesOff(uint8_t channel)
-// {
-//     // midi CC where cc=123 and value = 0
-//     // uint8_t statusByte = 0xB0 | channel;
-//     // uint8_t msg[3] = {statusByte,0x7B,0x00};
-//     // m_Serial->write(msg,3);
-//     ContinuousController(channel, 0x7B, 0x00);
-// }
-void allNotesOff(MidiHandler &handler, uint8_t channel)
+void MidiOut::allNotesOff(uint8_t channel)
 {
     // midi CC where cc=123 and value = 0
-    handler.ContinuousController(channel, 0x7B, 0x00);
+    ContinuousController(channel, 0x7B, 0x00);
 }

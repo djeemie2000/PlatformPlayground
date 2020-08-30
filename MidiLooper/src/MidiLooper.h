@@ -17,14 +17,10 @@ public:
         for (int idx = 0; idx < NumTracks; ++idx)
         {
             m_Track[idx].m_MidiLearn = false;
+            m_Track[idx].m_MidiLearn = idx;
         }
-        //        m_Track.m_MidiLearn = false;
-        m_Track[0].m_MidiChannel = 0x00;
-        //        m_Track2.m_MidiLearn = false;
-        m_Track[1].m_MidiChannel = 0x09;
-        m_Track[2].m_MidiChannel = 0x0A;
-        m_Track[3].m_MidiChannel = 0x01;
-
+        m_Track[4].m_MidiChannel = 0x09;
+        m_Track[5].m_MidiChannel = 0x0A;
         //TODO default channel for m_Metronome
     }
 
@@ -43,7 +39,7 @@ public:
         m_MidiOut.NoteOn(Channel, MidiNote, Velocity);
         for (int idx = 0; idx < NumTracks; ++idx)
         {
-            m_Track[idx].onNoteOn(m_Ticker, Channel, MidiNote, Velocity);
+            m_Track[idx].onNoteOn(m_Ticker, m_MidiOut, Channel, MidiNote, Velocity);
         }
         m_Metronome.OnNoteOn(Channel, MidiNote, Velocity);
     }
@@ -72,6 +68,14 @@ public:
         }
     }
 
+    void allNotesOff()
+    {
+        for (int idx = 0; idx < NumTracks; ++idx)
+        {
+            m_MidiOut.allNotesOff(m_Track[idx].m_MidiChannel);
+        }
+    }
+
     void printState(HardwareSerial &serial)
     {
         for (int idx = 0; idx < NumTracks; ++idx)
@@ -85,7 +89,7 @@ public:
 
     MidiOut m_MidiOut;
     MidiLooperTicker m_Ticker;
-    static const int NumTracks = 4;
+    static const int NumTracks = 6;
     MidiLooperTrack m_Track[NumTracks];
     MidiMetronome m_Metronome;
 };

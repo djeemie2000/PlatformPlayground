@@ -5,9 +5,14 @@
 #include "MPR121TouchPad.h"
 #include "ScanI2C.h"
 #include "TestTouchPad.h"
+#include "StopWatch.h"
 
-HardwareSerial SerialDebug(PA10, PA9);
-HardwareSerial SerialMidi(PB11, PB10);
+// RX1 TX1 PA10 PA9
+// RX2 TX2 PA3 PA2
+// RX3 TX3 PB11 PB10
+static const int debugPin = PA8;
+HardwareSerial serialDebug(PA10, PA9);
+HardwareSerial serialMidi(PA3, PA2);
 MidiParser midiParser;
 MidiLooper midiLooper;
 MPR121TouchPad touchPad;
@@ -15,37 +20,19 @@ MPR121TouchPad touchPad;
 void setup()
 {
   // put your setup code here, to run once:
-  SerialDebug.begin(115200);
-  //SerialMidi.begin(31250);
-  midiLooper.begin(&SerialMidi);
+  pinMode(debugPin, INPUT_PULLUP); //pull down for debug
+  serialDebug.begin(115200);
+  midiLooper.begin(&serialMidi); //calls serialMidi.begin(31250);
 
-  pinMode(PC13, OUTPUT);
+  pinMode(PC13, OUTPUT); // clock led
 
   // setup I2C for MPR121 touchpad
   // Wire.begin() is called inside touchpad.begin()
-  Wire.setSDA(PB7);
-  Wire.setSCL(PB6);
+  Wire.setSDA(PB11);   //SDA2
+  Wire.setSCL(PB10);   //SCL2
   touchPad.Begin(PB0); //irq pin
 
-  SerialDebug.println("MidiLooper v0.2");
-}
-
-void ledOn()
-{
-  digitalWrite(PC13, LOW); // turn the LED on
-  SerialDebug.println("On");
-  //  uint8_t msg[3] = {0x90,0x30,0x60};
-  //  SerialMidi.write(msg,3);
-  midiLooper.m_MidiOut.NoteOn(0x00, 0x2D, 0x60);
-}
-
-void ledOff()
-{
-  digitalWrite(PC13, HIGH); // turn the LED off
-  SerialDebug.println("Off");
-  //  uint8_t msg[3] = {0x80,0x30,0x60};
-  //  SerialMidi.write(msg,3);
-  midiLooper.m_MidiOut.NoteOff(0x00, 0x2D, 0x60);
+  serialDebug.println("MidiLooper v0.3");
 }
 
 void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &handler, int maxNumBytesRead = 3)
@@ -61,10 +48,6 @@ void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &han
   {
     uint8_t byte = serialMidi.read();
     parser.Parse(byte, handler);
-
-    // SerialDebug.print(byte, HEX); //TODO debug ~~ DigitalIn
-    // SerialDebug.print(" ");
-
     --numBytesIn;
   }
 }
@@ -75,8 +58,11 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad)
   const int ToggleRecordingPad = 1;
   const int UndoRecordingPad = 2;
   const int MutePad = 3;
-  const int Track0Pad = 8;
-  const int MetronomePad = 7;
+
+  const int AllNotesOffPad = 4;
+  const int MetronomePad = 5;
+
+  const int Track0Pad = 6;
 
   touchPad.Read();
 
@@ -114,7 +100,11 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad)
       }
       if (touchPad.Get(MutePad))
       {
-        midiLooper.m_Track[idx].onToggleMuted(); //midiLooper.m_MidiOut); //?
+        midiLooper.m_Track[idx].onToggleMuted(midiLooper.m_MidiOut);
+      }
+      if (touchPad.Get(AllNotesOffPad))
+      {
+        midiLooper.m_Track[idx].AllNotesOff(midiLooper.m_MidiOut);
       }
     }
   }
@@ -124,29 +114,18 @@ void loop()
 {
   // put your main code here, to run repeatedly:
 
-  // blinking LED
-  // for(int i = 0; i<3; ++i)
-  // {
-  //  ledOn();
-  //  delay(300);
-  //  ledOff();
-  //  delay(300);
-  // }
-  // for(int i = 0; i<2; ++i)
-  // {
-  //   ledOn();
-  //   delay(800);
-  //   ledOff();
-  //   delay(800);
-  // }
-  ScanI2C(SerialDebug);
+  // startup checks
+  ScanI2C(serialDebug);
   // remove/limit in time test touchpad
   const int numRepeats = 5;
-  TestTouchPad(touchPad, SerialDebug, numRepeats);
+  TestTouchPad(touchPad, serialDebug, numRepeats);
 
-  allNotesOff(midiLooper.m_MidiOut, 0x00);
+  midiLooper.allNotesOff(); //?? all channels???
 
+  // main loop:
   int debugCounter = 0;
+  StopWatch debugTimer;
+  debugTimer.start();
 
   //fake clock
   int clockCounter = 0;
@@ -169,22 +148,27 @@ void loop()
     digitalWrite(PC13, clock ? LOW : HIGH); // turn the LED on/off
 
     // read midi in but limit # bytes for performance issues
-    readMidiIn(SerialMidi, midiParser, midiLooper, 3);
+    readMidiIn(serialMidi, midiParser, midiLooper, 3);
 
     updateMidiLooper(midiLooper, touchPad);
 
     ++debugCounter;
-    if (debugCounter >= 1000)
+    if (debugCounter >= 1000) //TODO stopwatch 1 sec + # runs
     {
-      //TODO serial debug out = timing, ...
-      SerialDebug.print("D: ");
-      SerialDebug.println(millis()); //TODO elapsed
-      debugCounter = 0;
+      debugTimer.stop();
+      if (0 == digitalRead(debugPin))
+      {
+        // serial debug out : timing, ...
+        serialDebug.print(debugTimer.read_ms()); //elapsed
+        serialDebug.print(" ");
+        serialDebug.println(millis());
 
-      midiLooper.printState(SerialDebug);
-      //midiLooper.m_Track.printItems(SerialDebug);
+        midiLooper.printState(serialDebug);
+      }
+      debugCounter = 0;
+      debugTimer.start();
     }
 
-    delay(1); //TODO check if needed
+    delay(1); //TODO check if needed when using external clock input
   }
 }

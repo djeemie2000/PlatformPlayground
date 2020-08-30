@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include "MidiOut.h"
+#include "MidiNoteStack.h"
 #include "MidiLooperTicker.h"
 
 struct MidiLooperItem
@@ -23,15 +24,32 @@ public:
         //for now, clear all items
         // TODO only undo last recorded 'layer'
 
-        // TODO all playing notes should be note off???
+        // all playing notes should be note off!! => note stack
+        AllNotesOff(midiOut);
         // TODO all 'cleared' note off events should be sent right now!
         // TODO only those after current step??
+        // int idx = 0;
+        // while (idx < m_NumItems)
+        // {
+        //     if (!m_Items[idx].m_Velocity)
+        //     {
+        //         // use some dummy velocity but not zero!
+        //         midiOut.NoteOff(m_MidiChannel, m_Items[idx].m_MidiNote, 0x01);
+        //     }
+        //     ++idx;
+        // }
+
         m_NumItems = 0;
     }
 
-    void onToggleMuted()
+    void onToggleMuted(MidiOut &midiOut)
     {
         m_Muted = !m_Muted;
+        //TODO all notes off ~ steps??
+        if (m_Muted)
+        {
+            midiOut.allNotesOff(m_MidiChannel);
+        }
     }
 
     void ToggleRecording()
@@ -64,35 +82,39 @@ public:
 
             // iterate all items, if step matches current step, play it
             // muted => no note on, but still do all note off (?)
-            int idx = 0;
-            while (idx < m_NumItems)
+            if (!m_Muted)
             {
-                if (step == m_Items[idx].m_Step)
+                int idx = 0;
+                while (idx < m_NumItems)
                 {
-                    if (m_Items[idx].m_Velocity)
+                    if (step == m_Items[idx].m_Step)
                     {
-                        if (!m_Muted)
+                        if (m_Items[idx].m_Velocity)
                         {
                             midiOut.NoteOn(m_MidiChannel, m_Items[idx].m_MidiNote, m_Items[idx].m_Velocity);
+                            m_NoteStack.NoteOn(m_Items[idx].m_MidiNote);
+                        }
+                        else
+                        {
+                            // use some dummy velocity but not zero!
+                            midiOut.NoteOff(m_MidiChannel, m_Items[idx].m_MidiNote, 0x01);
+                            m_NoteStack.NoteOff(m_Items[idx].m_MidiNote);
                         }
                     }
-                    else
-                    {
-                        // use some dummy velocity but not zero!
-                        midiOut.NoteOff(m_MidiChannel, m_Items[idx].m_MidiNote, 0x01);
-                    }
+                    ++idx;
                 }
-                ++idx;
             }
         }
     }
 
-    void onNoteOn(const MidiLooperTicker &ticker, uint8_t midiChannel, uint8_t midiNote, uint8_t velocity)
+    void onNoteOn(const MidiLooperTicker &ticker, MidiOut &midiOut, uint8_t midiChannel, uint8_t midiNote, uint8_t velocity)
     {
         //TODO if midi learn changes channels, need to note off all open notes!
         //TODO midi learn also learns 2 cc sliders!
         if (m_MidiLearn)
         {
+            midiOut.allNotesOff(m_MidiChannel);
+            //TODO only notes of this track not all notes of this channel!!
             m_MidiChannel = midiChannel;
             m_MidiLearn = false;
         }
@@ -123,6 +145,16 @@ public:
         }
     }
 
+    void AllNotesOff(MidiOut &midiOut)
+    {
+        //midiOut.allNotesOff(m_MidiChannel);
+        while (m_NoteStack.Size())
+        {
+            // fixed non zero velocity
+            midiOut.NoteOff(m_MidiChannel, m_NoteStack.Pop(), 0x01);
+        }
+    }
+
     void printItems(HardwareSerial &serial)
     {
         serial.print("items # ");
@@ -148,7 +180,9 @@ public:
         serial.print(m_Recording ? 1 : 0);
         serial.print(" P");
         serial.print(m_Muted ? 0 : 1);
-        serial.print(" items#");
+        serial.print(" S");
+        serial.print(m_NoteStack.Size());
+        serial.print(" #");
         serial.println(m_NumItems);
     }
 
@@ -157,6 +191,8 @@ public:
     bool m_Recording;
     bool m_Muted;
     //TODO int m_ClockDivider;
+
+    MidiNoteStack m_NoteStack;
 
     static const int ItemCapacity = 128;
     MidiLooperItem m_Items[ItemCapacity];
