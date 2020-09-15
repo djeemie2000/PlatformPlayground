@@ -11,7 +11,7 @@
 // RX1 TX1 PA10 PA9
 // RX2 TX2 PA3 PA2
 // RX3 TX3 PB11 PB10
-static const int debugPin = PA8;
+static const int debugPin = PB15;
 HardwareSerial serialDebug(PA10, PA9);
 HardwareSerial serialMidi(PA3, PA2);
 MidiParser midiParser;
