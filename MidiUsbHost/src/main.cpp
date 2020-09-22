@@ -1,109 +1,92 @@
 #include <Arduino.h>
-#include "usbh_midi.h"
-#include "usbhub.h"
-
-#include <SPI.h>
+#include "MidiUsbHost.h"
 
 const int ledPin = PD2;
-
-USB Usb;
-//USBHub Hub(&Usb);
-USBH_MIDI Midi(&Usb);
-
-uint16_t pid, vid;
+const int debugPin = PD3;
+bool debugMode;
+MidiUsbHost midiUsbHost;
 
 void setup()
 {
   // put your setup code here, to run once:
-  vid = 0;
-  pid = 0;
+
+  // TODO led blink fast => usb init failed
+  // TODO blink led slow => wait for pid/vid >0
+  // TODO led on => active
+
+  // TODO upon startup check din (pullup) ->
+  //    LOW = debug mode => Serial debug print 115200
+  //    HIGH = normal mode => midi 31250
+  //vid = 0;
+  //pid = 0;
 
   pinMode(ledPin, OUTPUT);
-  Serial.begin(115200);
+  //default no debug mode
+  pinMode(debugPin, INPUT_PULLUP);
+  debugMode = (digitalRead(debugPin) == LOW);
 
-  Serial.println("MidiUsbHost v0.1...");
-
-  if (Usb.Init() == -1)
+  if (debugMode)
   {
-    Serial.println("Usb init failed!");
-    while (1)
-      ; //halt
-  }     //if (Usb.Init() == -1...
-  Serial.println("Usb init succeeded!");
-
-  delay(200);
-}
-
-void testBlinkLed()
-{
-  for (int repeat = 0; repeat < 2; ++repeat)
-  {
-    digitalWrite(ledPin, HIGH);
-    delay(800);
-    digitalWrite(ledPin, LOW);
-    delay(800);
+    Serial.begin(115200);
+    Serial.println("MidiUsbHost v0.1...");
   }
 
-  for (int repeat = 0; repeat < 8; ++repeat)
-  {
-    digitalWrite(ledPin, HIGH);
-    delay(200);
-    digitalWrite(ledPin, LOW);
-    delay(200);
-  }
-}
+  midiUsbHost.begin();
 
-// Poll USB MIDI Controler and send to serial MIDI
-void MIDI_poll()
-{
-  char buf[20];
-  uint8_t bufMidi[64];
-  //  uint16_t rcvd;
-
-  if (Midi.idVendor() != vid || Midi.idProduct() != pid)
+  if (debugMode)
   {
-    vid = Midi.idVendor();
-    pid = Midi.idProduct();
-    sprintf(buf, "VID:%04X, PID:%04X", vid, pid);
-    Serial.println(buf);
-  }
-  uint8_t size = Midi.RecvData(bufMidi, true);
-  if (0 < size)
-  {
-    for (uint16_t i = 1; i <= size; i++)
+    if (midiUsbHost.InitSucceeded())
     {
-      Serial.print(bufMidi[i], HEX);
-      Serial.print(" ");
+      Serial.println("Usb init succeeded!");
     }
-    Serial.println();
+    else
+    {
+      Serial.println("Usb init failed!");
+    }
   }
-  // if (Midi.RecvData(&rcvd, bufMidi) == 0)
-  // {
-  //   uint32_t time = (uint32_t)millis();
-  //   sprintf(buf, "%04X%04X: ", (uint16_t)(time >> 16), (uint16_t)(time & 0xFFFF)); // Split variable to prevent warnings on the ESP8266 platform
-  //   Serial.print(buf);
-  //   Serial.print(rcvd);
-  //   Serial.print(':');
-  //   for (uint16_t i = 0; i < rcvd; i++)
-  //   {
-  //     sprintf(buf, " %02X", bufMidi[i]);
-  //     Serial.print(buf);
-  //   }
-  //   Serial.println("");
-  // }
+  delay(200);
 }
 
 void loop()
 {
   // put your main code here, to run repeatedly:
-  testBlinkLed();
-
-  while (true)
+  if (midiUsbHost.InitSucceeded())
   {
-    Usb.Task();
-    if (Midi)
+    midiUsbHost.Update(); //TODO parser
+    //TODO poll midi Serial In -> parser
+
+    // led on if connected, off if not connected
+    if (midiUsbHost.DeviceConnected())
     {
-      MIDI_poll();
+      digitalWrite(ledPin, HIGH);
     }
+    else
+    {
+      digitalWrite(ledPin, LOW);
+    }
+
+    if (debugMode && midiUsbHost.DeviceConnected() && 0 < midiUsbHost.RecieveSize())
+    {
+      //print bytes if any
+      Serial.print("pid ");
+      Serial.print(midiUsbHost.Pid(), HEX);
+      Serial.print("vid ");
+      Serial.print(midiUsbHost.Vid(), HEX);
+      Serial.print(" :  ");
+      for (int idx = 0; idx < midiUsbHost.RecieveSize(); ++idx)
+      {
+        Serial.print(midiUsbHost.RecieveByte(idx), HEX);
+        Serial.print(" ");
+      }
+      Serial.println();
+    }
+  }
+  else
+  {
+    // USB init failed => blink led fast
+    digitalWrite(ledPin, HIGH);
+    delay(100);
+    digitalWrite(ledPin, LOW);
+    delay(100);
   }
 }
