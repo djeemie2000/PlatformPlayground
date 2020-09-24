@@ -1,10 +1,15 @@
 #include <Arduino.h>
 #include "MidiUsbHost.h"
+#include "MidiParser.h"
+#include "MidiOut.h"
 
 const int ledPin = PD2;
 const int debugPin = PD3;
 bool debugMode;
 MidiUsbHost midiUsbHost;
+MidiParser midiParserUsb;
+MidiParser midiParserSerial;
+MidiOut midiOut;
 
 void setup()
 {
@@ -30,6 +35,18 @@ void setup()
     Serial.begin(115200);
     Serial.println("MidiUsbHost v0.1...");
   }
+  else
+  {
+    Serial.begin(31250);
+    midiOut.begin(&Serial);
+  }
+
+  delay(1000);
+
+  if (debugMode)
+  {
+    Serial.println("USB init...");
+  }
 
   midiUsbHost.begin();
 
@@ -37,14 +54,14 @@ void setup()
   {
     if (midiUsbHost.InitSucceeded())
     {
-      Serial.println("Usb init succeeded!");
+      Serial.println("USB init succeeded!");
     }
     else
     {
-      Serial.println("Usb init failed!");
+      Serial.println("USB init failed!");
     }
   }
-  delay(200);
+  delay(2000);
 }
 
 void loop()
@@ -52,33 +69,70 @@ void loop()
   // put your main code here, to run repeatedly:
   if (midiUsbHost.InitSucceeded())
   {
-    midiUsbHost.Update(); //TODO parser
-    //TODO poll midi Serial In -> parser
+    midiUsbHost.Update();
 
     // led on if connected, off if not connected
+    // + flicker while reciveing bytes
     if (midiUsbHost.DeviceConnected())
     {
-      digitalWrite(ledPin, HIGH);
+      if (0 < midiUsbHost.RecieveSize())
+      {
+        digitalWrite(ledPin, LOW);
+      }
+      else
+      {
+        digitalWrite(ledPin, HIGH);
+      }
     }
     else
     {
       digitalWrite(ledPin, LOW);
     }
 
-    if (debugMode && midiUsbHost.DeviceConnected() && 0 < midiUsbHost.RecieveSize())
+    if (!debugMode)
     {
-      //print bytes if any
-      Serial.print("pid ");
-      Serial.print(midiUsbHost.Pid(), HEX);
-      Serial.print("vid ");
-      Serial.print(midiUsbHost.Vid(), HEX);
-      Serial.print(" :  ");
-      for (int idx = 0; idx < midiUsbHost.RecieveSize(); ++idx)
+      // read usb midi in -> parser -> midi out
+      if (midiUsbHost.DeviceConnected() && 0 < midiUsbHost.RecieveSize())
       {
-        Serial.print(midiUsbHost.RecieveByte(idx), HEX);
-        Serial.print(" ");
+        for (int idx = 0; idx < midiUsbHost.RecieveSize(); ++idx)
+        {
+          midiParserUsb.Parse(midiUsbHost.RecieveByte(idx), midiOut);
+        }
       }
-      Serial.println();
+
+      // read serial midi in -> parser -> midi out
+      // limit # bytes for performance issues
+      int numBytesIn = Serial.available();
+      const int maxNumBytesIn = 3;
+      if (maxNumBytesIn < numBytesIn)
+      {
+        numBytesIn = maxNumBytesIn;
+      }
+      while (0 < numBytesIn)
+      {
+        uint8_t byte = Serial.read();
+        midiParserSerial.Parse(byte, midiOut);
+        --numBytesIn;
+      }
+    }
+
+    if (debugMode)
+    {
+      if (midiUsbHost.DeviceConnected() && 0 < midiUsbHost.RecieveSize())
+      {
+        //print bytes if any
+        Serial.print("pid ");
+        Serial.print(midiUsbHost.Pid(), HEX);
+        Serial.print("vid ");
+        Serial.print(midiUsbHost.Vid(), HEX);
+        Serial.print(" :  ");
+        for (int idx = 0; idx < midiUsbHost.RecieveSize(); ++idx)
+        {
+          Serial.print(midiUsbHost.RecieveByte(idx), HEX);
+          Serial.print(" ");
+        }
+        Serial.println();
+      }
     }
   }
   else
