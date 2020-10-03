@@ -8,7 +8,7 @@
 #include "library/include/attiny_analog.h"
 
 
-#define	LED_PIN		PB0
+#define	LED_PIN		PB3//PB0
 
 // class TestClass
 // {
@@ -217,6 +217,7 @@ void setup() {
   attiny_pin_mode(LED_PIN, ATTINY_OUTPUT);
 	attiny_digital_write(LED_PIN, ATTINY_LOW);
   //?needed? pin_mode(ADC1, OUTPUT);
+  attiny_pin_mode(ADC2, ATTINY_INPUT);
 
   attiny_random_init(500);//TODO random from EEPROM!!!
 
@@ -238,18 +239,32 @@ void loop() {
 	attiny_sleep(800);
 
   attiny_digital_toggle(LED_PIN);
-  int randomPeriod = attiny_random()>>6;
+  //TODO loop int randomPeriod = attiny_random()>>6;
   attiny_sleep(500);//range 2^10 = 1024 msec
   //TODO variable cntr + delay per millisecond??
 
   attiny_digital_toggle(LED_PIN);
 	attiny_sleep(800);
 
-  int period = attiny_analog_read(ADC1);
+//  int period = attiny_analog_read(ADC2);
   attiny_sleep(1000);//problem : compile time constant into sleep!!!
   //TODO variable cntr + delay per millisecond??
 
 //  g_test.update();
+}
+
+void loop2() {
+
+  // put your main code here, to run repeatedly:
+  int cntr = 0;
+  int period = 1;
+  while(cntr<period)
+  {
+    period = attiny_analog_read(ADC2);
+    ++cntr;
+    attiny_sleep(1);//problem : compile time constant into sleep!!!
+  }
+  attiny_digital_toggle(LED_PIN);
 }
 
 int main()
@@ -258,7 +273,7 @@ int main()
 
   while(true)
   {
-    loop();
+    loop2();
   }
 
   return 0;
