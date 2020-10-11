@@ -5,6 +5,8 @@
 #ifndef	_ATTINY_H_
 #define	_ATTINY_H_
 
+#include <avr/io.h>
+
 //void setup();
 //void loop();
 

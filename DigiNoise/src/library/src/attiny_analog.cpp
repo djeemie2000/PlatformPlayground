@@ -19,16 +19,21 @@ attiny_analog_read(uint8_t pin)
 	default: ADMUX = 0; break;
 	}
 
+	// set ADC clock divider
+	sbi(ADCSRA,ADPS0);
+	sbi(ADCSRA,ADPS1);
+	//sbi(ADCSRA,ADPS2);
+
 	sbi(ADCSRA, ADEN);					// Enable ADC
 	sbi(ADCSRA, ADSC);					// Run single conversion
 	while(bit_is_set(ADCSRA, ADSC));			// Wait conversion is done
 
 	// Read values
 	low = ADCL;
-        high = ADCH;
+    high = ADCH;
 
-        // combine the two bytes
-        return (high << 8) | low;
+	// combine the two bytes
+	return (high << 8) | low;
 }
 
 void
