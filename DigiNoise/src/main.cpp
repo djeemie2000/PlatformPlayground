@@ -10,17 +10,19 @@
 #include "masterclock.h"
 #include "buttonin.h"
 #include "rotaryencoder.h"
+#include "masterclock2.h"
 
 #define	LED_PIN		PB3//PB0
 
 // RandomGate gate;
 // PulseGate gate2;
 // MasterClock clockOut;
-ButtonIn buttonIn;
-ButtonIn rotaryInA;
-ButtonIn rotaryInB;
-uint16_t Cntr;
-RotaryEncoder rotaryEncoder;
+// ButtonIn buttonIn;
+// ButtonIn rotaryInA;
+// ButtonIn rotaryInB;
+// uint16_t Cntr;
+// RotaryEncoder rotaryEncoder;
+MasterClock2 masterClock;
 
 void setup() {
  // put your setup code here, to run once:
@@ -29,19 +31,20 @@ void setup() {
  //gate.setup();
  //gate2.setup();
  //clockOut.setup();
- rotaryInA.begin(PB0, 10);
- rotaryInB.begin(PB2, 10);
- //buttonIn.begin(PB1, 10);
- attiny_pin_mode(PB3, ATTINY_OUTPUT);
- attiny_digital_write(PB3,ATTINY_HIGH);
+//  rotaryInA.begin(PB0, 10);
+//  rotaryInB.begin(PB2, 10);
+//  //buttonIn.begin(PB1, 10);
+//  attiny_pin_mode(PB3, ATTINY_OUTPUT);
+//  attiny_digital_write(PB3,ATTINY_HIGH);
 
- attiny_pin_mode(PB4, ATTINY_OUTPUT);
- attiny_digital_write(PB4,ATTINY_HIGH);
+//  attiny_pin_mode(PB4, ATTINY_OUTPUT);
+//  attiny_digital_write(PB4,ATTINY_HIGH);
 
- attiny_pin_mode(PB1, ATTINY_OUTPUT);
- attiny_timer_mode(FAST_PWM);
- attiny_timer_prescale(1);
- Cntr = 0;
+//  attiny_pin_mode(PB1, ATTINY_OUTPUT);
+//  attiny_timer_mode(FAST_PWM);
+//  attiny_timer_prescale(1);
+//  Cntr = 0;
+ masterClock.setup();
 }
 
 void loop() {
@@ -78,16 +81,17 @@ int main()
 
   while(true)
   {
-    buttonIn.read();
-    rotaryInA.read();
-    rotaryInB.read();
-    attiny_digital_write(PB3,rotaryInA.Get()?ATTINY_HIGH:ATTINY_LOW);
-    attiny_digital_write(PB4,rotaryInB.Get()?ATTINY_HIGH:ATTINY_LOW);
+    // buttonIn.read();
+    // rotaryInA.read();
+    // rotaryInB.read();
+    // attiny_digital_write(PB3,rotaryInA.Get()?ATTINY_HIGH:ATTINY_LOW);
+    // attiny_digital_write(PB4,rotaryInB.Get()?ATTINY_HIGH:ATTINY_LOW);
 
-    int increment = rotaryEncoder.encode(rotaryInA.Get(), rotaryInB.Get());
-    Cntr += increment;
-    attiny_analog_write(PB1,Cntr);
-    attiny_sleep(1);
+    // int increment = rotaryEncoder.encode(rotaryInA.Get(), rotaryInB.Get());
+    // Cntr += increment;
+    // attiny_analog_write(PB1,Cntr);
+    // attiny_sleep(1);
+    masterClock.loop();
   }
 
   return 0;
