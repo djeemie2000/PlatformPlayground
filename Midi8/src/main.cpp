@@ -1,43 +1,67 @@
 #include <Arduino.h>
 #include <SPI.h>
 
-// #include "DigitalOutBank.h"
-// #include "analogoutbank.h"
-// #include "shiftoutbank.h"
-
 #include "midi8ui.h"
-#include "MidiNoteStack.h"
-
-// DigitalOutBank gatesOut(4,5,6,7);
-// AnalogOutBank cvOut(4);// 2x DAV => use CS pins 10,9
-// ShiftOutBank ledsOut(8);//use CS pin 8
+#include "mode1handler.h"
+#include "MidiParser.h"
 
 Midi8UI midi8UI;
+MidiParser midiParserSerial;
+Mode1Handler mode1Handler;
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(31250);//115200);
   Serial.println("Midi8 v0.1...");
 
-  // gatesOut.begin();
-  // cvOut.begin();
-  // ledsOut.begin();
   midi8UI.begin();
 }
 
-void ledPattern(uint8_t pattern)
+// void ledPattern(uint8_t pattern)
+// {
+//   for(int idx = 0; idx<8; ++idx)
+//   {
+//     uint8_t curr = (pattern>>idx) & 0x01;
+//     digitalWrite(LED_BUILTIN, curr);
+//     delay(200);
+//   }
+// }
+
+void testUi()
 {
-  for(int idx = 0; idx<8; ++idx)
-  {
-    uint8_t curr = (pattern>>idx) & 0x01;
-    digitalWrite(LED_BUILTIN, curr);
-    delay(200);
-  }
+  testAnalogOutBank(midi8UI.cvOut, 1);
+  testDigitalOutBank(midi8UI.gatesOut, 1);
+  testLedOutBank(midi8UI.ledsOut,1);
+}
+
+void handleMidi(MidiHandler& midiHandler)
+{
+  // read serial midi in -> parser -> midi out
+    // limit # bytes for performance issues
+    int numBytesIn = Serial.available();
+    const int maxNumBytesIn = 3;
+    if (maxNumBytesIn < numBytesIn)
+    {
+      numBytesIn = maxNumBytesIn;
+    }
+    while (0 < numBytesIn)
+    {
+      uint8_t byte = Serial.read();
+      //Serial.println(byte,HEX);
+      midiParserSerial.Parse(byte, midiHandler);
+      --numBytesIn;
+    }
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  testAnalogOutBank(midi8UI.cvOut, 1);
-  testDigitalOutBank(midi8UI.ledsOut,4);
-  testDigitalOutBank(midi8UI.gatesOut, 4);
+  testUi();
+
+  while (true)
+  {
+    midi8UI.update();
+    handleMidi(mode1Handler);
+    mode1Handler.updateUI(&midi8UI);
+  }
+
 }

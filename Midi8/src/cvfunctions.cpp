@@ -1,7 +1,7 @@
 #include "cvfunctions.h"
 #include "analogoutbank.h"
 #include "DigitalOutBank.h"
-#include "shiftoutbank.h"
+#include "ledoutbank.h"
 
 void PitchOut(AnalogOutBank& out, int idx, uint8_t midiNote)
 {
@@ -31,12 +31,17 @@ void CCOut(AnalogOutBank& out, int idx, uint8_t value)
     out.set(idx, val);
 }
 
+void GateOut(AnalogOutBank& out, int idx, int gate)
+{
+    out.set(idx, gate ? 4095 : 0);
+}
+
 void GateOut(DigitalOutBank& out, int idx, int gate)
 {
     out.set(idx, gate ? HIGH : LOW);
 }
 
-void GateOut(ShiftOutBank& out, int idx, int gate)
+void LedOut(LedOutBank& out, int idx, int gate)
 {
-    out.set(idx, gate ? HIGH : LOW);
+    out.set(idx, gate);
 }

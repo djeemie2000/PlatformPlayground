@@ -36,19 +36,19 @@ void testAnalogOutBank(AnalogOutBank &bank, int repeats)
     {
         for (int idx = 0; idx < bank.size(); ++idx)
         {
-            for(int val = 1; val<=16; ++val)
+            for(int val = 0; val<=4096; val+=256)
             {
-                int value = (val<<8)-1;
-                bank.set(idx, value);
+                bank.set(idx, val);
                 bank.update();
 
                 Serial.print("Set ");
                 Serial.print(idx);
                 Serial.print(" to ");
-                Serial.println(value);
+                Serial.println(val);
                 delay(200);
             }
             bank.set(idx, 0);
-        }
+            bank.update();
+         }
     }
 }
