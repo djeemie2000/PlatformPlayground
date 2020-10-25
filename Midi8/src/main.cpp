@@ -3,11 +3,14 @@
 
 #include "midi8ui.h"
 #include "mode1handler.h"
+#include "mode4handler.h"
 #include "MidiParser.h"
 
 Midi8UI midi8UI;
 MidiParser midiParserSerial;
 Mode1Handler mode1Handler;
+Mode4Handler mode4Handler;
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -60,8 +63,16 @@ void loop() {
   while (true)
   {
     midi8UI.update();
-    handleMidi(mode1Handler);
-    mode1Handler.updateUI(&midi8UI);
+    if(midi8UI.mode == 1)
+    {
+      handleMidi(mode1Handler);
+      mode1Handler.updateUI(&midi8UI);
+    }
+    else if(midi8UI.mode==4)
+    {
+      handleMidi(mode4Handler);
+      mode4Handler.updateUI(&midi8UI);
+    }
   }
 
 }

@@ -10,7 +10,7 @@ class MonoPVG4Out
 public:
     MonoPVG4Out();
 
-    void Begin(int idx, Midi8UI* ui);
+    void Begin(int idx);
 
     void NoteOn(uint8_t channel, uint8_t midiNote, uint8_t velocity);
     void NoteOff(uint8_t channel, uint8_t midiNote, uint8_t velocity);
@@ -20,9 +20,7 @@ public:
     void updateUI(Midi8UI* ui);
 
 private:
-
     int m_Idx;
-    Midi8UI* m_Ui;
 
     bool m_Learn;
 

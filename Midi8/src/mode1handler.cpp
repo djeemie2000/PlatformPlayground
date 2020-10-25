@@ -16,7 +16,7 @@ Mode1Handler::Mode1Handler()
 void Mode1Handler::NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t /*Velocity*/)
 {
     //
-    Serial.print("On  ");
+    Serial.print("M1 On  ");
     Serial.print(Channel, HEX);
     Serial.print(" ");
     Serial.print(MidiNote, HEX);
@@ -52,7 +52,7 @@ void Mode1Handler::NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t /*Velocity*
 void Mode1Handler::NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t /*Velocity*/)
 {
     //
-    Serial.print("Off ");
+    Serial.print("M1 Off ");
     Serial.print(Channel, HEX);
     Serial.print(" ");
     Serial.print(MidiNote, HEX);
@@ -78,7 +78,7 @@ void Mode1Handler::updateUI(Midi8UI* ui)
 {
     if(ui->mode != 1)
     {
-        Serial.println("Not Mode1");
+        //Serial.println("Not Mode1");
         return;
     }
 

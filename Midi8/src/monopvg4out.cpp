@@ -4,16 +4,14 @@
 
 MonoPVG4Out::MonoPVG4Out()
 : m_Idx(0)
-, m_Ui(0)
 , m_Learn(false)
 , m_Channel(0xFF)
 , m_Stack() 
 {}
 
-void MonoPVG4Out::Begin(int idx, Midi8UI* ui)
+void MonoPVG4Out::Begin(int idx)
 {
   m_Idx = idx;
-  m_Ui = ui;
   m_Learn = false;//??
   m_Channel = 0xFF;
   m_Stack.Clear();
