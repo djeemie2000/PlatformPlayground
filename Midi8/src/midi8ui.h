@@ -44,8 +44,12 @@ struct Midi8UI
 
         if(modeBtn.IsFalling())
         {
-            //toggle mode 1 2 4
+            //toggle mode 1->2->4->
             if(mode==1)
+            {
+                mode = 2;
+            }
+            if(mode==2)
             {
                 mode = 4;
             }
