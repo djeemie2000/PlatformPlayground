@@ -1,6 +1,15 @@
 #include "DigitalOutBank.h"
 
-DigitalOutBank::DigitalOutBank(int pin0, int pin1, int pin2, int pin3, int pin4, int pin5, int pin6, int pin7)
+DigitalOutBank::DigitalOutBank()
+{
+    for (int idx = 0; idx < Capacity; ++idx)
+    {
+        m_Pins[idx] = -1;
+        m_Values[idx] = 0;
+    }
+}
+
+void DigitalOutBank::begin(int pin0, int pin1, int pin2, int pin3, int pin4, int pin5, int pin6, int pin7)
 {
     m_Pins[0] = pin0;
     m_Pins[1] = pin1;
@@ -10,15 +19,13 @@ DigitalOutBank::DigitalOutBank(int pin0, int pin1, int pin2, int pin3, int pin4,
     m_Pins[5] = pin5;
     m_Pins[6] = pin6;
     m_Pins[7] = pin7;
-}
 
-void DigitalOutBank::begin()
-{
     for (int idx = 0; idx < Capacity; ++idx)
     {
         if (-1 != m_Pins[idx])
         {
             pinMode(m_Pins[idx], OUTPUT);
+            m_Values[idx] = 0;
         }
     }
 }

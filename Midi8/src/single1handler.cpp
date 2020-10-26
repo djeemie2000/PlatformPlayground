@@ -1,8 +1,8 @@
-#include "mode1handler.h"
+#include "single1handler.h"
 #include "midi8ui.h"
 #include "cvfunctions.h"
 
-Mode1Handler::Mode1Handler()
+Single1Handler::Single1Handler()
  : m_LearnIdx(-1)
 {
     for(int idx = 0; idx<Size; ++idx)
@@ -13,10 +13,10 @@ Mode1Handler::Mode1Handler()
     }
 }
 
-void Mode1Handler::NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t /*Velocity*/)
+void Single1Handler::NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t /*Velocity*/)
 {
     //
-    Serial.print("M1 On  ");
+    Serial.print("S1 On  ");
     Serial.print(Channel, HEX);
     Serial.print(" ");
     Serial.print(MidiNote, HEX);
@@ -49,10 +49,10 @@ void Mode1Handler::NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t /*Velocity*
     }
 }
     
-void Mode1Handler::NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t /*Velocity*/)
+void Single1Handler::NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t /*Velocity*/)
 {
     //
-    Serial.print("M1 Off ");
+    Serial.print("S1 Off ");
     Serial.print(Channel, HEX);
     Serial.print(" ");
     Serial.print(MidiNote, HEX);
@@ -74,14 +74,8 @@ void Mode1Handler::NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t /*Velocity
     }
 }
 
-void Mode1Handler::updateUI(Midi8UI* ui)
+void Single1Handler::updateUI(Midi8UI* ui)
 {
-    if(ui->mode != 1)
-    {
-        //Serial.println("Not Mode1");
-        return;
-    }
-
     for(int idx = 0; idx<4; ++idx)
     {
         if(idx==m_LearnIdx)

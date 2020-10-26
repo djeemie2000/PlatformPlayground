@@ -23,6 +23,7 @@ void MonoPG2Out::NoteOn(uint8_t channel, uint8_t midiNote)
     {
         m_Stack.Clear();
         m_Channel = channel;
+        m_Learn = false;
     }
     if(m_Channel == channel)
     {

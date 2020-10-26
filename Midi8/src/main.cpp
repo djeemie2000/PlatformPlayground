@@ -2,15 +2,22 @@
 #include <SPI.h>
 
 #include "midi8ui.h"
-#include "mode1handler.h"
-#include "mode4handler.h"
+#include "single1handler.h"
+#include "single2handler.h"
+#include "mono2handler.h"
+#include "mono4handler.h"
+#include "poly2handler.h"
+#include "poly4handler.h"
 #include "MidiParser.h"
 
 Midi8UI midi8UI;
 MidiParser midiParserSerial;
-Mode1Handler mode1Handler;
-Mode4Handler mode4Handler;
-
+Single1Handler single1Handler;
+Single2Handler single2Handler;
+Mono2Handler mono2Handler;
+Mono4Handler mono4Handler;
+Poly2Handler poly2Handler;
+Poly4Handler poly4Handler;
 
 void setup() {
   // put your setup code here, to run once:
@@ -60,18 +67,62 @@ void loop() {
   // put your main code here, to run repeatedly:
   testUi();
 
+  unsigned long debugCntr =0;
   while (true)
   {
     midi8UI.update();
-    if(midi8UI.mode == 1)
+    if(midi8UI.grouping == Midi8UI::Grouping1)
     {
-      handleMidi(mode1Handler);
-      mode1Handler.updateUI(&midi8UI);
+      // always single mode!
+      handleMidi(single1Handler);
+      single1Handler.updateUI(&midi8UI);
     }
-    else if(midi8UI.mode==4)
+    else if(midi8UI.grouping==Midi8UI::Grouping2)
     {
-      handleMidi(mode4Handler);
-      mode4Handler.updateUI(&midi8UI);
+      if(midi8UI.mode==Midi8UI::MonoMode)
+      {
+        handleMidi(mono2Handler);
+        mono2Handler.updateUI(&midi8UI);
+      }
+      else if(midi8UI.mode==Midi8UI::PolyMode)
+      {
+        handleMidi(poly2Handler);
+        poly2Handler.updateUI(&midi8UI);
+      }
+      else if(midi8UI.mode==Midi8UI::SingleMode)
+      {
+        handleMidi(single2Handler);
+        single2Handler.updateUI(&midi8UI);
+      }
+    }
+    else if(midi8UI.grouping==Midi8UI::Grouping4)
+    {
+      // only mono or poly
+      if(midi8UI.mode==Midi8UI::MonoMode)
+      {
+        handleMidi(mono4Handler);
+        mono4Handler.updateUI(&midi8UI);
+      }
+      else if(midi8UI.mode==Midi8UI::PolyMode)
+      {
+        handleMidi(poly4Handler);
+        poly4Handler.updateUI(&midi8UI);
+      }
+    }
+
+    ++debugCntr;
+    if(2000<debugCntr)
+    {
+      Serial.print(debugCntr);
+      Serial.print(" -> ");
+      Serial.print(millis());
+
+      Serial.print(" G ");
+      Serial.print(midi8UI.grouping);
+      Serial.print(" M ");
+      Serial.println(midi8UI.mode);
+
+      debugCntr = 0;
     }
   }
 

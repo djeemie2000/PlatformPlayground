@@ -5,10 +5,10 @@
 
 class Midi8UI;
 
-class Mode1Handler : public MidiHandler
+class Poly4Handler : public MidiHandler
 {
 public:
-    Mode1Handler();
+    Poly4Handler();
 
     void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity);//override
     void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) ;//override
@@ -16,11 +16,11 @@ public:
     void updateUI(Midi8UI* ui);
 
 private:
-    static const int Size = 8;
+    static const int Size = 2;
 
-    uint8_t m_Channel[Size];
+    uint8_t m_Channel;
     uint8_t m_MidiNote[Size];
-    int m_Gate[Size];
+    uint8_t m_Velocity[Size];
 
     int m_LearnIdx;
 };

@@ -6,10 +6,10 @@
 
 class Midi8UI;
 
-class Mode4Handler : public MidiHandler
+class Mono4Handler : public MidiHandler
 {
 public:
-    Mode4Handler();
+    Mono4Handler();
 
     void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity);//override
     void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) ;//override

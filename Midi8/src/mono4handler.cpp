@@ -1,8 +1,8 @@
-#include "mode4handler.h"
+#include "mono4handler.h"
 #include "midi8ui.h"
 #include "cvfunctions.h"
 
-Mode4Handler::Mode4Handler()
+Mono4Handler::Mono4Handler()
  : m_LearnIdx(-1)
 {
     for(int idx = 0; idx<Size; ++idx)
@@ -12,7 +12,7 @@ Mode4Handler::Mode4Handler()
     }
 }
 
-void Mode4Handler::NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
+void Mono4Handler::NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
 {
     //
     Serial.print("M4 On  ");
@@ -48,7 +48,7 @@ void Mode4Handler::NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
     }
 }
     
-void Mode4Handler::NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
+void Mono4Handler::NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
 {
     //
     Serial.print("M4 Off ");
@@ -70,14 +70,8 @@ void Mode4Handler::NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
     }
 }
 
-void Mode4Handler::updateUI(Midi8UI* ui)
+void Mono4Handler::updateUI(Midi8UI* ui)
 {
-    if(ui->mode != 4)
-    {
-        //Serial.println("Not Mode4");
-        return;
-    }
-
     for(int idx = 0; idx<Size; ++idx)
     {
         m_Out[idx].updateUI(ui);

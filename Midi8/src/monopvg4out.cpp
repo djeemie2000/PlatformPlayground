@@ -23,6 +23,7 @@ void MonoPVG4Out::NoteOn(uint8_t channel, uint8_t midiNote, uint8_t velocity)
     {
         m_Stack.Clear();
         m_Channel = channel;
+        m_Learn = false;
     }
     if(m_Channel == channel)
     {
@@ -71,8 +72,6 @@ void MonoPVG4Out::updateUI(Midi8UI* ui)
 void MonoPVG4Out::Learn(bool learn)
 {
     m_Learn = learn;
-    //TODO start blinking the leds!!!!!! 
-    // how?????????????
 }
 
 bool MonoPVG4Out::IsLearning() const
