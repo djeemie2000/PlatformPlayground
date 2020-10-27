@@ -25,7 +25,7 @@ void MonoPVG4Out::NoteOn(uint8_t channel, uint8_t midiNote, uint8_t velocity)
         m_Channel = channel;
         m_Learn = false;
     }
-    if(m_Channel == channel)
+    else if(m_Channel == channel)
     {
         m_Stack.NoteOn(midiNote, velocity);
     }

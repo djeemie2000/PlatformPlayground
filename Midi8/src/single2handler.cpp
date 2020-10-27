@@ -106,7 +106,6 @@ void Single2Handler::updateUI(Midi8UI* ui)
             ui->ledsOut.set(idx+4, LedOutBank::Off);
             ui->gatesOut.set(idx, 0);
             // velocity unchanged
-            ui->cvOut.set(idx, m_Velocity[idx]);
         }
     }
 

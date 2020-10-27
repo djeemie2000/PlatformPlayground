@@ -41,7 +41,7 @@ void MidiNoteStack::NoteOff(uint8_t MidiNote)
         }
         if(*rptr == MidiNote)
         {
-            ++rptr;
+            --wptr;//++rptr;
             --m_Size;
         }
         ++rptr;
@@ -112,7 +112,7 @@ void MidiNoteVelocityStack::NoteOff(uint8_t midiNote)
         }
         if(*rptr == removeItem)
         {
-            ++rptr;
+            --wptr;//++rptr;
             --m_Size;
         }
         ++rptr;
