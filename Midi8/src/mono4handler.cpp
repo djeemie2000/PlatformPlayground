@@ -35,7 +35,6 @@ void Mono4Handler::NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
     else
     {
         //learning
-        m_Out[m_LearnIdx].Learn(true);
         m_Out[m_LearnIdx].NoteOn(Channel, MidiNote, Velocity);
         if(!m_Out[m_LearnIdx].IsLearning())
         {
@@ -43,6 +42,10 @@ void Mono4Handler::NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
             if(Size<=m_LearnIdx)
             {
                 m_LearnIdx = -1;//stop learning
+            }
+            else
+            {
+                m_Out[m_LearnIdx].Learn(true);
             }
         }
     }
@@ -89,9 +92,11 @@ void Mono4Handler::updateUI(Midi8UI* ui)
         if(m_LearnIdx ==-1)
         {
             m_LearnIdx = 0;
+            m_Out[m_LearnIdx].Learn(true);
         }
         else
         {
+            m_Out[m_LearnIdx].Learn(false);
             m_LearnIdx = -1;
         }
     }
