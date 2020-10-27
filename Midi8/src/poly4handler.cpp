@@ -6,6 +6,7 @@ Poly4Handler::Poly4Handler()
  : m_LearnIdx(-1)
 {
     m_Channel = 0xFF;
+    m_BaseNote = 0x00;
     for(int idx = 0; idx<Size; ++idx)
     {
         m_MidiNote[idx] = 0xFF;
@@ -46,6 +47,7 @@ void Poly4Handler::NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
     {
         //learning
         m_Channel = Channel;
+        m_BaseNote = MidiNote;
         for(int idx = 0; idx<Size; ++idx)
         {
             m_MidiNote[idx] = 0xFF;
@@ -114,7 +116,7 @@ void Poly4Handler::updateUI(Midi8UI* ui)
             ui->ledsOut.set(column+5, LedOutBank::On);
             ui->gatesOut.set(column, 1);
             ui->gatesOut.set(column+1, 1);
-            PitchOut(ui->cvOut, column, m_MidiNote[idx]);
+            PitchOut(ui->cvOut, column, m_MidiNote[idx], m_BaseNote);
             VelocityOut(ui->cvOut, column+1, m_Velocity[idx]);  
         }
         else

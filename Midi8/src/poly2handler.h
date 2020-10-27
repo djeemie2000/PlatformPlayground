@@ -20,6 +20,7 @@ private:
     static const int Size = 4;
 
     uint8_t m_Channel;
+    uint8_t m_BaseNote;
     uint8_t m_MidiNote[Size];
 
     int m_LearnIdx;

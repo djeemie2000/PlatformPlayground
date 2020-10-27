@@ -6,6 +6,7 @@ MonoPVG4Out::MonoPVG4Out()
 : m_Idx(0)
 , m_Learn(false)
 , m_Channel(0xFF)
+, m_BaseNote(0x00)
 , m_Stack() 
 {}
 
@@ -14,6 +15,7 @@ void MonoPVG4Out::Begin(int idx)
   m_Idx = idx;
   m_Learn = false;//??
   m_Channel = 0xFF;
+  m_BaseNote = 0x00;
   m_Stack.Clear();
 }
 
@@ -23,6 +25,7 @@ void MonoPVG4Out::NoteOn(uint8_t channel, uint8_t midiNote, uint8_t velocity)
     {
         m_Stack.Clear();
         m_Channel = channel;
+        m_BaseNote = midiNote;
         m_Learn = false;
     }
     else if(m_Channel == channel)
@@ -59,7 +62,7 @@ void MonoPVG4Out::updateUI(Midi8UI* ui)
         GateOut(ui->gatesOut, m_Idx+1, gate);
         if(gate)
         {
-            PitchOut(ui->cvOut, m_Idx, m_Stack.Note(0));
+            PitchOut(ui->cvOut, m_Idx, m_Stack.Note(0), m_BaseNote);
             VelocityOut(ui->cvOut, m_Idx+1, m_Stack.Velocity(0));
         }
         LedOut(ui->ledsOut, m_Idx, gate);

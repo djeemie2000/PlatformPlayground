@@ -25,5 +25,6 @@ private:
     bool m_Learn;
 
     uint8_t m_Channel;
+    uint8_t m_BaseNote;
     MidiNoteVelocityStack m_Stack;//mono => stack
 };

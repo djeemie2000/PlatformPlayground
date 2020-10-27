@@ -3,12 +3,13 @@
 #include "DigitalOutBank.h"
 #include "ledoutbank.h"
 
-void PitchOut(AnalogOutBank& out, int idx, uint8_t midiNote)
+void PitchOut(AnalogOutBank& out, int idx, uint8_t midiNote, uint8_t baseNote)
 {
+    uint8_t note = baseNote<midiNote ? midiNote-baseNote : 0x00;
     //Assumes 1000 = 1Volt
     const uint32_t multiplier = 1000;
     const uint32_t divider = 12;
-    uint32_t pitch = multiplier*midiNote/divider;
+    uint32_t pitch = multiplier*note/divider;
     const uint32_t maxPitch = 4095;
     if(maxPitch<pitch)
     {
