@@ -117,10 +117,9 @@ void loop() {
       Serial.print(" -> ");
       Serial.print(millis());
 
-      Serial.print(" G ");
-      Serial.print(midi8UI.grouping);
-      Serial.print(" M ");
-      Serial.println(midi8UI.mode);
+      Serial.print(" ");
+      Serial.print(midi8UI.mode);
+      Serial.println(midi8UI.grouping);
 
       debugCntr = 0;
     }

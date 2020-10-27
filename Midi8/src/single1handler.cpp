@@ -74,6 +74,11 @@ void Single1Handler::NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t /*Veloci
     }
 }
 
+bool Single1Handler::IsLearning() const
+ {
+     return m_LearnIdx != -1;
+ }
+
 void Single1Handler::updateUI(Midi8UI* ui)
 {
     for(int idx = 0; idx<4; ++idx)

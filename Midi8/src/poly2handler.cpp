@@ -80,6 +80,11 @@ void Poly2Handler::NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t /*Velocity
     }
 }
 
+bool Poly2Handler::IsLearning() const
+ {
+     return m_LearnIdx != -1;
+ }
+
 void Poly2Handler::updateUI(Midi8UI* ui)
 {
     for(int idx = 0; idx<Size; ++idx)

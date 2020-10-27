@@ -8,13 +8,13 @@
 
 struct Midi8UI
 {
-    static const int SingleMode = 0;
-    static const int MonoMode = 1;
-    static const int PolyMode = 2;
+    static const char SingleMode = 'S';
+    static const char MonoMode = 'M';
+    static const char PolyMode = 'P';
 
-    static const int Grouping1 = 3;
-    static const int Grouping2 = 4;
-    static const int Grouping4 = 5;
+    static const char Grouping1 = '1';
+    static const char Grouping2 = '2';
+    static const char Grouping4 = '4';
 
     DigitalOutBank gatesOut;//(4,5,6,7);
     AnalogOutBank cvOut;//(4);// 2x DAC => use CS pins 10,9
@@ -26,12 +26,12 @@ struct Midi8UI
     // grouping 1/2/4
     ButtonIn groupingBtn1;// pin A0
     ButtonIn groupingBtn2;// pin A1
-    int grouping;
+    char grouping;
 
     // mode Single/Mono/Poly
     ButtonIn modeBtn1;// pin A2
     ButtonIn modeBtn2;// pin A3
-    int mode;
+    char mode;
 
 
     Midi8UI()

@@ -70,6 +70,11 @@ void Mono4Handler::NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
     }
 }
 
+ bool Mono4Handler::IsLearning() const
+ {
+     return m_LearnIdx != -1;
+ }
+
 void Mono4Handler::updateUI(Midi8UI* ui)
 {
     for(int idx = 0; idx<Size; ++idx)
@@ -79,7 +84,7 @@ void Mono4Handler::updateUI(Midi8UI* ui)
 
     if(ui->learnBtn.IsFalling())
     {
-        Serial.println("Toggle learn!");
+        //Serial.println("Toggle learn!");
         //toggle learn mode on/off
         if(m_LearnIdx ==-1)
         {

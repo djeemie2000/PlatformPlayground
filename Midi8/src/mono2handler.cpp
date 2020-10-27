@@ -70,6 +70,11 @@ void Mono2Handler::NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t /*Velocity
     }
 }
 
+ bool Mono2Handler::IsLearning() const
+ {
+     return m_LearnIdx != -1;
+ }
+
 void Mono2Handler::updateUI(Midi8UI* ui)
 {
     for(int idx = 0; idx<Size; ++idx)

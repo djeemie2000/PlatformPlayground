@@ -14,6 +14,7 @@ public:
     void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) ;//override
 
     void updateUI(Midi8UI* ui);
+    bool IsLearning() const;
 
 private:
     static const int Size = 2;
