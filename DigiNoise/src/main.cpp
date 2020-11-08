@@ -11,6 +11,7 @@
 #include "buttonin.h"
 #include "rotaryencoder.h"
 #include "masterclock2.h"
+#include "diginoise.h"
 
 #define	LED_PIN		PB3//PB0
 
@@ -22,7 +23,8 @@
 // ButtonIn rotaryInB;
 // uint16_t Cntr;
 // RotaryEncoder rotaryEncoder;
-MasterClock2 masterClock;
+//MasterClock2 masterClock;
+DigiNoise digiNoise;
 
 void setup() {
  // put your setup code here, to run once:
@@ -44,7 +46,8 @@ void setup() {
 //  attiny_timer_mode(FAST_PWM);
 //  attiny_timer_prescale(1);
 //  Cntr = 0;
- masterClock.setup();
+ //masterClock.setup();
+ digiNoise.setup();
 }
 
 void loop() {
@@ -81,17 +84,8 @@ int main()
 
   while(true)
   {
-    // buttonIn.read();
-    // rotaryInA.read();
-    // rotaryInB.read();
-    // attiny_digital_write(PB3,rotaryInA.Get()?ATTINY_HIGH:ATTINY_LOW);
-    // attiny_digital_write(PB4,rotaryInB.Get()?ATTINY_HIGH:ATTINY_LOW);
-
-    // int increment = rotaryEncoder.encode(rotaryInA.Get(), rotaryInB.Get());
-    // Cntr += increment;
-    // attiny_analog_write(PB1,Cntr);
-    // attiny_sleep(1);
-    masterClock.loop();
+    //masterClock.loop();
+    digiNoise.loop();
   }
 
   return 0;

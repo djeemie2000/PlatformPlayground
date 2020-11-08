@@ -1,0 +1,28 @@
+https://rajeshkovvuri.wordpress.com/2012/06/01/usbasp-avrdude-reading-fuse-bits/
+
+./avrdude.exe -c usbasp -p attiny85 -U lfuse:r:low_fuse_val.hex:h -U hfuse:r:high_fuse_val.hex:h 
+
+./avrdude.exe -c usbasp -p attiny85 -U lfuse:r:low_fuse_val.hex:h -U hfuse:r:high_fuse_val.hex:h -F
+
+ATT85 DIP8 (aliexpress):
+
+avrdude.exe: safemode: Fuses OK (E:52, H:86, L:52)
+
+module:
+
+avrdude.exe: safemode: Fuses OK (E:FE, H:DD, L:E1)
+
+ATT85 DIP8 (aliexpress batch 2):
+
+avrdude.exe: safemode: Fuses OK (E:FF, H:DF, L:62)
+
+
+program:
+
+./avrdude.exe -c usbasp -p attiny85 -U lfuse:w:0xe1:m -U hfuse:w:0xdd:m -U efuse:w:0xfe:m 
+#-F
+#./avrdude.exe -c usbasp -p attiny85 -U lfuse:w:0x51:m -U hfuse:w:0x86:m   -F  
+
+
+https://www.engbedded.com/fusecalc/
+
