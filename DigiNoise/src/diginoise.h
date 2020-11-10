@@ -9,27 +9,30 @@
 
 struct DigiNoise
 {
-  static const int SpeedInPin = ADC2;//PB4
-  static const int NoiseOutPin = PB3;
-  static const int SparseNoiseOutPin = PB2;
-  static const int DenseNoiseOutPin = PB1;
-  static const int ClockOutPin4 = PB0;
+  static const int TuneInPin = ADC2;//PB4
+  static const int TuneModInPin = ADC3;//PB3
+  static const int NoiseOutPin = PB2;
+  static const int SparseNoiseOutPin = PB1;
+  static const int DenseNoiseOutPin = PB0;
+  //static const int ClockOutPin4 = PB0;
   //TODO ...
 
   void setup()
   {
+    m_Period = 0;
+    m_Mod = 0;
+
     attiny_pin_mode(NoiseOutPin, ATTINY_OUTPUT);
     attiny_pin_mode(SparseNoiseOutPin, ATTINY_OUTPUT);
     attiny_pin_mode(DenseNoiseOutPin, ATTINY_OUTPUT);
-    attiny_pin_mode(ClockOutPin4, ATTINY_OUTPUT);
-    attiny_pin_mode(SpeedInPin, ATTINY_INPUT);
+    attiny_pin_mode(TuneInPin, ATTINY_INPUT);
+    attiny_pin_mode(TuneModInPin, ATTINY_INPUT);
     attiny_random_init(500);//seed
 
     // avoid noise from other pins => everything LOW upon setup
     attiny_digital_write(NoiseOutPin, ATTINY_LOW);
     attiny_digital_write(SparseNoiseOutPin, ATTINY_LOW);
     attiny_digital_write(DenseNoiseOutPin, ATTINY_LOW);
-    attiny_digital_write(ClockOutPin4, ATTINY_LOW);
 
     // //debug : show startup
     // attiny_digital_write(SparseNoiseOutPin, ATTINY_HIGH);
@@ -39,20 +42,19 @@ struct DigiNoise
 
   void loop()
   {
-    int period = attiny_analog_read(SpeedInPin);
+    m_Period = attiny_analog_read(TuneInPin);
+    SetOutputs();
 
-    // debug : find low noise threshold
-    // if(period<10)
-    // {
-    //   attiny_digital_write(SparseNoiseOutPin, ATTINY_HIGH);
-    // }
-    // else
-    // {
-    //   attiny_digital_write(SparseNoiseOutPin, ATTINY_LOW);
-    // }
+    m_Mod = attiny_analog_read(TuneModInPin);
+    SetOutputs();
+  }
+
+  void SetOutputs()
+  {
+    uint16_t period = m_Period * (1024u-m_Mod) >> 10u;
 
     // min 10 usec sleep
-    const int minPeriod = 5;
+    const uint16_t minPeriod = 5;
     if(period<minPeriod)
     {
       period = minPeriod;
@@ -75,5 +77,6 @@ struct DigiNoise
     //attiny_digital_toggle(SparseNoiseOutPin);//square wave out
   }
 
-  int m_Cntr;
+  uint32_t m_Period;
+  uint32_t m_Mod;
 };
