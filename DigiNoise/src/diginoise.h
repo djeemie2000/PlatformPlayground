@@ -43,15 +43,18 @@ struct DigiNoise
   void loop()
   {
     m_Period = attiny_analog_read(TuneInPin);
+    m_Period = m_Period * m_Period >> 10u;//rescale
     SetOutputs();
 
     m_Mod = attiny_analog_read(TuneModInPin);
+    m_Mod = m_Mod * m_Mod >> 10u;//rescale
     SetOutputs();
   }
 
   void SetOutputs()
   {
     uint16_t period = m_Period * (1024u-m_Mod) >> 10u;
+//    uint16_t period = (m_Period + m_Mod)*(m_Period + m_Mod) >> 10u;
 
     // min 10 usec sleep
     const uint16_t minPeriod = 5;
