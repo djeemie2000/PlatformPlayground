@@ -12,6 +12,7 @@
 #include "rotaryencoder.h"
 #include "masterclock2.h"
 #include "diginoise.h"
+#include "comparepulser.h"
 
 #define	LED_PIN		PB3//PB0
 
@@ -24,7 +25,8 @@
 // uint16_t Cntr;
 // RotaryEncoder rotaryEncoder;
 //MasterClock2 masterClock;
-DigiNoise digiNoise;
+//DigiNoise digiNoise;
+ComparePulser comparePulser;
 
 void setup() {
  // put your setup code here, to run once:
@@ -47,7 +49,8 @@ void setup() {
 //  attiny_timer_prescale(1);
 //  Cntr = 0;
  //masterClock.setup();
- digiNoise.setup();
+ //digiNoise.setup();
+ comparePulser.setup();
 }
 
 void loop() {
@@ -85,7 +88,8 @@ int main()
   while(true)
   {
     //masterClock.loop();
-    digiNoise.loop();
+    //digiNoise.loop();
+    comparePulser.loop();
   }
 
   return 0;
