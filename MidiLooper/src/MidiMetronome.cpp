@@ -2,7 +2,7 @@
 
 MidiMetronome::MidiMetronome()
     : m_MidiLearn(false), m_MidiChannel(0x03),
-      m_BaseNote(0x48), m_Divider(4), m_Divider2(4), m_LastChannel(0x03), m_LastNote(0xFF)
+      m_BaseNote(0x48), m_TicksPerBeat(4), m_BeatsPerBar(4), m_LastChannel(0x03), m_LastNote(0xFF)
 {
 }
 
@@ -28,17 +28,21 @@ void MidiMetronome::OnTick(MidiLooperTicker &ticker, MidiOut &midiOut)
 
     if (m_Playing && ticker.clockIsRising())
     {
-        int step = ticker.recordingStep(1);
-        if (step % m_Divider == 0)
+        const int ClocksPerTick = 1;
+        int step = ticker.recordingStep(ClocksPerTick);//Counter(1) ???
+        if (step % m_TicksPerBeat == 0)
         {
+            // first tick of beat
             m_LastNote = m_BaseNote;
             m_LastChannel = m_MidiChannel;
             if (step == 0)
             {
+                // first beat of first bar
                 m_LastNote += 24; // + 2 octaves
             }
-            else if (step % (m_Divider2 * m_Divider) == 0)
+            else if (step % (m_BeatsPerBar * m_TicksPerBeat) == 0)
             {
+                // first beat of other bars
                 m_LastNote += 12; //+1 octave
             }
 

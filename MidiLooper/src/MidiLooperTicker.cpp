@@ -3,7 +3,20 @@
 MidiLooperTicker::MidiLooperTicker(int maxCounter)
     : m_Clock(0), m_PrevClock(0), m_Counter(0), m_MaxCounter(maxCounter) {}
 
-void onTick(int clock, int reset);
+ void MidiLooperTicker::onTick(int clock, int reset)
+{
+    m_PrevClock = m_Clock;
+    m_Clock = clock;
+    if (clockIsRising())
+    {
+        //rising clock => augment/reset counter
+        ++m_Counter;
+        if (m_MaxCounter <= m_Counter || reset)
+        {
+            m_Counter = 0;
+        }
+    }
+}
 
 bool MidiLooperTicker::clockIsRising() const
 {

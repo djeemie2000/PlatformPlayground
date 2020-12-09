@@ -23,8 +23,8 @@ private:
     bool m_MidiLearn;
     uint8_t m_MidiChannel;
     uint8_t m_BaseNote;
-    int m_Divider;
-    int m_Divider2;
+    int m_TicksPerBeat;
+    int m_BeatsPerBar;
     bool m_Playing;
 
     uint8_t m_LastChannel;
