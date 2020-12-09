@@ -77,7 +77,7 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, DigitalO
     // => check which function(s) is pressed
     if (touchPad.Get(LearnModePad))
     {
-      midiLooper.m_Metronome.StartMidiLearn();
+      midiLooper.m_Metronome.ToggleMidiLearn();
     }
     if (touchPad.Get(PlayModePad))
     {
@@ -93,7 +93,7 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, DigitalO
       // => check which function(s) is pressed
       if (touchPad.Get(LearnModePad))
       {
-        midiLooper.m_Track[idx].StartMidiLearn();
+        midiLooper.m_Track[idx].ToggleMidiLearn();
       }
       if (touchPad.Get(RecordingModePad))
       {

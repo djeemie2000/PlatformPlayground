@@ -74,10 +74,16 @@ void MidiMetronome::OnTick(MidiLooperTicker &ticker, MidiOut &midiOut)
     }
 }
 
-void MidiMetronome::StartMidiLearn()
+void MidiMetronome::ToggleMidiLearn()
 {
-    m_MidiLearn = true;
+    m_MidiLearn = !m_MidiLearn;
 }
+
+void MidiMetronome::onToggleMuted()
+{
+    m_Playing = !m_Playing;
+}
+
 
 void MidiMetronome::OnNoteOn(uint8_t channel, uint8_t midiNote, uint8_t velocity)
 {
@@ -96,6 +102,6 @@ void MidiMetronome::printState(HardwareSerial& serial)
     serial.print(m_MidiChannel, HEX);
     serial.print(" L");
     serial.print(m_MidiLearn ? 1 : 0);
-    serial.print("   P");
+    serial.print("    P");
     serial.println(m_Playing ? 1 : 0);
 }

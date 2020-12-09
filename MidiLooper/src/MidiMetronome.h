@@ -12,11 +12,8 @@ public:
     void Start();
     void Stop();
     void OnTick(MidiLooperTicker &ticker, MidiOut &midiOut);
-    void StartMidiLearn();
-    void onToggleMuted()
-    {
-        m_Playing = !m_Playing;
-    }
+    void ToggleMidiLearn();
+    void onToggleMuted();
     void OnNoteOn(uint8_t channel, uint8_t midiNote, uint8_t velocity);
 
     void printState(HardwareSerial& serial);

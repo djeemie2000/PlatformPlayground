@@ -48,9 +48,9 @@ void MidiLooperTrack::StopRecording()
     m_Recording = false;
 }
 
-void MidiLooperTrack::StartMidiLearn()
+void MidiLooperTrack::ToggleMidiLearn()
 {
-    m_MidiLearn = true;
+    m_MidiLearn = !m_MidiLearn;
 }
 
 void MidiLooperTrack::onTick(const MidiLooperTicker &ticker, MidiOut &midiOut)

@@ -16,7 +16,7 @@ public:
     void ToggleRecording();
     void StartRecording();
     void StopRecording();
-    void StartMidiLearn();
+    void ToggleMidiLearn();
 
     void onTick(const MidiLooperTicker &ticker, MidiOut &midiOut);
     void onNoteOn(const MidiLooperTicker &ticker, MidiOut &midiOut, uint8_t midiChannel, uint8_t midiNote, uint8_t velocity);
