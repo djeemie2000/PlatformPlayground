@@ -89,3 +89,13 @@ void MidiMetronome::OnNoteOn(uint8_t channel, uint8_t midiNote, uint8_t velocity
         m_MidiLearn = false;
     }
 }
+
+void MidiMetronome::printState(HardwareSerial& serial)
+{
+    serial.print("Ch");
+    serial.print(m_MidiChannel, HEX);
+    serial.print(" L");
+    serial.print(m_MidiLearn ? 1 : 0);
+    serial.print("   P");
+    serial.println(m_Playing ? 1 : 0);
+}

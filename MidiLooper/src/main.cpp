@@ -18,6 +18,8 @@ MidiParser midiParser;
 MidiLooper midiLooper;
 MPR121TouchPad touchPad;
 DigitalOutBank recordingLeds(PA11, PA12, PA15, PB3, PB4, PB5);
+//TODO clock reset inputs
+//TODO play leds vs recording/learning leds
 
 void setup()
 {
@@ -57,15 +59,15 @@ void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &han
 
 void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, DigitalOutBank &recordingLeds)
 {
-  const int MidiLearnPad = 0;
-  const int ToggleRecordingPad = 1;
-  const int UndoRecordingPad = 2;
-  const int MutePad = 3;
+  const int LearnModePad = 8;
+  const int RecordingModePad = 4;
+  const int PlayModePad = 0;
 
-  const int AllNotesOffPad = 4;
-  const int MetronomePad = 5;
+  const int MetronomePad = 9;
+  const int RecordingUndoPad = 5;
+  const int AllNotesOffPad = 1;
 
-  const int Track0Pad = 6;
+  const int TrackPads[] = {10,6,2,11,7,3};
 
   touchPad.Read();
 
@@ -73,11 +75,11 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, DigitalO
   if (touchPad.IsClicked(MetronomePad))
   {
     // => check which function(s) is pressed
-    if (touchPad.Get(MidiLearnPad))
+    if (touchPad.Get(LearnModePad))
     {
       midiLooper.m_Metronome.StartMidiLearn();
     }
-    if (touchPad.Get(MutePad))
+    if (touchPad.Get(PlayModePad))
     {
       midiLooper.m_Metronome.onToggleMuted();
     }
@@ -86,22 +88,22 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, DigitalO
   for (int idx = 0; idx < MidiLooper::NumTracks; ++idx)
   {
     // track is clicked?
-    if (touchPad.IsClicked(Track0Pad + idx))
+    if (touchPad.IsClicked(TrackPads[idx]))
     {
       // => check which function(s) is pressed
-      if (touchPad.Get(MidiLearnPad))
+      if (touchPad.Get(LearnModePad))
       {
         midiLooper.m_Track[idx].StartMidiLearn();
       }
-      if (touchPad.Get(ToggleRecordingPad))
+      if (touchPad.Get(RecordingModePad))
       {
         midiLooper.m_Track[idx].ToggleRecording();
       }
-      if (touchPad.Get(UndoRecordingPad))
+      if (touchPad.Get(RecordingUndoPad))
       {
         midiLooper.m_Track[idx].onUndo(midiLooper.m_MidiOut); //?
       }
-      if (touchPad.Get(MutePad))
+      if (touchPad.Get(PlayModePad))
       {
         midiLooper.m_Track[idx].onToggleMuted(midiLooper.m_MidiOut);
       }
@@ -114,12 +116,14 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, DigitalO
 
   for (int idx = 0; idx < MidiLooper::NumTracks; ++idx)
   {
-    if (touchPad.Get(MutePad))
+    if (touchPad.Get(PlayModePad))
     {
       recordingLeds.set(idx, midiLooper.m_Track[idx].m_Muted ? 0 : 1);
+      //TODO separate play leds
     }
-    else if (touchPad.Get(MidiLearnPad))
+    else if (touchPad.Get(LearnModePad))
     {
+      //TODO fast blink if midi learn, on/off ~recording otherwise
       recordingLeds.set(idx, midiLooper.m_Track[idx].m_MidiLearn ? 1 : 0);
     }
     else
@@ -138,12 +142,16 @@ void loop()
   // startup checks
   ScanI2C(serialDebug);
   // remove/limit in time test touchpad
-  const int numRepeats = 5;
+  const int numRepeats = 20;
   TestTouchPad(touchPad, serialDebug, numRepeats);
 
-  testDigitalOutBank(recordingLeds, 2);
+  testDigitalOutBank(recordingLeds, 4);
 
-  midiLooper.allNotesOff(); //?? all channels???
+  // make sure all notes are off on all midi channels
+  for(int ch =0; ch<16; ++ch)
+  {
+    midiLooper.m_MidiOut.allNotesOff(ch); 
+  }
 
   // main loop:
   int debugCounter = 0;
@@ -164,6 +172,7 @@ void loop()
     {
       clockCounter = 0;
     }
+    //TODO clock + reset from digitalIn
     int clock = clockCounter < (fakeClockPeriod / 2) ? 1 : 0;
     int reset = 0;
 

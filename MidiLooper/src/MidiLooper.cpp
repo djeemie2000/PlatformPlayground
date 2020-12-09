@@ -73,6 +73,8 @@ void MidiLooper::allNotesOff()
 
 void MidiLooper::printState(HardwareSerial &serial)
 {
+    serial.print("Metro  : ");
+    m_Metronome.printState(serial);
     for (int idx = 0; idx < NumTracks; ++idx)
     {
         serial.print("Track ");

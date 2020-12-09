@@ -19,6 +19,8 @@ public:
     }
     void OnNoteOn(uint8_t channel, uint8_t midiNote, uint8_t velocity);
 
+    void printState(HardwareSerial& serial);
+
 private:
     void NoteOn(MidiOut &midiOut, uint8_t channel, uint8_t midiNote);
     void NoteOff(MidiOut &midiOut);
