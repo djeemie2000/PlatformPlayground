@@ -16,37 +16,60 @@ void MidiMetronome::Stop()
     // note off in OnTick
 }
 
-void MidiMetronome::OnTick(MidiLooperTicker &ticker, MidiOut &midiOut)
+void MidiMetronome::NoteOn(MidiOut &midiOut, uint8_t channel, uint8_t midiNote)
 {
-    // make sure note off is always sent, even after chaning midi channel upon learn
+    m_LastChannel = channel;
+    m_LastNote = midiNote;
     const uint8_t velocity = 0x7F;
-    if (ticker.clockIsFalling() && m_LastNote != 0xFF)
+    midiOut.NoteOn(m_LastChannel, m_LastNote, velocity);
+}
+
+void MidiMetronome::NoteOff(MidiOut &midiOut)
+{
+    // make sure note off is always sent, even after changing midi channel upon learn
+    if(m_LastNote != 0xFF)
     {
+        const uint8_t velocity = 0x7F;
         midiOut.NoteOff(m_LastChannel, m_LastNote, velocity);
         m_LastNote = 0xFF;
+    }
+}
+
+
+void MidiMetronome::OnTick(MidiLooperTicker &ticker, MidiOut &midiOut)
+{
+    // make sure note off is always sent, even after changing midi channel upon learn
+    const uint8_t velocity = 0x7F;
+    if (ticker.clockIsFalling())
+    {
+        NoteOff(midiOut);
     }
 
     if (m_Playing && ticker.clockIsRising())
     {
         const int ClocksPerTick = 1;
-        int step = ticker.recordingStep(ClocksPerTick);//Counter(1) ???
-        if (step % m_TicksPerBeat == 0)
+        uint16_t counter = ticker.Counter(ClocksPerTick);//Counter(1) ???
+        uint16_t tick = CounterToTick(counter);
+        if (tick == 0)
         {
             // first tick of beat
-            m_LastNote = m_BaseNote;
-            m_LastChannel = m_MidiChannel;
-            if (step == 0)
+            uint8_t midiNote = m_BaseNote;
+
+            uint16_t beat = CounterToBeat(counter);
+            if (beat == 0)
             {
-                // first beat of first bar
-                m_LastNote += 24; // + 2 octaves
-            }
-            else if (step % (m_BeatsPerBar * m_TicksPerBeat) == 0)
-            {
-                // first beat of other bars
-                m_LastNote += 12; //+1 octave
+                // first beat of a bar
+                midiNote += 12; //+1 octave
+                
+                uint16_t bar = CounterToBar(counter);
+                if(bar == 0)
+                {
+                    // first beat of first bar
+                    midiNote += 12; // + another 1 octave
+                }
             }
 
-            midiOut.NoteOn(m_LastChannel, m_LastNote, velocity);
+            NoteOn(midiOut, m_MidiChannel, midiNote);
         }
     }
 }

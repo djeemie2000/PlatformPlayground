@@ -1,7 +1,7 @@
 #include "MidiLooperTicker.h"
 
-MidiLooperTicker::MidiLooperTicker(int maxCounter)
-    : m_Clock(0), m_PrevClock(0), m_Counter(0), m_MaxCounter(maxCounter) {}
+MidiLooperTicker::MidiLooperTicker()
+    : m_Clock(0), m_PrevClock(0), m_Counter(0) {}
 
  void MidiLooperTicker::onTick(int clock, int reset)
 {
@@ -9,12 +9,8 @@ MidiLooperTicker::MidiLooperTicker(int maxCounter)
     m_Clock = clock;
     if (clockIsRising())
     {
-        //rising clock => augment/reset counter
+        //rising clock => augment counter
         ++m_Counter;
-        if (m_MaxCounter <= m_Counter || reset)
-        {
-            m_Counter = 0;
-        }
     }
 }
 
@@ -28,24 +24,50 @@ bool MidiLooperTicker::clockIsFalling() const
     return m_PrevClock && !m_Clock;
 }
 
-int MidiLooperTicker::Counter(int divider) const
+uint16_t MidiLooperTicker::Counter(int divider) const
 {
-    return m_Counter / divider;
+    // assumes 
+    //  4 ticks per beat 
+    //  4 beats per bar
+    //  4 bars (length)
+    uint16_t mask = (1u<<6)-1;
+    return (m_Counter / divider)& mask;
 }
 
-int MidiLooperTicker::recordingStep(int divider) const
+uint16_t MidiLooperTicker::recordingStep(int divider) const
 {
     // 'quantized' recording step:
     // clock on => use current step for recording
     // clock off => use next step for recording
-    uint8_t step = Counter(divider);
-    if (!m_Clock)
+    if(m_Clock)
     {
-        ++step;
-        if (m_MaxCounter <= step)
-        {
-            step = 0;
-        }
+        return Counter(divider);
     }
-    return step;
+
+    // assumes 
+    //  4 ticks per beat 
+    //  4 beats per bar
+    //  4 bars (length)
+    uint16_t mask = (1u<<6)-1;
+    return (Counter(divider)+1)&mask;
+}
+
+uint16_t CounterToTick(uint16_t counter)
+{
+    // assumes 4 ticks per beat
+    return counter & 0x03;
+}
+
+uint16_t CounterToBeat(uint16_t counter)
+{
+    // assumes 4 ticks per beat
+    return (counter >> 2) & 0x03;
+}
+uint16_t CounterToBar(uint16_t counter)
+{
+    // assumes 4 ticks per beat
+    // assumes 4 beats per bar => mask 0x03 = (1<<2)-1;
+
+    //assumes counter is cropped to # bars
+    return (counter >> 4); //& 0x03;
 }

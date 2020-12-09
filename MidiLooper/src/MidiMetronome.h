@@ -20,6 +20,9 @@ public:
     void OnNoteOn(uint8_t channel, uint8_t midiNote, uint8_t velocity);
 
 private:
+    void NoteOn(MidiOut &midiOut, uint8_t channel, uint8_t midiNote);
+    void NoteOff(MidiOut &midiOut);
+
     bool m_MidiLearn;
     uint8_t m_MidiChannel;
     uint8_t m_BaseNote;
