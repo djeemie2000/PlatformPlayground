@@ -19,6 +19,7 @@ MidiParser midiParser;
 MidiLooper midiLooper;
 MPR121TouchPad touchPad;
 DigitalOutBank recordingLeds(PA11, PA12, PA15, PB3, PB4, PB5);
+DigitalOutBank playLeds(PA0, PA1, PA4, PA5, PA6, PA7); 
 ButtonState metronomePadState;
 ButtonState trackPadState[MidiLooper::NumTracks];
 //TODO clock reset inputs
@@ -43,8 +44,9 @@ void setup()
   Wire.setSCL(PB10);   //SCL2
   touchPad.Begin(PB0); //irq pin
   recordingLeds.begin();
+  playLeds.begin();
 
-  serialDebug.println("MidiLooper v0.3");
+  serialDebug.println("MidiLooper v0.5");
 }
 
 void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &handler, int maxNumBytesRead = 3)
@@ -71,8 +73,6 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, DigitalO
   const int PlayModePad = 0;
 
   const int MetronomePad = 9;
-  //const int RecordingUndoPad = 5;
-  //const int AllNotesOffPad = 1;
 
   const int TrackPads[] = {10,6,2,11,7,3};
 
@@ -144,14 +144,9 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, DigitalO
 
   for (int idx = 0; idx < MidiLooper::NumTracks; ++idx)
   {
-    if(currentMode == PlayMode)
-    {
-      recordingLeds.set(idx, midiLooper.m_Track[idx].m_Muted ? 0 : 1);
-      //TODO separate play leds
-    }
-    else
-    {
-      // fast blink if midi learn, on/off ~recording otherwise
+      // play leds on/off ~play/mute
+      playLeds.set(idx, midiLooper.m_Track[idx].m_Muted ? 0 : 1);
+      // recording leds: blink if midi learn, on/off ~recording otherwise
       if(midiLooper.m_Track[idx].m_MidiLearn)
       {
         recordingLeds.set(idx, (currMillis>>7) & 0x01);
@@ -160,10 +155,11 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, DigitalO
       {
         recordingLeds.set(idx, midiLooper.m_Track[idx].m_Recording ? 1 : 0);
       }
-    }
+ //   }
   }
 
   recordingLeds.update();
+  playLeds.update();
 }
 
 void loop()
@@ -173,10 +169,14 @@ void loop()
   // startup checks
   ScanI2C(serialDebug);
   // remove/limit in time test touchpad
-  const int numRepeats = 20;
+  const int numRepeats = 10;
   TestTouchPad(touchPad, serialDebug, numRepeats);
 
-  testDigitalOutBank(recordingLeds, 4);
+  for(int repeat = 0; repeat<4; ++repeat)
+  {
+    testDigitalOutBank(recordingLeds, 1);
+    testDigitalOutBank(playLeds, 1);
+  }
 
   // make sure all notes are off on all midi channels
   for(int ch =0; ch<16; ++ch)
