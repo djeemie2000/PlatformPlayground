@@ -16,6 +16,9 @@ public:
     void onToggleMuted();
     void OnNoteOn(uint8_t channel, uint8_t midiNote, uint8_t velocity);
 
+    bool IsLearning() const { return m_MidiLearn;}
+    bool IsPlaying() const { return m_Playing; }
+
     void printState(HardwareSerial& serial);
 
 private:

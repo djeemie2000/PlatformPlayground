@@ -13,13 +13,17 @@
 // RX2 TX2 PA3 PA2
 // RX3 TX3 PB11 PB10
 static const int debugPin = PB15;
+static const int clockLedPin = PC13;
 HardwareSerial serialDebug(PA10, PA9);
 HardwareSerial serialMidi(PA3, PA2);
 MidiParser midiParser;
 MidiLooper midiLooper;
 MPR121TouchPad touchPad;
-DigitalOutBank recordingLeds(PA11, PA12, PA15, PB3, PB4, PB5);
-DigitalOutBank playLeds(PA0, PA1, PA4, PA5, PA6, PA7); 
+//static const int metronomeRecordingLed = PA10;
+DigitalOutBank recordingLeds(PA11, PA12, PA15, PB3, PB4, PB5, PB6);
+//static const int metronomePlayLedPin = PC15;
+DigitalOutBank playLeds(PA0, PA1, PA4, PA5, PA6, PA7, PC15);
+
 ButtonState metronomePadState;
 ButtonState trackPadState[MidiLooper::NumTracks];
 //TODO clock reset inputs
@@ -36,7 +40,7 @@ void setup()
   serialDebug.begin(115200);
   midiLooper.begin(&serialMidi); //calls serialMidi.begin(31250);
 
-  pinMode(PC13, OUTPUT); // clock led
+  pinMode(clockLedPin, OUTPUT); // clock led
 
   // setup I2C for MPR121 touchpad
   // Wire.begin() is called inside touchpad.begin()
@@ -155,8 +159,20 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, DigitalO
       {
         recordingLeds.set(idx, midiLooper.m_Track[idx].m_Recording ? 1 : 0);
       }
- //   }
   }
+
+  // metronome play led ~~ playing 
+  // recording led blink if midi learn
+  playLeds.set(MidiLooper::NumTracks, midiLooper.m_Metronome.IsPlaying() ? 1:0);
+  if(midiLooper.m_Metronome.IsLearning())
+  {
+    recordingLeds.set(MidiLooper::NumTracks, (currMillis>>7) & 0x01);
+  }
+  else
+  {
+    recordingLeds.set(MidiLooper::NumTracks, LOW);      
+  }
+    
 
   recordingLeds.update();
   playLeds.update();
@@ -210,7 +226,7 @@ void loop()
     int reset = 0;
 
     midiLooper.onTick(clock, reset);
-    digitalWrite(PC13, clock ? LOW : HIGH); // turn the LED on/off
+    digitalWrite(clockLedPin, clock ? LOW : HIGH); // turn the LED on/off
 
     // read midi in but limit # bytes for performance issues
     readMidiIn(serialMidi, midiParser, midiLooper, 3);
