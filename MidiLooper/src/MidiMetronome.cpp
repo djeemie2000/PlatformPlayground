@@ -39,7 +39,6 @@ void MidiMetronome::NoteOff(MidiOut &midiOut)
 void MidiMetronome::OnTick(MidiLooperTicker &ticker, MidiOut &midiOut)
 {
     // make sure note off is always sent, even after changing midi channel upon learn
-    const uint8_t velocity = 0x7F;
     if (ticker.clockIsFalling())
     {
         NoteOff(midiOut);

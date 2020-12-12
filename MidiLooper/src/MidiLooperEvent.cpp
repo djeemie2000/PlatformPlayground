@@ -19,3 +19,28 @@ void MidiLooperEvent::SetNoteOff(uint8_t step, uint8_t midiNote, uint8_t /*veloc
     m_Velocity = NoteOffVelocity;
     m_Layer = layer;
 }
+
+ void MidiLooperNoteEvent::SetNoteOn(uint8_t step, uint8_t midiNote, uint8_t velocity, uint8_t layer)
+ {
+    m_MidiNote = midiNote;
+    m_VelocityOn = velocity;
+    m_Layer = layer;
+    m_StepOn = step;
+    m_VelocityOff = 0xFF;
+ }
+
+bool MidiLooperNoteEvent::SetNoteOff(uint8_t step, uint8_t midiNote, uint8_t velocity)
+{
+    if(midiNote == m_MidiNote)
+    {
+        m_StepOff = step;
+        m_VelocityOff = velocity;
+        return true;
+    }
+    return false;
+}
+
+bool MidiLooperNoteEvent::HasNoteOff() const
+{
+    return m_VelocityOff != 0xFF;
+}
