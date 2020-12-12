@@ -140,51 +140,26 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, DigitalO
           midiLooper.m_Track[idx].AllNotesOff(midiLooper.m_MidiOut);
         }
     }
-
-    // // track is clicked?
-    // if (trackPadState[idx].Clicked())
-    // {
-    //   // => check which function(s) is pressed
-    //   if (touchPad.Get(LearnModePad))
-    //   {
-    //     midiLooper.m_Track[idx].ToggleMidiLearn();
-    //   }
-    //   if (touchPad.Get(RecordingModePad))
-    //   {
-    //     midiLooper.m_Track[idx].ToggleRecording();
-    //   }
-    //   if (touchPad.Get(RecordingUndoPad))
-    //   {
-    //     midiLooper.m_Track[idx].onUndo(midiLooper.m_MidiOut); //?
-    //   }
-    //   if (touchPad.Get(PlayModePad))
-    //   {
-    //     midiLooper.m_Track[idx].onToggleMuted(midiLooper.m_MidiOut);
-    //   }
-    //   if (touchPad.Get(AllNotesOffPad))
-    //   {
-    //     midiLooper.m_Track[idx].AllNotesOff(midiLooper.m_MidiOut);
-    //   }
-    //}
   }
 
   for (int idx = 0; idx < MidiLooper::NumTracks; ++idx)
   {
-    //if (touchPad.Get(PlayModePad))
     if(currentMode == PlayMode)
     {
       recordingLeds.set(idx, midiLooper.m_Track[idx].m_Muted ? 0 : 1);
       //TODO separate play leds
     }
-    //else if (touchPad.Get(LearnModePad))
-    else if(currentMode == LearnMode)
+    else
     {
-      //TODO fast blink if midi learn, on/off ~recording otherwise
-      recordingLeds.set(idx, midiLooper.m_Track[idx].m_MidiLearn ? 1 : 0);
-    }
-    else if(currentMode == RecordingMode)
-    {
-      recordingLeds.set(idx, midiLooper.m_Track[idx].m_Recording ? 1 : 0);
+      // fast blink if midi learn, on/off ~recording otherwise
+      if(midiLooper.m_Track[idx].m_MidiLearn)
+      {
+        recordingLeds.set(idx, (currMillis>>7) & 0x01);
+      }
+      else
+      {
+        recordingLeds.set(idx, midiLooper.m_Track[idx].m_Recording ? 1 : 0);
+      }
     }
   }
 
