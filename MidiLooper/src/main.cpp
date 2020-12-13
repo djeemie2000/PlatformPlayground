@@ -8,6 +8,7 @@
 #include "StopWatch.h"
 #include "DigitalOutBank.h"
 #include "ButtonState.h"
+#include "DigitalIn.h"
 
 // RX1 TX1 PA10 PA9
 // RX2 TX2 PA3 PA2
@@ -19,10 +20,14 @@ HardwareSerial serialMidi(PA3, PA2);
 MidiParser midiParser;
 MidiLooper midiLooper;
 MPR121TouchPad touchPad;
-//static const int metronomeRecordingLed = PA10;
+//static const int metronomeRecordingLed = PB6;
 DigitalOutBank recordingLeds(PA11, PA12, PA15, PB3, PB4, PB5, PB6);
 //static const int metronomePlayLedPin = PC15;
 DigitalOutBank playLeds(PA0, PA1, PA4, PA5, PA6, PA7, PC15);
+static const int clockInPin = PB7;
+DigitalIn clockIn;
+static const int resetInPin = PB8;
+DigitalIn resetIn;
 
 ButtonState metronomePadState;
 ButtonState trackPadState[MidiLooper::NumTracks];
@@ -49,6 +54,8 @@ void setup()
   touchPad.Begin(PB0); //irq pin
   recordingLeds.begin();
   playLeds.begin();
+  clockIn.begin(clockInPin);
+  resetIn.begin(resetInPin);
 
   serialDebug.println("MidiLooper v0.5");
 }
@@ -185,10 +192,10 @@ void loop()
   // startup checks
   ScanI2C(serialDebug);
   // remove/limit in time test touchpad
-  const int numRepeats = 10;
+  const int numRepeats = 16;
   TestTouchPad(touchPad, serialDebug, numRepeats);
 
-  for(int repeat = 0; repeat<4; ++repeat)
+  for(int repeat = 0; repeat<2; ++repeat)
   {
     testDigitalOutBank(recordingLeds, 1);
     testDigitalOutBank(playLeds, 1);
@@ -222,7 +229,10 @@ void loop()
       clockCounter = 0;
     }
     //TODO clock + reset from digitalIn
-    int clock = clockCounter < (fakeClockPeriod / 2) ? 1 : 0;
+    clockIn.Read();
+    resetIn.Read();
+
+    int clock = clockIn.Get(); //clockCounter < (fakeClockPeriod / 2) ? 1 : 0;
     int reset = 0;
 
     midiLooper.onTick(clock, reset);
