@@ -93,12 +93,12 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
   const int PlayModePad = 0;
 
   const int MetronomePad = 9;
-  const int TrackPads[] = {10,6,2,11,7,3};
+  const int TrackPads[] = {5,1, 10,6,2, 11,7,3};
   //6 tracks + metronome
-  const int recordingY[] = {0,1,2,0,1,2,0};
-  const int recordingX[] = {5,5,5,6,6,6,4};
-  const int playY[] = {5,6,7,5,6,7,5};
-  const int playX[] = {5,5,5,6,6,6,4};
+  const int recordingY[] = {1,2, 0,1,2, 0,1,2, 0};
+  const int recordingX[] = {4,4, 5,5,5, 6,6,6, 4};
+  const int playY[] = {6,7, 5,6,7, 5,6,7, 5};
+  const int playX[] = {4,4, 5,5,5, 6,6,6, 4};
   
   touchPad.Read();
 
