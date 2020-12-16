@@ -1,10 +1,13 @@
 #include <Arduino.h>
 #include <Wire.h>
+#include <SPI.h>
 #include "MidiParser.h"
 #include "MidiLooper.h"
 #include "MPR121TouchPad.h"
 #include "ScanI2C.h"
 #include "TestTouchPad.h"
+#include "Max7219Matrix.h"
+#include "TestDigitalOutMatrix.h"
 #include "StopWatch.h"
 #include "DigitalOutBank.h"
 #include "ButtonState.h"
@@ -21,13 +24,15 @@ MidiParser midiParser;
 MidiLooper midiLooper;
 MPR121TouchPad touchPad;
 //static const int metronomeRecordingLed = PB6;
-DigitalOutBank recordingLeds(PA11, PA12, PA15, PB3, PB4, PB5, PB6);
+//DigitalOutBank recordingLeds(PA11, PA12, PA15, PB3, PB4, PB5, PB6);
 //static const int metronomePlayLedPin = PC15;
-DigitalOutBank playLeds(PA0, PA1, PA4, PA5, PA6, PA7, PC15);
+//DigitalOutBank playLeds(PA0, PA1, PA4, PA5, PA6, PA7, PC15);
 static const int clockInPin = PB7;
 DigitalIn clockIn;
 static const int resetInPin = PB8;
 DigitalIn resetIn;
+Max7219Matrix ledMatrix(1,PA4);//cs pin
+
 
 ButtonState metronomePadState;
 ButtonState trackPadState[MidiLooper::NumTracks];
@@ -50,12 +55,18 @@ void setup()
   Wire.setSDA(PB11);   //SDA2
   Wire.setSCL(PB10);   //SCL2
   touchPad.Begin(PB0); //irq pin
-  recordingLeds.begin();
-  playLeds.begin();
+  //recordingLeds.begin();
+  //playLeds.begin();
   clockIn.begin(clockInPin);
   resetIn.begin(resetInPin);
 
   serialDebug.println("MidiLooper v0.5");
+
+  SPI.setSCLK(PA5);
+  SPI.setMISO(PA6);
+  SPI.setMOSI(PA7);
+  //SPI CS external
+  ledMatrix.Configure();
 }
 
 void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &handler, int maxNumBytesRead = 3)
@@ -75,16 +86,20 @@ void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &han
   }
 }
 
-void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, DigitalOutBank &recordingLeds, int& currentMode)
+void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& currentMode)
 {
   const int LearnModePad = 8;
   const int RecordingModePad = 4;
   const int PlayModePad = 0;
 
   const int MetronomePad = 9;
-
   const int TrackPads[] = {10,6,2,11,7,3};
-
+  //6 tracks + metronome
+  const int recordingY[] = {0,1,2,0,1,2,0};
+  const int recordingX[] = {5,5,5,6,6,6,4};
+  const int playY[] = {5,6,7,5,6,7,5};
+  const int playX[] = {5,5,5,6,6,6,4};
+  
   touchPad.Read();
 
   if (touchPad.IsClicked(LearnModePad))
@@ -151,36 +166,67 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, DigitalO
     }
   }
 
+  bool blinkOn = (currMillis>>7) & 0x01;
   for (int idx = 0; idx < MidiLooper::NumTracks; ++idx)
   {
       // play leds on/off ~play/mute
-      playLeds.set(idx, midiLooper.m_Track[idx].m_Muted ? 0 : 1);
-      // recording leds: blink if midi learn, on/off ~recording otherwise
-      if(midiLooper.m_Track[idx].m_MidiLearn)
+      //playLeds.set(idx, midiLooper.m_Track[idx].m_Muted ? 0 : 1);
+      if(midiLooper.m_Track[idx].m_Muted)
       {
-        recordingLeds.set(idx, (currMillis>>7) & 0x01);
+        ledMatrix.Clear(playX[idx], playY[idx]);
       }
       else
       {
-        recordingLeds.set(idx, midiLooper.m_Track[idx].m_Recording ? 1 : 0);
+        ledMatrix.Set(playX[idx], playY[idx]);        
+      }
+      
+      // recording leds: blink if midi learn, on/off ~recording otherwise
+      if(midiLooper.m_Track[idx].m_MidiLearn)
+      {
+        if(blinkOn)
+        {
+          ledMatrix.Set(recordingX[idx], recordingY[idx]);
+        }
+        else
+        {
+          ledMatrix.Clear(recordingX[idx], recordingY[idx]);
+        }
+      }
+      else
+      {
+        if(midiLooper.m_Track[idx].m_Recording)
+        {
+          ledMatrix.Set(recordingX[idx], recordingY[idx]);
+        }
+        else
+        {
+          ledMatrix.Clear(recordingX[idx], recordingY[idx]);
+        }
       }
   }
 
   // metronome play led ~~ playing 
   // recording led blink if midi learn
-  playLeds.set(MidiLooper::NumTracks, midiLooper.m_Metronome.IsPlaying() ? 1:0);
-  if(midiLooper.m_Metronome.IsLearning())
+  if(midiLooper.m_Metronome.IsPlaying())
   {
-    recordingLeds.set(MidiLooper::NumTracks, (currMillis>>7) & 0x01);
+    ledMatrix.Clear(playX[MidiLooper::NumTracks], playY[MidiLooper::NumTracks]);
   }
   else
   {
-    recordingLeds.set(MidiLooper::NumTracks, LOW);      
+    ledMatrix.Set(playX[MidiLooper::NumTracks], playY[MidiLooper::NumTracks]);        
   }
-    
-
-  recordingLeds.update();
-  playLeds.update();
+  
+  if(midiLooper.m_Metronome.IsLearning() && blinkOn)
+  {
+      ledMatrix.Set(recordingX[MidiLooper::NumTracks], recordingY[MidiLooper::NumTracks]);
+  }
+  else
+  {
+    ledMatrix.Clear(recordingX[MidiLooper::NumTracks], recordingY[MidiLooper::NumTracks]);
+  }    
+  //recordingLeds.update();
+  //playLeds.update();
+  ledMatrix.WriteAll();
 }
 
 void loop()
@@ -193,13 +239,17 @@ void loop()
   const int numRepeats = 16;
   TestTouchPad(touchPad, serialDebug, numRepeats);
 
-  for(int repeat = 0; repeat<2; ++repeat)
-  {
-    testDigitalOutBank(recordingLeds, 1);
-    testDigitalOutBank(playLeds, 1);
-  }
+  serialDebug.println("test led matrix");
+  testDigitalOutMatrix(ledMatrix, 1);
+ 
+  // for(int repeat = 0; repeat<2; ++repeat)
+  // {
+  //   testDigitalOutBank(recordingLeds, 1);
+  //   testDigitalOutBank(playLeds, 1);
+  // }
 
   // make sure all notes are off on all midi channels
+  serialDebug.println("all notes off");
   for(int ch =0; ch<16; ++ch)
   {
     midiLooper.m_MidiOut.allNotesOff(ch); 
@@ -239,7 +289,7 @@ void loop()
     // read midi in but limit # bytes for performance issues
     readMidiIn(serialMidi, midiParser, midiLooper, 3);
 
-    updateMidiLooper(midiLooper, touchPad, recordingLeds, currentMode);
+    updateMidiLooper(midiLooper, touchPad, currentMode);
 
     ++debugCounter;
     if (debugCounter >= 1000) //TODO stopwatch 1 sec + # runs
