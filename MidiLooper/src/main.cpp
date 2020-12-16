@@ -166,6 +166,36 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
     }
   }
 
+  // indicate current mode with leds
+  if(currentMode == LearnMode)
+  {
+    ledMatrix.Set(0,0);
+    ledMatrix.Set(0,1);
+    ledMatrix.Clear(0,3);
+    ledMatrix.Clear(0,4);
+    ledMatrix.Clear(0,6);
+    ledMatrix.Clear(0,7);
+  }
+  else if(currentMode == RecordingMode)
+  {
+    ledMatrix.Clear(0,0);
+    ledMatrix.Clear(0,1);
+    ledMatrix.Set(0,3);
+    ledMatrix.Set(0,4);
+    ledMatrix.Clear(0,6);
+    ledMatrix.Clear(0,7);
+  }
+  else if(currentMode == PlayMode)
+  {
+    ledMatrix.Clear(0,0);
+    ledMatrix.Clear(0,1);
+    ledMatrix.Clear(0,3);
+    ledMatrix.Clear(0,4);
+    ledMatrix.Set(0,6);
+    ledMatrix.Set(0,7);
+  }
+
+
   bool blinkOn = (currMillis>>7) & 0x01;
   for (int idx = 0; idx < MidiLooper::NumTracks; ++idx)
   {
