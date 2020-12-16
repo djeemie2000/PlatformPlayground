@@ -82,12 +82,12 @@ void MidiLooperTrack::onTick(const MidiLooperTicker &ticker, MidiOut &midiOut)
             // do not play the stuff that was recorded in the current layer to prevent playing twice (live + playback)
             while (idx < m_NumNoteEvents - m_CurrLayerSize)
             {
-                if (step == m_NoteEvents[idx].m_StepOn  && m_NoteEvents[idx].HasNoteOff())
+                if (step == m_NoteEvents[idx].m_StepOn  && m_NoteEvents[idx].IsValid())
                 {
                     midiOut.NoteOn(m_MidiChannel, m_NoteEvents[idx].m_MidiNote, m_NoteEvents[idx].m_VelocityOn);
                     m_NoteStack.NoteOn(m_NoteEvents[idx].m_MidiNote);
                 }
-                if (step == m_NoteEvents[idx].m_StepOff && m_NoteEvents[idx].HasNoteOff())
+                if (step == m_NoteEvents[idx].m_StepOff && m_NoteEvents[idx].IsValid())
                 {
                     midiOut.NoteOff(m_MidiChannel, m_NoteEvents[idx].m_MidiNote, m_NoteEvents[idx].m_VelocityOff);
                     m_NoteStack.NoteOff(m_NoteEvents[idx].m_MidiNote);

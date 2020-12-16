@@ -44,3 +44,9 @@ bool MidiLooperNoteEvent::HasNoteOff() const
 {
     return m_VelocityOff != 0xFF;
 }
+
+bool MidiLooperNoteEvent::IsValid() const
+{
+    return m_VelocityOff != 0xFF && m_StepOn!=m_StepOff;
+}
+

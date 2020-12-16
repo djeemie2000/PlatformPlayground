@@ -28,4 +28,5 @@ struct MidiLooperNoteEvent
     void SetNoteOn(uint8_t step, uint8_t midiNote, uint8_t velocity, uint8_t layer);
     bool SetNoteOff(uint8_t step, uint8_t midiNote, uint8_t velocity);
     bool HasNoteOff() const;
+    bool IsValid() const;
 };

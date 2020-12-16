@@ -31,8 +31,6 @@ DigitalIn resetIn;
 
 ButtonState metronomePadState;
 ButtonState trackPadState[MidiLooper::NumTracks];
-//TODO clock reset inputs
-//TODO play leds vs recording/learning leds
 
 static const int LearnMode =0;
 static const int RecordingMode = 1;
@@ -228,7 +226,7 @@ void loop()
     {
       clockCounter = 0;
     }
-    //TODO clock + reset from digitalIn
+    // clock + reset from digitalIn
     clockIn.Read();
     resetIn.Read();
 
