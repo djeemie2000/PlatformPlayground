@@ -118,7 +118,7 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
 
   unsigned long currMillis = millis();
 
-  // metronome!!
+  // metronome update
   metronomePadState.update(currMillis, touchPad.Get(MetronomePad));
   if (metronomePadState.Tapped())
   {
@@ -134,6 +134,7 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
     }
   }
 
+  // tracks update
   for (int idx = 0; idx < MidiLooper::NumTracks; ++idx)
   {
     trackPadState[idx].update(currMillis, touchPad.Get(TrackPads[idx]));
@@ -166,7 +167,7 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
     }
   }
 
-  // indicate current mode with leds
+  // indicate current mode with leds (row 0)
   if(currentMode == LearnMode)
   {
     ledMatrix.Set(0,0);
@@ -195,12 +196,23 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
     ledMatrix.Set(0,7);
   }
 
+  // indicate ticker state (which bar) (row 2)
+  TickerState tickerState;
+  midiLooper.m_Ticker.GetTickerState(1, tickerState, 3);// 8 bars
+  for(int col = 0; col<8; ++col)
+  {
+    ledMatrix.Clear(2, col);
+  }
+  // blink off upon last tick of each beat
+  if(tickerState.m_Tick!=3)
+  {
+    ledMatrix.Set(2, tickerState.m_Bar);
+  }
 
   bool blinkOn = (currMillis>>7) & 0x01;
   for (int idx = 0; idx < MidiLooper::NumTracks; ++idx)
   {
       // play leds on/off ~play/mute
-      //playLeds.set(idx, midiLooper.m_Track[idx].m_Muted ? 0 : 1);
       if(midiLooper.m_Track[idx].m_Muted)
       {
         ledMatrix.Clear(playX[idx], playY[idx]);
@@ -211,32 +223,23 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
       }
       
       // recording leds: blink if midi learn, on/off ~recording otherwise
-      if(midiLooper.m_Track[idx].m_MidiLearn)
+      if(midiLooper.m_Track[idx].m_MidiLearn && blinkOn)
       {
-        if(blinkOn)
-        {
           ledMatrix.Set(recordingX[idx], recordingY[idx]);
-        }
-        else
-        {
-          ledMatrix.Clear(recordingX[idx], recordingY[idx]);
-        }
+      }
+      else if(midiLooper.m_Track[idx].m_Recording)
+      {
+        ledMatrix.Set(recordingX[idx], recordingY[idx]);
       }
       else
       {
-        if(midiLooper.m_Track[idx].m_Recording)
-        {
-          ledMatrix.Set(recordingX[idx], recordingY[idx]);
-        }
-        else
-        {
-          ledMatrix.Clear(recordingX[idx], recordingY[idx]);
-        }
+        ledMatrix.Clear(recordingX[idx], recordingY[idx]);
       }
   }
 
-  // metronome play led ~~ playing 
-  // recording led blink if midi learn
+  // metronome
+  //   play led ~~ playing 
+  //   recording led blink if midi learn
   if(midiLooper.m_Metronome.IsPlaying())
   {
     ledMatrix.Clear(playX[MidiLooper::NumTracks], playY[MidiLooper::NumTracks]);
@@ -254,8 +257,7 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
   {
     ledMatrix.Clear(recordingX[MidiLooper::NumTracks], recordingY[MidiLooper::NumTracks]);
   }    
-  //recordingLeds.update();
-  //playLeds.update();
+
   ledMatrix.WriteAll();
 }
 

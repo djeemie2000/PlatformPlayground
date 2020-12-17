@@ -52,6 +52,11 @@ uint16_t MidiLooperTicker::recordingStep(int divider) const
     return (Counter(divider)+1)&mask;
 }
 
+void MidiLooperTicker::GetTickerState(int divider, TickerState& state, uint16_t numBarShift)
+{
+    CounterToState(m_Counter/divider, state, numBarShift);
+}
+
 uint16_t CounterToTick(uint16_t counter)
 {
     // assumes 4 ticks per beat
@@ -70,4 +75,18 @@ uint16_t CounterToBar(uint16_t counter)
 
     //assumes counter is cropped to # bars
     return (counter >> 4); //& 0x03;
+}
+
+void CounterToState(uint16_t counter, TickerState& state, uint16_t numBarShift)
+{
+    // assumes 4 ticks per beat
+    state.m_Tick = counter & 0x03;
+    // assumes 4 ticks per beat
+    state.m_Beat =(counter >> 2) & 0x03;
+
+    // assumes 4 ticks per beat
+    // assumes 4 beats per bar
+    // => shift >> 4
+    uint16_t barMask = (1u<<numBarShift) -1;
+    state.m_Bar =  (counter >> 4) & barMask;
 }
