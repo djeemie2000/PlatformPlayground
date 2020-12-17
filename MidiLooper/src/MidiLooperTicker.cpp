@@ -1,7 +1,7 @@
 #include "MidiLooperTicker.h"
 
 MidiLooperTicker::MidiLooperTicker()
-    : m_Clock(0), m_PrevClock(0), m_Counter(0) {}
+    : m_Clock(0), m_PrevClock(0), m_Counter(0), m_NumBarShift(2) {}
 
  void MidiLooperTicker::onTick(int clock, int reset)
 {
@@ -12,6 +12,11 @@ MidiLooperTicker::MidiLooperTicker()
         //rising clock => augment counter
         ++m_Counter;
     }
+}
+
+void MidiLooperTicker::SetNumBars(uint16_t numBarShift)
+{
+    m_NumBarShift = numBarShift;
 }
 
 bool MidiLooperTicker::clockIsRising() const
@@ -52,9 +57,9 @@ uint16_t MidiLooperTicker::recordingStep(int divider) const
     return (Counter(divider)+1)&mask;
 }
 
-void MidiLooperTicker::GetTickerState(int divider, TickerState& state, uint16_t numBarShift)
+void MidiLooperTicker::GetTickerState(int divider, TickerState& state) const
 {
-    CounterToState(m_Counter/divider, state, numBarShift);
+    CounterToState(m_Counter/divider, state, m_NumBarShift);
 }
 
 uint16_t CounterToTick(uint16_t counter)

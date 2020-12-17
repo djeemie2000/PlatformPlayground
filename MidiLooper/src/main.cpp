@@ -23,19 +23,17 @@ HardwareSerial serialMidi(PA3, PA2);
 MidiParser midiParser;
 MidiLooper midiLooper;
 MPR121TouchPad touchPad;
-//static const int metronomeRecordingLed = PB6;
-//DigitalOutBank recordingLeds(PA11, PA12, PA15, PB3, PB4, PB5, PB6);
-//static const int metronomePlayLedPin = PC15;
-//DigitalOutBank playLeds(PA0, PA1, PA4, PA5, PA6, PA7, PC15);
 static const int clockInPin = PB7;
 DigitalIn clockIn;
 static const int resetInPin = PB8;
 DigitalIn resetIn;
 Max7219Matrix ledMatrix(1,PA4);//cs pin
 
-
 ButtonState metronomePadState;
 ButtonState trackPadState[MidiLooper::NumTracks];
+ButtonState learnModePadState;
+ButtonState recordingModePadState;
+ButtonState playModePadState;
 
 static const int LearnMode =0;
 static const int RecordingMode = 1;
@@ -96,11 +94,13 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
   const int TrackPads[] = {5,1, 10,6,2, 11,7,3};
   //6 tracks + metronome
   const int recordingY[] = {1,2, 0,1,2, 0,1,2, 0};
-  const int recordingX[] = {4,4, 5,5,5, 6,6,6, 4};
+  const int recordingX[] = {5,5, 6,6,6, 7,7,7, 5};
   const int playY[] = {6,7, 5,6,7, 5,6,7, 5};
-  const int playX[] = {4,4, 5,5,5, 6,6,6, 4};
+  const int playX[] = {5,5, 6,6,6, 7,7,7, 5};
   
   touchPad.Read();
+
+  unsigned long currMillis = millis();
 
   if (touchPad.IsClicked(LearnModePad))
   {
@@ -115,8 +115,22 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
      currentMode = PlayMode;
   }
 
+  learnModePadState.update(currMillis, touchPad.Get(LearnModePad));
+  recordingModePadState.update(currMillis, touchPad.Get(RecordingModePad));
+  playModePadState.update(currMillis, touchPad.Get(PlayModePad));
+  if(learnModePadState.LongPressed())
+  {
+    midiLooper.m_Ticker.SetNumBars(1);// 2 bars
+  }
+  if(recordingModePadState.LongPressed())
+  {
+    midiLooper.m_Ticker.SetNumBars(2);// 4 bars
+  }
+  if(playModePadState.LongPressed())
+  {
+    midiLooper.m_Ticker.SetNumBars(3);// 8 bars
+  }
 
-  unsigned long currMillis = millis();
 
   // metronome update
   metronomePadState.update(currMillis, touchPad.Get(MetronomePad));
@@ -198,7 +212,7 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
 
   // indicate ticker state (which bar) (row 2)
   TickerState tickerState;
-  midiLooper.m_Ticker.GetTickerState(1, tickerState, 2);// 4 bars
+  midiLooper.m_Ticker.GetTickerState(1, tickerState);
   for(int col = 0; col<8; ++col)
   {
     if(col<tickerState.m_NumBars)

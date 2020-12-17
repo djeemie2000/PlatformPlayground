@@ -47,21 +47,19 @@ void MidiMetronome::OnTick(MidiLooperTicker &ticker, MidiOut &midiOut)
     if (m_Playing && ticker.clockIsRising())
     {
         const int ClocksPerTick = 1;
-        uint16_t counter = ticker.Counter(ClocksPerTick);//Counter(1) ???
-        uint16_t tick = CounterToTick(counter);
-        if (tick == 0)
+        TickerState state;
+        ticker.GetTickerState(ClocksPerTick, state);
+        if (state.m_Tick == 0)
         {
             // first tick of beat
             uint8_t midiNote = m_BaseNote;
 
-            uint16_t beat = CounterToBeat(counter);
-            if (beat == 0)
+            if (state.m_Beat == 0)
             {
                 // first beat of a bar
                 midiNote += 12; //+1 octave
                 
-                uint16_t bar = CounterToBar(counter);
-                if(bar == 0)
+                if(state.m_Bar == 0)
                 {
                     // first beat of first bar
                     midiNote += 12; // + another 1 octave
