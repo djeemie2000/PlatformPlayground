@@ -46,9 +46,8 @@ void MidiMetronome::OnTick(MidiLooperTicker &ticker, MidiOut &midiOut)
 
     if (m_Playing && ticker.clockIsRising())
     {
-        const int ClocksPerTick = 1;
         TickerState state;
-        ticker.GetTickerState(ClocksPerTick, state);
+        ticker.GetTickerState(state);
         if (state.m_Tick == 0)
         {
             // first tick of beat

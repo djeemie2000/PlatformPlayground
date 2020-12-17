@@ -29,37 +29,39 @@ bool MidiLooperTicker::clockIsFalling() const
     return m_PrevClock && !m_Clock;
 }
 
-uint16_t MidiLooperTicker::Counter(int divider) const
+uint16_t MidiLooperTicker::Counter() const
 {
     // assumes 
+    //  const int ClocksPerTick = 1;
     //  4 ticks per beat 
     //  4 beats per bar
-    //  4 bars (length)
-    uint16_t mask = (1u<<6)-1;
-    return (m_Counter / divider)& mask;
+    //  2/4/8/.. bars (cfr num bars shift)
+    uint16_t mask = (1u<<(4+m_NumBarShift))-1;
+    return m_Counter & mask;
 }
 
-uint16_t MidiLooperTicker::recordingStep(int divider) const
+uint16_t MidiLooperTicker::recordingStep() const
 {
     // 'quantized' recording step:
     // clock on => use current step for recording
     // clock off => use next step for recording
     if(m_Clock)
     {
-        return Counter(divider);
+        return Counter();
     }
 
     // assumes 
+    //  const int ClocksPerTick = 1;
     //  4 ticks per beat 
     //  4 beats per bar
-    //  4 bars (length)
-    uint16_t mask = (1u<<6)-1;
-    return (Counter(divider)+1)&mask;
+    //  2/4/8/.. bars (cfr num bars shift)
+    uint16_t mask = (1u<<(4+m_NumBarShift))-1;
+    return (Counter()+1) & mask;
 }
 
-void MidiLooperTicker::GetTickerState(int divider, TickerState& state) const
+void MidiLooperTicker::GetTickerState(TickerState& state) const
 {
-    CounterToState(m_Counter/divider, state, m_NumBarShift);
+    CounterToState(m_Counter, state, m_NumBarShift);
 }
 
 uint16_t CounterToTick(uint16_t counter)

@@ -212,7 +212,7 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
 
   // indicate ticker state (which bar) (row 2)
   TickerState tickerState;
-  midiLooper.m_Ticker.GetTickerState(1, tickerState);
+  midiLooper.m_Ticker.GetTickerState(tickerState);
   for(int col = 0; col<8; ++col)
   {
     if(col<tickerState.m_NumBars)

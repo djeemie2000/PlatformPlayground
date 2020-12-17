@@ -27,9 +27,9 @@ public:
     bool clockIsRising() const;
     bool clockIsFalling() const;
 
-    uint16_t Counter(int divider) const;
-    uint16_t recordingStep(int divider) const;
-    void GetTickerState(int divider, TickerState& state) const;
+    uint16_t Counter() const;
+    uint16_t recordingStep() const;
+    void GetTickerState(TickerState& state) const;
 
 private:
     int m_Clock;

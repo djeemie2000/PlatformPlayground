@@ -31,7 +31,6 @@ public:
     bool m_MidiLearn;
     bool m_Recording;
     bool m_Muted;
-    //TODO int m_ClockDivider;
 
 private:
     uint8_t m_CurrLayer;

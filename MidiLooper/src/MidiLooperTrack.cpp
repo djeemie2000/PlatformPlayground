@@ -61,7 +61,7 @@ void MidiLooperTrack::onTick(const MidiLooperTicker &ticker, MidiOut &midiOut)
     {
         //TODO if muted => all note off?
         //TODO if channel changed (midi learn) => all notes off on original channel?
-        int step = ticker.Counter(1); //TODO divider
+        int step = ticker.Counter();
 
         if (0 == step)
         {
@@ -113,7 +113,7 @@ void MidiLooperTrack::onNoteOn(const MidiLooperTicker &ticker, MidiOut &midiOut,
     {
         if(m_Recording && m_NumNoteEvents<NoteEventCapacity)
         {
-            m_NoteEvents[m_NumNoteEvents].SetNoteOn(ticker.recordingStep(1), midiNote, velocity, m_CurrLayer);
+            m_NoteEvents[m_NumNoteEvents].SetNoteOn(ticker.recordingStep(), midiNote, velocity, m_CurrLayer);
             ++m_NumNoteEvents;
             ++m_CurrLayerSize;
         }
@@ -126,7 +126,7 @@ void MidiLooperTrack::onNoteOff(const MidiLooperTicker &ticker, uint8_t midiChan
     {
         if(m_Recording && m_NumNoteEvents<NoteEventCapacity)
         {
-            uint16_t recordingStep = ticker.recordingStep(1);
+            uint16_t recordingStep = ticker.recordingStep();
             int idx = m_NumNoteEvents - 1;
             while(0<=idx && !m_NoteEvents[idx].SetNoteOff(recordingStep, midiNote, velocity))
             {
