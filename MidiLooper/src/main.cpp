@@ -244,9 +244,16 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
       }
       
       // recording leds: blink if midi learn, on/off ~recording otherwise
-      if(midiLooper.m_Track[idx].m_MidiLearn && blinkOn)
-      {
-          ledMatrix.Set(recordingX[idx], recordingY[idx]);
+      if(midiLooper.m_Track[idx].m_MidiLearn)
+      { 
+        if(blinkOn)
+        {
+            ledMatrix.Set(recordingX[idx], recordingY[idx]);
+        }
+        else
+        {
+          ledMatrix.Clear(recordingX[idx], recordingY[idx]);
+        }      
       }
       else if(midiLooper.m_Track[idx].m_Recording)
       {
@@ -263,11 +270,11 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
   //   recording led blink if midi learn
   if(midiLooper.m_Metronome.IsPlaying())
   {
-    ledMatrix.Clear(playX[MidiLooper::NumTracks], playY[MidiLooper::NumTracks]);
+    ledMatrix.Set(playX[MidiLooper::NumTracks], playY[MidiLooper::NumTracks]);
   }
   else
   {
-    ledMatrix.Set(playX[MidiLooper::NumTracks], playY[MidiLooper::NumTracks]);        
+    ledMatrix.Clear(playX[MidiLooper::NumTracks], playY[MidiLooper::NumTracks]);        
   }
   
   if(midiLooper.m_Metronome.IsLearning() && blinkOn)
@@ -333,7 +340,8 @@ void loop()
     clockIn.Read();
     resetIn.Read();
 
-    int clock = clockIn.Get(); //clockCounter < (fakeClockPeriod / 2) ? 1 : 0;
+    //int clock = clockIn.Get(); 
+    int clock = clockCounter < (fakeClockPeriod / 2) ? 1 : 0;
     int reset = 0;
 
     midiLooper.onTick(clock, reset);
