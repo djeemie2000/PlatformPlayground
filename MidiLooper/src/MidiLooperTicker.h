@@ -11,6 +11,7 @@ struct TickerState
     uint16_t m_Tick;
     uint16_t m_Beat;
     uint16_t m_Bar;
+    uint16_t m_NumBars;
 };
 
 void CounterToState(uint16_t counter, TickerState& state, uint16_t numBarShift = 2);

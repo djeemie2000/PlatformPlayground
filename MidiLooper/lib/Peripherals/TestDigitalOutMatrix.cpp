@@ -10,10 +10,10 @@ void testDigitalOutMatrix(DigitalOutMatrix &matrix, int repeats)
             {
                 matrix.Set(row, col);
                 matrix.WriteAll();
-                delay(200);
+                delay(100);
                 matrix.Clear(row, col);
                 matrix.WriteAll();
-                delay(200);
+                delay(100);
                 //matrix.set(row, col);
             }
         }

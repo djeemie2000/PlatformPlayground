@@ -198,13 +198,20 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
 
   // indicate ticker state (which bar) (row 2)
   TickerState tickerState;
-  midiLooper.m_Ticker.GetTickerState(1, tickerState, 3);// 8 bars
+  midiLooper.m_Ticker.GetTickerState(1, tickerState, 2);// 4 bars
   for(int col = 0; col<8; ++col)
   {
-    ledMatrix.Clear(2, col);
+    if(col<tickerState.m_NumBars)
+    {
+      ledMatrix.Clear(2, col);
+    }
+    else
+    {
+      ledMatrix.Set(2, col);
+    }
   }
-  // blink off upon last tick of each beat
-  if(tickerState.m_Tick!=3)
+  // blink on upon first tick of each beat
+  if(tickerState.m_Tick==0)
   {
     ledMatrix.Set(2, tickerState.m_Bar);
   }
@@ -268,7 +275,7 @@ void loop()
   // startup checks
   ScanI2C(serialDebug);
   // remove/limit in time test touchpad
-  const int numRepeats = 16;
+  const int numRepeats = 4;//16;
   TestTouchPad(touchPad, serialDebug, numRepeats);
 
   serialDebug.println("test led matrix");

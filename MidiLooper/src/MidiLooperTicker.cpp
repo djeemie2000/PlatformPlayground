@@ -89,4 +89,6 @@ void CounterToState(uint16_t counter, TickerState& state, uint16_t numBarShift)
     // => shift >> 4
     uint16_t barMask = (1u<<numBarShift) -1;
     state.m_Bar =  (counter >> 4) & barMask;
+
+    state.m_NumBars = 1u<<numBarShift;
 }
