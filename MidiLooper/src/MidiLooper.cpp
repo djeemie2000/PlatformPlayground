@@ -27,7 +27,6 @@ void MidiLooper::onTick(int clock, int reset)
 
 void MidiLooper::NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
 {
-    // no note on if some track is recording + clock low
     m_MidiOut.NoteOn(Channel, MidiNote, Velocity);
     for (int idx = 0; idx < NumTracks; ++idx)
     {

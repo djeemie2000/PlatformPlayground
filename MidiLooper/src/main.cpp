@@ -327,6 +327,8 @@ void loop()
   while (true)
   {
     //fake clock
+    delay(1); //TODO check if needed when using external clock input
+
     const int fakeClockPeriod = 125;
     if (clockCounter < fakeClockPeriod)
     {
@@ -359,6 +361,13 @@ void loop()
       if (0 == digitalRead(debugPin))
       {
         // serial debug out : timing, ...
+        // serialDebug.println(midiLooper.m_Ticker.Counter(), HEX);
+        // TickerState state;
+        // midiLooper.m_Ticker.GetTickerState(state);
+        // serialDebug.print(state.m_Bar, HEX);
+        // serialDebug.print(" ");
+        // serialDebug.println(state.m_NumBars, HEX);
+       
         serialDebug.print(debugTimer.read_ms()); //elapsed
         serialDebug.print(" ");
         serialDebug.println(millis());
@@ -369,6 +378,5 @@ void loop()
       debugTimer.start();
     }
 
-    delay(1); //TODO check if needed when using external clock input
   }
 }

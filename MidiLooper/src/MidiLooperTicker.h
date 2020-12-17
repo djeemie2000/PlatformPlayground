@@ -1,10 +1,10 @@
 #pragma once
 #include <Arduino.h>
 
-// counter => bar, beat, tick (assuming 4 bars length)
-uint16_t CounterToTick(uint16_t counter);
-uint16_t CounterToBeat(uint16_t counter);
-uint16_t CounterToBar(uint16_t counter);
+// // counter => bar, beat, tick (assuming 4 bars length)
+// uint16_t CounterToTick(uint16_t counter);
+// uint16_t CounterToBeat(uint16_t counter);
+// uint16_t CounterToBar(uint16_t counter);
 
 struct TickerState
 {

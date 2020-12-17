@@ -52,7 +52,6 @@ void MidiMetronome::OnTick(MidiLooperTicker &ticker, MidiOut &midiOut)
         {
             // first tick of beat
             uint8_t midiNote = m_BaseNote;
-
             if (state.m_Beat == 0)
             {
                 // first beat of a bar

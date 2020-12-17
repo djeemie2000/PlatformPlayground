@@ -38,7 +38,7 @@ private:
 
     MidiNoteStack m_NoteStack;
 
-    static const int NoteEventCapacity = 64;
+    static const int NoteEventCapacity = 96;
     MidiLooperNoteEvent m_NoteEvents[NoteEventCapacity];
     int m_NumNoteEvents;
 };
