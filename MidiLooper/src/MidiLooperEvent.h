@@ -30,3 +30,27 @@ struct MidiLooperNoteEvent
     bool HasNoteOff() const;
     bool IsValid() const;
 };
+
+class MidiLooperStepStack
+{
+public:
+    MidiLooperStepStack();
+
+    bool OnNoteOn(uint8_t midiNote, uint8_t velocity, uint8_t layer);
+    bool OnNoteOff(uint8_t midiNote, uint8_t velocity, uint8_t layer);
+    void OnUndo(uint8_t layer);
+
+public:
+    static const int Capacity = 4;
+    static const uint8_t InvalidNote = 0xFF;
+    static const uint8_t NoteOffVelocity = 0x00;
+
+    uint8_t m_MidiNoteOn[Capacity];
+    uint8_t m_Velocity[Capacity];
+    uint8_t m_LayerOn[Capacity];
+    int m_SizeOn;
+
+    uint8_t m_MidiNoteOff[Capacity];
+    uint8_t m_LayerOff[Capacity];
+    int m_SizeOff;
+};

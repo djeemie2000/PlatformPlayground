@@ -50,3 +50,43 @@ bool MidiLooperNoteEvent::IsValid() const
     return m_VelocityOff != 0xFF && m_StepOn!=m_StepOff;
 }
 
+MidiLooperStepStack::MidiLooperStepStack() : m_SizeOn(0), m_SizeOff(0)
+{}
+
+bool MidiLooperStepStack::OnNoteOn(uint8_t midiNote, uint8_t velocity, uint8_t layer)
+{
+    if(m_SizeOn<Capacity)
+    {
+        m_MidiNoteOn[m_SizeOn] = midiNote;
+        m_Velocity[m_SizeOn] = velocity;
+        m_LayerOn[m_SizeOn] = layer;
+        ++m_SizeOn;
+        return true;
+    }
+    return false;
+}
+
+bool MidiLooperStepStack::OnNoteOff(uint8_t midiNote, uint8_t /*velocity*/, uint8_t layer)
+{
+    // check if no note on for same midi note TODO
+    if(m_SizeOff<Capacity)
+    {
+        m_MidiNoteOff[m_SizeOff] = midiNote;
+        m_LayerOff[m_SizeOff] = layer;
+        ++m_SizeOff;
+        return true;
+    }
+    return false;
+}
+
+void MidiLooperStepStack::OnUndo(uint8_t layer)
+{
+    while(0<m_SizeOn && m_LayerOn[m_SizeOn-1] == layer)
+    {
+        --m_SizeOn;
+    }
+    while(0<m_SizeOff && m_LayerOff[m_SizeOff-1] == layer)
+    {
+        --m_SizeOff;
+    }
+}

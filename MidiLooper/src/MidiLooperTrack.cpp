@@ -124,7 +124,7 @@ void MidiLooperTrack::onNoteOff(const MidiLooperTicker &ticker, uint8_t midiChan
 {
     if (midiChannel == m_MidiChannel)
     {
-        if(m_Recording && m_NumNoteEvents<NoteEventCapacity)
+        if(m_Recording)
         {
             uint16_t recordingStep = ticker.recordingStep();
             int idx = m_NumNoteEvents - 1;
