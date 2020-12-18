@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include "MidiHandler.h"
+#include "MidiNoteOnStack.h"
 
 class MidiOut
 {
@@ -18,4 +18,5 @@ public:
 
 private:
     HardwareSerial *m_Serial;
+    MidiNoteOnStack m_NoteOnStack[16];//per midi channel
 };

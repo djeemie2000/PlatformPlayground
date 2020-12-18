@@ -10,16 +10,26 @@ void MidiOut::begin(HardwareSerial *serial)
 
 void MidiOut::NoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
 {
-    uint8_t statusByte = 0x90 | channel;
-    uint8_t msg[3] = {statusByte, note, velocity};
-    m_Serial->write(msg, 3);
+    if(!m_NoteOnStack[channel].GetNoteOn(note))
+    {
+        uint8_t statusByte = 0x90 | channel;
+        uint8_t msg[3] = {statusByte, note, velocity};
+        m_Serial->write(msg, 3);
+
+        m_NoteOnStack[channel].SetNoteOn(note);
+    }
 }
 
 void MidiOut::NoteOff(uint8_t channel, uint8_t note, uint8_t velocity)
 {
-    uint8_t statusByte = 0x80 | channel;
-    uint8_t msg[3] = {statusByte, note, velocity};
-    m_Serial->write(msg, 3);
+    if(m_NoteOnStack[channel].GetNoteOn(note))
+    {
+        uint8_t statusByte = 0x80 | channel;
+        uint8_t msg[3] = {statusByte, note, velocity};
+        m_Serial->write(msg, 3);
+
+        m_NoteOnStack[channel].SetNoteOff(note);
+    }
 }
 
 void MidiOut::ContinuousController(uint8_t channel, uint8_t controller, uint8_t value)
