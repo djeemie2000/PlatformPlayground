@@ -22,6 +22,7 @@ public:
   }
   uint8_t Pop();
   uint8_t Note(int idx) const;
+  bool Contains(uint8_t midiNote);
 
 private:
   uint8_t m_Stack[Capacity];

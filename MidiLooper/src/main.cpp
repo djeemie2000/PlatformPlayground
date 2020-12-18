@@ -58,13 +58,16 @@ void setup()
   clockIn.begin(clockInPin);
   resetIn.begin(resetInPin);
 
-  serialDebug.println("MidiLooper v0.5");
 
   SPI.setSCLK(PA5);
   SPI.setMISO(PA6);
   SPI.setMOSI(PA7);
   //SPI CS external
   ledMatrix.Configure();
+
+  delay(1000);
+  serialDebug.println("MidiLooper v0.5");
+
 }
 
 void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &handler, int maxNumBytesRead = 3)

@@ -38,7 +38,16 @@ private:
 
     MidiNoteStack m_NoteStack;
 
-    static const int NoteEventCapacity = 96;
-    MidiLooperNoteEvent m_NoteEvents[NoteEventCapacity];
-    int m_NumNoteEvents;
+    // static const int NoteEventCapacity = 96;
+    // MidiLooperNoteEvent m_NoteEvents[NoteEventCapacity];
+    // int m_NumNoteEvents;
+
+    static const int EventCapacity = 128;
+    MidiLooperEvent m_Events[EventCapacity];
+    int m_NumEvents;
+
+    static const int StepCapacity = 128;//4*4*8
+    static const int StepDepth = 8;
+    uint8_t m_StepSize[StepCapacity];
+    uint8_t m_StepEventIndex[StepCapacity][StepDepth];
 };

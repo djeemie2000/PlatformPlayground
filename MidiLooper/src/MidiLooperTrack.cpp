@@ -3,8 +3,13 @@
 MidiLooperTrack::MidiLooperTrack()
     : m_MidiChannel(0), m_MidiLearn(true), m_Recording(false), m_Muted(false)
     , m_CurrLayer(0), m_CurrLayerSize(0)
-    , m_NumNoteEvents(0)
+    , m_NumEvents(0)
 {
+    for(int step = 0; step<StepCapacity; ++step)
+    {
+        m_StepSize[step] = 0x00;
+        memset(m_StepEventIndex[step], 0x00, StepDepth);
+    }
 }
 
 void MidiLooperTrack::onUndo(MidiOut &midiOut)
@@ -12,9 +17,10 @@ void MidiLooperTrack::onUndo(MidiOut &midiOut)
     // only undo last recorded 'layer'
     //  use current layer if something is recorded, previous layer if not
     uint8_t undoLayer = 0 < m_CurrLayerSize ? m_CurrLayer : m_CurrLayer - 1;
-    while (0 < m_NumNoteEvents && m_NoteEvents[m_NumNoteEvents - 1].m_Layer == undoLayer)
+    while (0 < m_NumEvents && m_Events[m_NumEvents - 1].m_Layer == undoLayer)
     {
-         --m_NumNoteEvents;
+        --m_StepSize[m_Events[m_NumEvents - 1].m_Step];//remove from step
+         --m_NumEvents;
     }
     m_CurrLayer = undoLayer;
     m_CurrLayerSize = 0;
@@ -80,20 +86,43 @@ void MidiLooperTrack::onTick(const MidiLooperTicker &ticker, MidiOut &midiOut)
         {
             int idx = 0;
             // do not play the stuff that was recorded in the current layer to prevent playing twice (live + playback)
-            while (idx < m_NumNoteEvents - m_CurrLayerSize)
+            while(idx<m_StepSize[step])
             {
-                if (step == m_NoteEvents[idx].m_StepOn  && m_NoteEvents[idx].IsValid())
+                uint8_t eventIdx = m_StepEventIndex[step][idx];
+                if(eventIdx < m_NumEvents - m_CurrLayerSize)
                 {
-                    midiOut.NoteOn(m_MidiChannel, m_NoteEvents[idx].m_MidiNote, m_NoteEvents[idx].m_VelocityOn);
-                    m_NoteStack.NoteOn(m_NoteEvents[idx].m_MidiNote);
-                }
-                if (step == m_NoteEvents[idx].m_StepOff && m_NoteEvents[idx].IsValid())
-                {
-                    midiOut.NoteOff(m_MidiChannel, m_NoteEvents[idx].m_MidiNote, m_NoteEvents[idx].m_VelocityOff);
-                    m_NoteStack.NoteOff(m_NoteEvents[idx].m_MidiNote);
+                    if (m_Events[eventIdx].IsNoteOn())
+                    {
+                        midiOut.NoteOn(m_MidiChannel, m_Events[eventIdx].m_MidiNote, m_Events[eventIdx].m_Velocity);
+                        m_NoteStack.NoteOn(m_Events[eventIdx].m_MidiNote);
+                    }
+                    else
+                    {
+                        // use some dummy velocity but not zero!
+                        midiOut.NoteOff(m_MidiChannel, m_Events[eventIdx].m_MidiNote, 0x01);
+                        m_NoteStack.NoteOff(m_Events[eventIdx].m_MidiNote);
+                    }
                 }
                 ++idx;
             }
+            // while (idx < m_NumEvents - m_CurrLayerSize)
+            // {
+            //     if (step == m_Events[idx].m_Step)
+            //     {
+            //         if (m_Events[idx].IsNoteOn())
+            //         {
+            //             midiOut.NoteOn(m_MidiChannel, m_Events[idx].m_MidiNote, m_Events[idx].m_Velocity);
+            //             m_NoteStack.NoteOn(m_Events[idx].m_MidiNote);
+            //         }
+            //         else
+            //         {
+            //             // use some dummy velocity but not zero!
+            //             midiOut.NoteOff(m_MidiChannel, m_Events[idx].m_MidiNote, 0x01);
+            //             m_NoteStack.NoteOff(m_Events[idx].m_MidiNote);
+            //         }
+            //     }
+            //     ++idx;
+            // }
         }
     }
 }
@@ -111,11 +140,19 @@ void MidiLooperTrack::onNoteOn(const MidiLooperTicker &ticker, MidiOut &midiOut,
     }
     if (midiChannel == m_MidiChannel)
     {
-        if(m_Recording && m_NumNoteEvents<NoteEventCapacity)
+        if (m_Recording && m_NumEvents < EventCapacity)
         {
-            m_NoteEvents[m_NumNoteEvents].SetNoteOn(ticker.recordingStep(), midiNote, velocity, m_CurrLayer);
-            ++m_NumNoteEvents;
-            ++m_CurrLayerSize;
+            uint8_t step = ticker.recordingStep();
+            uint8_t stepSize = m_StepSize[step];
+            if(stepSize<StepDepth)
+            {
+                m_Events[m_NumEvents].SetNoteOn(step, midiNote, velocity, m_CurrLayer);
+                m_StepEventIndex[step][stepSize] = m_NumEvents;
+
+                ++m_NumEvents;
+                ++m_CurrLayerSize;
+                ++m_StepSize[step];
+            }
         }
     }
 }
@@ -124,13 +161,18 @@ void MidiLooperTrack::onNoteOff(const MidiLooperTicker &ticker, uint8_t midiChan
 {
     if (midiChannel == m_MidiChannel)
     {
-        if(m_Recording)
+        if (m_Recording && m_NumEvents < EventCapacity)        
         {
-            uint16_t recordingStep = ticker.recordingStep();
-            int idx = m_NumNoteEvents - 1;
-            while(0<=idx && !m_NoteEvents[idx].SetNoteOff(recordingStep, midiNote, velocity))
+            uint8_t step = ticker.recordingStep();
+            uint8_t stepSize = m_StepSize[step];
+            if(stepSize<StepDepth)
             {
-                --idx;
+                m_Events[m_NumEvents].SetNoteOff(step, midiNote, velocity, m_CurrLayer);
+                m_StepEventIndex[step][stepSize] = m_NumEvents;
+
+                ++m_NumEvents;
+                ++m_CurrLayerSize;
+                ++m_StepSize[step];
             }
         }
     }
@@ -148,21 +190,17 @@ void MidiLooperTrack::AllNotesOff(MidiOut &midiOut)
 void MidiLooperTrack::printItems(HardwareSerial &serial)
 {
     serial.print("items # ");
-    serial.println(m_NumNoteEvents);
+    serial.println(m_NumEvents);
 
-    for (int idx = 0; idx < m_NumNoteEvents; ++idx)
+    for (int idx = 0; idx < m_NumEvents; ++idx)
     {
-        serial.println(m_NoteEvents[idx].m_Layer, HEX);
+        serial.println(m_Events[idx].m_Layer, HEX);
         serial.print(" ");
-        serial.print(m_NoteEvents[idx].m_MidiNote, HEX);
+        serial.print(m_Events[idx].m_MidiNote, HEX);
         serial.print(" ");
-        serial.print(m_NoteEvents[idx].m_StepOn);
+        serial.print(m_Events[idx].m_Step);
         serial.print(" ");
-        serial.print(m_NoteEvents[idx].m_VelocityOn, HEX);
-        serial.print(" ");
-        serial.print(m_NoteEvents[idx].m_StepOff);
-        serial.print(" ");
-        serial.println(m_NoteEvents[idx].m_VelocityOff, HEX);
+        serial.println(m_Events[idx].m_Velocity, HEX);
     }
 }
 
@@ -183,5 +221,5 @@ void MidiLooperTrack::printState(HardwareSerial &serial)
     serial.print(" :");
     serial.print(m_CurrLayerSize);
     serial.print(" #");
-    serial.println(m_NumNoteEvents);
+    serial.println(m_NumEvents);
 }
