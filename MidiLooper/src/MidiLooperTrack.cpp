@@ -86,43 +86,23 @@ void MidiLooperTrack::onTick(const MidiLooperTicker &ticker, MidiOut &midiOut)
         {
             int idx = 0;
             // do not play the stuff that was recorded in the current layer to prevent playing twice (live + playback)
+            // -> this is now handled by the note on stack in the midi out
             while(idx<m_StepSize[step])
             {
                 uint8_t eventIdx = m_StepEventIndex[step][idx];
-                if(eventIdx < m_NumEvents - m_CurrLayerSize)
+                if (m_Events[eventIdx].IsNoteOn())
                 {
-                    if (m_Events[eventIdx].IsNoteOn())
-                    {
-                        midiOut.NoteOn(m_MidiChannel, m_Events[eventIdx].m_MidiNote, m_Events[eventIdx].m_Velocity);
-                        m_NoteStack.NoteOn(m_Events[eventIdx].m_MidiNote);
-                    }
-                    else
-                    {
-                        // use some dummy velocity but not zero!
-                        midiOut.NoteOff(m_MidiChannel, m_Events[eventIdx].m_MidiNote, 0x01);
-                        m_NoteStack.NoteOff(m_Events[eventIdx].m_MidiNote);
-                    }
+                    midiOut.NoteOn(m_MidiChannel, m_Events[eventIdx].m_MidiNote, m_Events[eventIdx].m_Velocity);
+                    m_NoteStack.NoteOn(m_Events[eventIdx].m_MidiNote);
+                }
+                else
+                {
+                    // use some dummy velocity but not zero!
+                    midiOut.NoteOff(m_MidiChannel, m_Events[eventIdx].m_MidiNote, 0x01);
+                    m_NoteStack.NoteOff(m_Events[eventIdx].m_MidiNote);
                 }
                 ++idx;
             }
-            // while (idx < m_NumEvents - m_CurrLayerSize)
-            // {
-            //     if (step == m_Events[idx].m_Step)
-            //     {
-            //         if (m_Events[idx].IsNoteOn())
-            //         {
-            //             midiOut.NoteOn(m_MidiChannel, m_Events[idx].m_MidiNote, m_Events[idx].m_Velocity);
-            //             m_NoteStack.NoteOn(m_Events[idx].m_MidiNote);
-            //         }
-            //         else
-            //         {
-            //             // use some dummy velocity but not zero!
-            //             midiOut.NoteOff(m_MidiChannel, m_Events[idx].m_MidiNote, 0x01);
-            //             m_NoteStack.NoteOff(m_Events[idx].m_MidiNote);
-            //         }
-            //     }
-            //     ++idx;
-            // }
         }
     }
 }
