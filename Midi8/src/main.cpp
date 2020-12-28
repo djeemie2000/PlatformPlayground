@@ -27,16 +27,6 @@ void setup() {
   midi8UI.begin();
 }
 
-// void ledPattern(uint8_t pattern)
-// {
-//   for(int idx = 0; idx<8; ++idx)
-//   {
-//     uint8_t curr = (pattern>>idx) & 0x01;
-//     digitalWrite(LED_BUILTIN, curr);
-//     delay(200);
-//   }
-// }
-
 void testUi()
 {
   testAnalogOutBank(midi8UI.cvOut, 1);

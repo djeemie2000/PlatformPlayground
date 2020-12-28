@@ -23,15 +23,16 @@ struct Midi8UI
     // toggle learn on/off
     ButtonIn learnBtn;// pin 2 
     
-    // grouping 1/2/4
-    ButtonIn groupingBtn1;// pin A0
-    ButtonIn groupingBtn2;// pin A1
+    // grouping (1/2/4) + mode (single/mono/poly) 
     char grouping;
-
-    // mode Single/Mono/Poly
-    ButtonIn modeBtn1;// pin A2
-    ButtonIn modeBtn2;// pin A3
     char mode;
+
+    ButtonIn modeBtn1;// pin A0
+    ButtonIn modeBtn2;// pin A1
+    ButtonIn modeBtn3;// pin A2
+    ButtonIn modeBtn4;// pin A3
+    ButtonIn modeBtn5;// pin A4
+    ButtonIn modeBtn6;// pin A5
 
 
     Midi8UI()
@@ -45,10 +46,12 @@ struct Midi8UI
         ledsOut.begin();
         const int debounce = 30;
         learnBtn.begin(2,debounce);
-        groupingBtn1.begin(A0,30);
-        groupingBtn2.begin(A1,30);
-        modeBtn1.begin(A2,30);
-        modeBtn2.begin(A3,30);
+        modeBtn1.begin(A0,debounce);
+        modeBtn2.begin(A1,debounce);
+        modeBtn3.begin(A2,debounce);
+        modeBtn4.begin(A3,debounce);
+        modeBtn5.begin(A4,debounce);
+        modeBtn6.begin(A5,debounce);
         
         grouping = Grouping1;
         mode = SingleMode;
@@ -61,34 +64,41 @@ struct Midi8UI
         int blink = (millis() >> 7) & 1;//period 256 msec 
         ledsOut.update(blink);
         learnBtn.read();
-        groupingBtn1.read();
-        groupingBtn2.read();
         modeBtn1.read();
         modeBtn2.read();
+        modeBtn3.read();
+        modeBtn4.read();
+        modeBtn5.read();
+        modeBtn6.read();
 
-        if(groupingBtn1.Get())
-        {
-            grouping = Grouping1;
-        }
-        else if(groupingBtn2.Get())
-        {
-            grouping = Grouping2;
-        }
-        else
-        {
-            grouping = Grouping4;
-        }
-        
         if(modeBtn1.Get())
         {
+            grouping = Grouping1;
             mode = SingleMode;
         }
         else if(modeBtn2.Get())
         {
+            grouping = Grouping2;
+            mode = SingleMode;
+        }
+        else if(modeBtn3.Get())
+        {
+            grouping = Grouping2;
             mode = MonoMode;
         }
-        else
+        else if(modeBtn4.Get())
         {
+            grouping = Grouping2;
+            mode = PolyMode;
+        }
+        else if(modeBtn5.Get())
+        {
+            grouping = Grouping4;
+            mode = MonoMode;
+        }
+        else if(modeBtn6.Get())
+        {
+            grouping = Grouping4;
             mode = PolyMode;
         }
     }
