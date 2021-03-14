@@ -1,0 +1,44 @@
+pin_name;pin_desc;pin_desc;5V_tolerant;function;;remarks;
+;;;;;;;
+;;;;;;;
+PB12;NSS2?;;5V;;IO expansion?;;
+PB13;SCK2?;;5V;;IO expansion?;;
+PB14;MISO2?;;5V;;IO expansion?;;
+PB15;MOSI2?;;5V;;IO expansion?;;
+PA8;;;5V;Debug Din;;pullup = debug off;5V tolerant
+PA9;TX1;;5V;Debug TX;;5V tolerant;
+PA10;RX1;;5V;Debug RX;;5V tolerant;
+PA11;;;5V;Clock In;;5V tolerant;
+PA12;;;5V;Reset In;;5V tolerant;
+PA15;;;5V;;IO expansion?;;
+PB3;;;5V;;IO expansion?;;
+PB4;;;5V;;IO expansion?;;
+PB5;;;3V3;;IO expansion?;;
+PB6;;;5V;;IO expansion?;;
+PB7;;;5V;;IO expansion?;;
+PB8;SCL1;;5V;MPR121 SDA;24LC256 SDA;3V3 supply;4k7 pullup needed
+PB9;SDA1;;5V;MPR121 SCL;24LC256 SCL;3V3 supply;4k7 pullup needed
+5V;;;5V;PowerSupply V+;;;
+GND;;;3V3;Powersupply GND;24LC256 GND;;
+3V3;;;3V3;;24LC256 VCC;;
+;;;;;;;
+GND;;;;;;;
+GND;;;;LedMatrix GND;MPR121 GND;3V3 supply;
+3V3;;;;LedMatrix VCC;MPR121 VCC;3V3 supply;
+NRST;reset_button;;3V3;;;;
+PB11;SDA2;RX3;5V;Midi RX;;5V tolerant;
+PB10;SCL2;TX3;5V;Midi TX;;5V tolerant;
+PB1;;ADC9;3V3;;AnalogIn expansion?;;
+PB0;;ADC8;3V3;MPR121 IRQ;;3V3 supply;
+PA7;MOSI1;ADC7;3V3;LedMatrix DIN;;3V3 supply;
+PA6;MISO1;ADC6;3V3;nc;;;
+PA5;SCK1;ADC5;3V3;LedMatrix CLK;;3V3 supply;
+PA4;NSS1;ADC4;3V3;LedMatrix CS;;3V3 supply;
+PA3;RX2;ADC3;3V3;;AnalogIn expansion?;;
+PA2;TX2;ADC2;3V3;;AnalogIn expansion?;;
+PA1;;ADC1;3V3;;AnalogIn expansion?;;
+PA0;;ADC0;3V3;;AnalogIn expansion?;;
+PC15;;;3V3-;nc;;;
+PC14;;;3V3-;nc;;;
+PC13;LED_BUILTIN;;3V3-;nc;;;
+VBAT;;;;nc;;;

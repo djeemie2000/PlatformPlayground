@@ -12,22 +12,103 @@
 #include "DigitalOutBank.h"
 #include "ButtonState.h"
 #include "DigitalIn.h"
+#include "AnalogIn.h"
+#include "DigitalInBank.h"
 
-// RX1 TX1 PA10 PA9
-// RX2 TX2 PA3 PA2
-// RX3 TX3 PB11 PB10
-static const int debugPin = PB15;
-static const int clockLedPin = PC13;
-HardwareSerial serialDebug(PA10, PA9);
-HardwareSerial serialMidi(PA3, PA2);
 MidiParser midiParser;
 MidiLooper midiLooper;
-MPR121TouchPad touchPad;
-static const int clockInPin = PB7;
-DigitalIn clockIn;
-static const int resetInPin = PB8;
-DigitalIn resetIn;
-Max7219Matrix ledMatrix(1,PA4);//cs pin
+
+struct DevBoard
+{
+  // RX1 TX1 PA10 PA9
+  // RX2 TX2 PA3 PA2
+  // RX3 TX3 PB11 PB10
+  HardwareSerial serialDebug;//(PA10, PA9);
+  static const int debugPin = PA8;// TODO debugIn DIn
+  HardwareSerial serialMidi;//(PB11, PB10);
+  // TODO membank
+  DigitalInBank IOXP1;
+  DigitalOutBank IOXP2;
+  DigitalOutBank IOXP3;
+  AnalogIn Pot1;
+  AnalogIn Pot2;
+  AnalogIn Pot3;
+  MPR121TouchPad MPR121A;
+  Max7219Matrix ledMatrix;//(1,PA4);//cs pin
+
+  DevBoard()
+   : serialDebug(PA10, PA9)
+   , serialMidi(PB11, PB10)
+   , IOXP1(PB15, PB14, PB13, PB12)
+   , IOXP2(PB3, PA15, PA12, PA11)
+   , IOXP3(PB7, PB6, PB5, PB4)
+   , Pot1()
+   , Pot2()
+   , Pot3()
+   , MPR121A()
+   , ledMatrix(1,PA4)//cs pin
+   {}
+
+   void Begin()
+   {
+     pinMode(PC13, OUTPUT);// led builtin
+     pinMode(debugPin, INPUT_PULLUP);
+
+     serialDebug.begin(115200);
+     serialMidi.begin(31250);
+
+     IOXP1.begin();
+     IOXP2.begin();
+     IOXP3.begin();
+
+     Pot1.begin(PA0);
+     Pot2.begin(PA1);
+     Pot3.begin(PA2);
+
+     // setup I2C for MPR121 MPR121A
+     // Wire.begin() is called inside MPR121A.begin()
+     Wire.setSDA(PB9);//PB11);   //SDA2
+     Wire.setSCL(PB8);//PB10);   //SCL2
+     MPR121A.Begin(PB0); //irq pin
+     //TODO autoDetect I2C : MPR121A memBank
+
+      SPI.setSCLK(PA5);
+      SPI.setMISO(PA6);
+      SPI.setMOSI(PA7);
+      //SPI CS external
+      ledMatrix.Configure();     
+   }
+
+   void update()
+   {
+     //TODO!!!!!!!!!!!!!!
+    IOXP1.update();
+    IOXP2.update();
+    IOXP3.update();
+
+     Pot1.Read();
+     Pot2.Read();
+     Pot3.Read();
+   }
+
+   //TODO update() -> store in variable
+   bool debugActive() const
+   {
+     return 0 == digitalRead(debugPin);
+   }
+
+   void LedOn()
+   {
+     digitalWrite(PC13, LOW);
+   }
+
+   void LedOff()
+   {
+     digitalWrite(PC13, HIGH);
+   }
+};
+
+DevBoard devBoard;
 
 ButtonState metronomePadState;
 ButtonState trackPadState[MidiLooper::NumTracks];
@@ -42,32 +123,12 @@ static const int PlayMode = 2;
 void setup()
 {
   // put your setup code here, to run once:
-  pinMode(debugPin, INPUT_PULLUP); //pull down for debug
-  serialDebug.begin(115200);
-  midiLooper.begin(&serialMidi); //calls serialMidi.begin(31250);
-
-  pinMode(clockLedPin, OUTPUT); // clock led
-
-  // setup I2C for MPR121 touchpad
-  // Wire.begin() is called inside touchpad.begin()
-  Wire.setSDA(PB11);   //SDA2
-  Wire.setSCL(PB10);   //SCL2
-  touchPad.Begin(PB0); //irq pin
-  //recordingLeds.begin();
-  //playLeds.begin();
-  clockIn.begin(clockInPin);
-  resetIn.begin(resetInPin);
-
-
-  SPI.setSCLK(PA5);
-  SPI.setMISO(PA6);
-  SPI.setMOSI(PA7);
-  //SPI CS external
-  ledMatrix.Configure();
+  //pinMode(debugPin, INPUT_PULLUP); //pull down for debug
+  devBoard.Begin();
+  midiLooper.begin(&devBoard.serialMidi); //calls serialMidi.begin(31250);
 
   delay(1000);
-  serialDebug.println("MidiLooper v0.5");
-
+  devBoard.serialDebug.println("MidiLooper v0.5");
 }
 
 void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &handler, int maxNumBytesRead = 3)
@@ -87,7 +148,7 @@ void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &han
   }
 }
 
-void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& currentMode)
+void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& currentMode, Max7219Matrix& ledMatrix)
 {
   const int LearnModePad = 8;
   const int RecordingModePad = 4;
@@ -123,14 +184,17 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
   playModePadState.update(currMillis, touchPad.Get(PlayModePad));
   if(learnModePadState.LongPressed())
   {
+    //serialDebug.println("learn pad long");
     midiLooper.m_Ticker.SetNumBars(1);// 2 bars
   }
   if(recordingModePadState.LongPressed())
   {
+    //serialDebug.println("rec   pad long");
     midiLooper.m_Ticker.SetNumBars(2);// 4 bars
   }
   if(playModePadState.LongPressed())
   {
+    //serialDebug.println("play  pad long");
     midiLooper.m_Ticker.SetNumBars(3);// 8 bars
   }
 
@@ -139,6 +203,7 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
   metronomePadState.update(currMillis, touchPad.Get(MetronomePad));
   if (metronomePadState.Tapped())
   {
+    //serialDebug.println("metro pad tap");
     // => check which function(s) is pressed
     if(currentMode == LearnMode)//if (touchPad.Get(LearnModePad))
     {
@@ -158,6 +223,10 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
 
     if(trackPadState[idx].Tapped())
     {
+        // serialDebug.print("track pad ");
+        // serialDebug.print(idx);
+        // serialDebug.println(" tap");
+
         if(currentMode == LearnMode)
         {
           midiLooper.m_Track[idx].ToggleMidiLearn();
@@ -173,6 +242,10 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
     }
     else if(trackPadState[idx].LongPressed())
     {
+        // serialDebug.print("track pad ");
+        // serialDebug.print(idx);
+        // serialDebug.println(" long");
+
         if(currentMode == RecordingMode)
         {
           midiLooper.m_Track[idx].onUndo(midiLooper.m_MidiOut);
@@ -297,22 +370,19 @@ void loop()
   // put your main code here, to run repeatedly:
 
   // startup checks
-  ScanI2C(serialDebug);
-  // remove/limit in time test touchpad
-  const int numRepeats = 4;//16;
-  TestTouchPad(touchPad, serialDebug, numRepeats);
+  if(devBoard.debugActive())
+  {
+    ScanI2C(devBoard.serialDebug);
 
-  serialDebug.println("test led matrix");
-  testDigitalOutMatrix(ledMatrix, 1);
- 
-  // for(int repeat = 0; repeat<2; ++repeat)
-  // {
-  //   testDigitalOutBank(recordingLeds, 1);
-  //   testDigitalOutBank(playLeds, 1);
-  // }
+    const int numRepeats = 16;
+    TestTouchPad(devBoard.MPR121A, devBoard.serialDebug, numRepeats);
+
+    devBoard.serialDebug.println("test led matrix");
+    testDigitalOutMatrix(devBoard.ledMatrix, 1);
+  }
 
   // make sure all notes are off on all midi channels
-  serialDebug.println("all notes off");
+  devBoard.serialDebug.println("all notes off");
   for(int ch =0; ch<16; ++ch)
   {
     midiLooper.m_MidiOut.allNotesOff(ch); 
@@ -326,12 +396,16 @@ void loop()
   int currentMode = LearnMode;
 
   //fake clock
+  #ifdef FAKECLOCK
   int clockCounter = 0;
+  #endif
+  
   while (true)
   {
     //fake clock
     delay(1); //TODO check if needed when using external clock input
 
+    #ifdef FAKECLOCK
     const int fakeClockPeriod = 125;
     if (clockCounter < fakeClockPeriod)
     {
@@ -341,41 +415,45 @@ void loop()
     {
       clockCounter = 0;
     }
-    // clock + reset from digitalIn
-    clockIn.Read();
-    resetIn.Read();
-
-    //int clock = clockIn.Get(); 
     int clock = clockCounter < (fakeClockPeriod / 2) ? 1 : 0;
-    int reset = 0;
+    #endif
+
+    #ifndef FAKECLOCK
+    // clock + reset from digitalIn
+    devBoard.IOXP1.update();
+    int clock = devBoard.IOXP1.get(0);
+    #endif
+    
+    int reset = 0;//TODO digitalIn
 
     midiLooper.onTick(clock, reset);
-    digitalWrite(clockLedPin, clock ? LOW : HIGH); // turn the LED on/off
-
+    // turn the LED on/off
+    if(clock)
+    {
+      devBoard.LedOn();
+    }
+    else
+    { 
+      devBoard.LedOff();
+    }
+   
     // read midi in but limit # bytes for performance issues
-    readMidiIn(serialMidi, midiParser, midiLooper, 3);
+    readMidiIn(devBoard.serialMidi, midiParser, midiLooper, 3);
 
-    updateMidiLooper(midiLooper, touchPad, currentMode);
+    updateMidiLooper(midiLooper, devBoard.MPR121A, currentMode, devBoard.ledMatrix);
 
     ++debugCounter;
     if (debugCounter >= 1000) //TODO stopwatch 1 sec + # runs
     {
       debugTimer.stop();
-      if (0 == digitalRead(debugPin))
+      if (devBoard.debugActive())
       {
-        // serial debug out : timing, ...
-        // serialDebug.println(midiLooper.m_Ticker.Counter(), HEX);
-        // TickerState state;
-        // midiLooper.m_Ticker.GetTickerState(state);
-        // serialDebug.print(state.m_Bar, HEX);
-        // serialDebug.print(" ");
-        // serialDebug.println(state.m_NumBars, HEX);
-       
-        serialDebug.print(debugTimer.read_ms()); //elapsed
-        serialDebug.print(" ");
-        serialDebug.println(millis());
+        // serial debug out : timing, ...       
+        devBoard.serialDebug.print(debugTimer.read_ms()); //elapsed
+        devBoard.serialDebug.print(" ");
+        devBoard.serialDebug.println(millis());
 
-        midiLooper.printState(serialDebug);
+        //midiLooper.printState(serialDebug);
       }
       debugCounter = 0;
       debugTimer.start();
