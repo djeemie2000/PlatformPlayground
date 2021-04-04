@@ -61,6 +61,11 @@ void MidiLooperTrack::ToggleMidiLearn()
     m_MidiLearn = !m_MidiLearn;
 }
 
+void MidiLooperTrack::StopMidiLearn()
+{
+    m_MidiLearn = false;
+}
+
 void MidiLooperTrack::onTick(const MidiLooperTicker &ticker, MidiOut &midiOut)
 {
     if (ticker.clockIsRising())

@@ -23,6 +23,7 @@ public:
 
     void onTick(int clock, int reset);
     void SetNumBars(uint16_t numBarShift); // 0/1/2/3/4 -> 1/2/4/8/16 bars
+    void reset();
 
     bool clockIsRising() const;
     bool clockIsFalling() const;
@@ -35,6 +36,7 @@ private:
     int m_Clock;
     int m_PrevClock;
     uint16_t m_Counter;
+    bool m_Reset;
 
     uint16_t m_NumBarShift;
 };

@@ -144,6 +144,9 @@ void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &han
   {
     uint8_t byte = serialMidi.read();
     parser.Parse(byte, handler);
+
+    //devBoard.serialDebug.println(byte, HEX);
+
     --numBytesIn;
   }
 }
@@ -229,11 +232,11 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
 
         if(currentMode == LearnMode)
         {
-          midiLooper.m_Track[idx].ToggleMidiLearn();
+          midiLooper.ToggleMidiLearn(idx);
         }
         else if(currentMode == RecordingMode)
         {
-          midiLooper.m_Track[idx].ToggleRecording();
+          midiLooper.ToggleRecording(idx);
         }
         else if(currentMode == PlayMode)
         {

@@ -20,6 +20,8 @@ public:
     void MidiStart();
     void MidiStop();
     void allNotesOff();
+    void ToggleRecording(int idxTrack);
+    void ToggleMidiLearn(int idxTrack);
 
     void printState(HardwareSerial &serial);
  
@@ -28,4 +30,6 @@ public:
     static const int NumTracks = 8;
     MidiLooperTrack m_Track[NumTracks];
     MidiMetronome m_Metronome;
+
+    bool m_IsRunning;// false => ignore clock ticks
 };

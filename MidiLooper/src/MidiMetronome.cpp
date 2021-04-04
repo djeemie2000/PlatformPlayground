@@ -91,6 +91,11 @@ void MidiMetronome::OnNoteOn(uint8_t channel, uint8_t midiNote, uint8_t velocity
     }
 }
 
+void MidiMetronome::AllNotesOff(MidiOut &midiOut)
+{
+    NoteOff(midiOut);
+}
+
 void MidiMetronome::printState(HardwareSerial& serial)
 {
     serial.print("Ch");
