@@ -1,6 +1,7 @@
 #include "poly4handler.h"
 #include "midi8ui.h"
 #include "cvfunctions.h"
+#include "EEPROM.h"
 
 Poly4Handler::Poly4Handler()
  : m_LearnIdx(-1)
@@ -144,5 +145,29 @@ void Poly4Handler::updateUI(Midi8UI* ui)
         {
             m_LearnIdx = -1;
         }
+    }
+}
+
+void Poly4Handler::saveParams(int offset)
+{
+    int off = offset;
+    EEPROM.update(off++, 'P');
+    EEPROM.update(off++,'4');
+    EEPROM.update(off++, m_Channel);
+    EEPROM.update(off++, m_BaseNote);
+}
+
+int Poly4Handler::paramSize() const
+{
+    return 4;
+}
+
+void Poly4Handler::loadParams(int offset)
+{
+    int off = offset;
+    if('P' == EEPROM.read(off++) && '4' == EEPROM.read(off++))
+    {
+        m_Channel = EEPROM.read(off++);
+        m_BaseNote = EEPROM.read(off++);
     }
 }

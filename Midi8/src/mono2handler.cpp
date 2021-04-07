@@ -1,6 +1,7 @@
 #include "mono2handler.h"
 #include "midi8ui.h"
 #include "cvfunctions.h"
+#include "EEPROM.h"
 
 Mono2Handler::Mono2Handler()
  : m_LearnIdx(-1)
@@ -100,5 +101,35 @@ void Mono2Handler::updateUI(Midi8UI* ui)
             m_Out[m_LearnIdx].Learn(false);
             m_LearnIdx = -1;
         }
+    }
+}
+
+void Mono2Handler::saveParams(int offset)
+{
+    int off = offset;
+    EEPROM.update(off++, 'M');
+    EEPROM.update(off++,'2');
+    for(int idx = 0; idx<Size; ++idx)
+    {
+        m_Out[idx].saveParams(off);
+        off += m_Out[idx].paramSize();
+    }   
+}
+
+int Mono2Handler::paramSize() const
+{
+    return 2 + Size*m_Out[0].paramSize();
+}
+
+void Mono2Handler::loadParams(int offset)
+{
+    int off = offset;
+    if('M' == EEPROM.read(off++) && '2' == EEPROM.read(off++))
+    {
+        for(int idx = 0; idx<Size; ++idx)
+        {
+            m_Out[idx].loadParams(off);
+            off += m_Out[idx].paramSize();
+        } 
     }
 }

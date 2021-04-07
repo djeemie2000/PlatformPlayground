@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <SPI.h>
+#include <EEPROM.h>
 
 #include "midi8ui.h"
 #include "single1handler.h"
@@ -51,6 +52,31 @@ void handleMidi(MidiHandler& midiHandler)
       midiParserSerial.Parse(byte, midiHandler);
       --numBytesIn;
     }
+}
+
+void saveParams()
+{
+  int off = 0;
+  EEPROM.update(off++, 'M');
+  EEPROM.update(off++, '8');
+  //TODO write size
+  off += 2;
+  single1Handler.saveParams(off);
+  off += single1Handler.paramSize();
+  single2Handler.saveParams(off);
+  off += single2Handler.paramSize();
+  mono2Handler.saveParams(off);
+  off += mono2Handler.paramSize();
+  poly2Handler.saveParams(off);
+  off += poly2Handler.paramSize();
+  mono4Handler.saveParams(off);
+  off += mono4Handler.paramSize();
+  poly4Handler.saveParams(off);
+  off += poly4Handler.paramSize();
+
+  int size = off-2;
+  EEPROM.update(2, 0x00);
+  EEPROM.update(3, size);
 }
 
 void loop() {

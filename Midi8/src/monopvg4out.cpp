@@ -1,6 +1,7 @@
 #include "monopvg4out.h"
 #include "cvfunctions.h"
 #include "midi8ui.h"
+#include "EEPROM.h"
 
 MonoPVG4Out::MonoPVG4Out()
 : m_Idx(0)
@@ -80,4 +81,23 @@ void MonoPVG4Out::Learn(bool learn)
 bool MonoPVG4Out::IsLearning() const
 {
     return m_Learn;
+}
+
+void MonoPVG4Out::saveParams(int offset)
+{
+    int off = offset;
+    EEPROM.update(off++, m_Channel);
+    EEPROM.update(off++, m_BaseNote);
+}
+
+int MonoPVG4Out::paramSize() const
+{
+    return 2;
+}
+
+void MonoPVG4Out::loadParams(int offset)
+{
+    int off = offset;
+    m_Channel = EEPROM.read(off++);
+    m_BaseNote = EEPROM.read(off++);
 }

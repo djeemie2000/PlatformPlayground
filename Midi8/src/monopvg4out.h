@@ -19,6 +19,10 @@ public:
 
     void updateUI(Midi8UI* ui);
 
+    void saveParams(int offset);
+    int paramSize() const;
+    void loadParams(int offset);
+
 private:
     int m_Idx;
 

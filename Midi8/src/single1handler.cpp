@@ -1,6 +1,7 @@
 #include "single1handler.h"
 #include "midi8ui.h"
 #include "cvfunctions.h"
+#include "EEPROM.h"
 
 Single1Handler::Single1Handler()
  : m_LearnIdx(-1)
@@ -129,6 +130,36 @@ void Single1Handler::updateUI(Midi8UI* ui)
         else
         {
             m_LearnIdx = -1;
+        }
+    }
+}
+
+void Single1Handler::saveParams(int offset)
+{
+    int off = offset;
+    EEPROM.update(off++, 'S');
+    EEPROM.update(off++,'2');
+    for(int idx = 0; idx<Size; ++idx)
+    {
+        EEPROM.update(off++, m_Channel[idx]);
+        EEPROM.update(off++, m_MidiNote[idx]);
+    }
+}
+
+int Single1Handler::paramSize() const
+{
+    return 2+Size*2;
+}
+
+void Single1Handler::loadParams(int offset)
+{
+    int off = offset;
+    if('S' == EEPROM.read(off++) && '2' == EEPROM.read(off++))
+    {
+        for(int idx = 0; idx<Size; ++idx)
+        {
+            m_Channel[idx] = EEPROM.read(off++);
+            m_MidiNote[idx] = EEPROM.read(off++);
         }
     }
 }
