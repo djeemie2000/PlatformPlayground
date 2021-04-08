@@ -138,7 +138,7 @@ void Single1Handler::saveParams(int offset)
 {
     int off = offset;
     EEPROM.update(off++, 'S');
-    EEPROM.update(off++,'2');
+    EEPROM.update(off++,'1');
     for(int idx = 0; idx<Size; ++idx)
     {
         EEPROM.update(off++, m_Channel[idx]);
@@ -154,7 +154,7 @@ int Single1Handler::paramSize() const
 void Single1Handler::loadParams(int offset)
 {
     int off = offset;
-    if('S' == EEPROM.read(off++) && '2' == EEPROM.read(off++))
+    if('S' == EEPROM.read(off++) && '1' == EEPROM.read(off++))
     {
         for(int idx = 0; idx<Size; ++idx)
         {
