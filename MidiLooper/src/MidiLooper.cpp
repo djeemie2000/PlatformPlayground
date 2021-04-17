@@ -15,14 +15,28 @@ void MidiLooper::begin(HardwareSerial *midiSerial)
     //TODO default channel for m_Metronome
 }
 
-void MidiLooper::onTick(int clock, int reset)
+void MidiLooper::onTick(int clock)
 {
     if(!m_IsRunning)
     {
         return;
     }
 
-    m_Ticker.onTick(clock, reset);
+    m_Ticker.onTick(clock);
+    
+    // midi clock sync (not midi standard compliant !!!): 
+    //      the resulting midi clock is 4PPQ instead of 24PPQ
+    // midi clock upon each rising clock
+    // when counter == 0 preceed midi clock by a midi continue which indicates a reset pulse
+    if(m_Ticker.clockIsRising())
+    {
+        if(m_Ticker.Counter()==0)
+        {
+            m_MidiOut.MidiContinue();
+        }
+        m_MidiOut.MidiClock();
+    }
+
     m_Metronome.OnTick(m_Ticker, m_MidiOut);
     for (int idx = 0; idx < NumTracks; ++idx)
     {
@@ -53,6 +67,7 @@ void MidiLooper::MidiStart()
 {
     m_IsRunning = true;
     m_Ticker.reset();
+    m_MidiOut.MidiStart();
 }
 
 void MidiLooper::MidiStop()
@@ -66,6 +81,8 @@ void MidiLooper::MidiStop()
     {
         m_Track[idx].AllNotesOff(m_MidiOut);
     }
+
+    m_MidiOut.MidiStop();
 }
 
 void MidiLooper::allNotesOff()

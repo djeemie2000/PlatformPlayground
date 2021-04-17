@@ -427,9 +427,7 @@ void loop()
     int clock = devBoard.IOXP1.get(0);
     #endif
     
-    int reset = 0;//TODO digitalIn
-
-    midiLooper.onTick(clock, reset);
+    midiLooper.onTick(clock);
     // turn the LED on/off
     if(clock)
     {

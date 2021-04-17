@@ -3,7 +3,7 @@
 MidiLooperTicker::MidiLooperTicker()
     : m_Clock(0), m_PrevClock(0), m_Counter(0), m_NumBarShift(2), m_Reset(true) {}
 
- void MidiLooperTicker::onTick(int clock, int reset)
+ void MidiLooperTicker::onTick(int clock)
 {
     m_PrevClock = m_Clock;
     m_Clock = clock;

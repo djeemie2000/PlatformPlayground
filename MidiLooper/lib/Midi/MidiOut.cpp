@@ -44,3 +44,23 @@ void MidiOut::allNotesOff(uint8_t channel)
     // midi CC where cc=123 and value = 0
     ContinuousController(channel, 0x7B, 0x00);
 }
+
+void MidiOut::MidiClock()
+{
+    m_Serial->write(0xF8);
+}
+
+void MidiOut::MidiStart()
+{
+    m_Serial->write(0xFA);
+}
+
+void MidiOut::MidiContinue()
+{
+    m_Serial->write(0xFB);
+}
+
+void MidiOut::MidiStop()
+{
+    m_Serial->write(0xFC);
+}

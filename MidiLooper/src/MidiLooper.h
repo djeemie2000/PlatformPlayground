@@ -13,7 +13,7 @@ public:
 
     void begin(HardwareSerial *midiSerial);
 
-    void onTick(int clock, int reset);
+    void onTick(int clock);
 
     void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity);
     void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity);

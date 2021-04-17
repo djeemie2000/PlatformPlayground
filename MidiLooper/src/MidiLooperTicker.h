@@ -21,7 +21,7 @@ class MidiLooperTicker
 public:
     MidiLooperTicker();
 
-    void onTick(int clock, int reset);
+    void onTick(int clock);
     void SetNumBars(uint16_t numBarShift); // 0/1/2/3/4 -> 1/2/4/8/16 bars
     void reset();
 
