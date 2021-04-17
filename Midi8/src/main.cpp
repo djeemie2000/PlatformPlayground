@@ -160,10 +160,11 @@ void loop() {
   }
   //if(midi8UI.modeBtn8.Get())
   {
-    testUi();
+    //testUi();
     printParams();
   }
-  //TODO loadParams();
+  testLedOutBank(midi8UI.ledsOut,1);
+  loadParams();
 
   unsigned long debugCntr =0;
   while (true)
