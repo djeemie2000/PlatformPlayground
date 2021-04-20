@@ -8,7 +8,7 @@
 #include "library/include/attiny_analog.h"
 
 
-#define	LED_PIN		PB0
+#define	LED_PIN		PB3
 
 // class TestClass
 // {
@@ -239,14 +239,20 @@ void loop() {
 
   attiny_digital_toggle(LED_PIN);
   int randomPeriod = attiny_random()>>6;
-  attiny_sleep(500);//range 2^10 = 1024 msec
+  for(int repeat = 0; repeat<randomPeriod;++repeat)
+  {
+   attiny_sleep(1);//range 2^10 = 1024 msec
+  }
   //TODO variable cntr + delay per millisecond??
 
   attiny_digital_toggle(LED_PIN);
 	attiny_sleep(800);
 
   int period = attiny_analog_read(ADC1);
-  attiny_sleep(1000);//problem : compile time constant into sleep!!!
+  for(int repeat = 0; repeat<period;++repeat)
+  {
+   attiny_sleep(1);//range 2^10 = 1024 msec
+  }
   //TODO variable cntr + delay per millisecond??
 
 //  g_test.update();
