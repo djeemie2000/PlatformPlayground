@@ -17,13 +17,13 @@ Single1Handler::Single1Handler()
 void Single1Handler::NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t /*Velocity*/)
 {
     //
-    Serial.print("S1 On  ");
-    Serial.print(Channel, HEX);
-    Serial.print(" ");
-    Serial.print(MidiNote, HEX);
-    //
-    Serial.print(" L ");
-    Serial.println(m_LearnIdx);
+    // Serial.print("S1 On  ");
+    // Serial.print(Channel, HEX);
+    // Serial.print(" ");
+    // Serial.print(MidiNote, HEX);
+    // //
+    // Serial.print(" L ");
+    // Serial.println(m_LearnIdx);
     //
 
     if(m_LearnIdx == -1)
@@ -53,13 +53,13 @@ void Single1Handler::NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t /*Velocit
 void Single1Handler::NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t /*Velocity*/)
 {
     //
-    Serial.print("S1 Off ");
-    Serial.print(Channel, HEX);
-    Serial.print(" ");
-    Serial.print(MidiNote, HEX);
-    //
-    Serial.print(" L ");
-    Serial.println(m_LearnIdx);
+    // Serial.print("S1 Off ");
+    // Serial.print(Channel, HEX);
+    // Serial.print(" ");
+    // Serial.print(MidiNote, HEX);
+    // //
+    // Serial.print(" L ");
+    // Serial.println(m_LearnIdx);
     //
 
     if(m_LearnIdx == -1)
@@ -121,7 +121,7 @@ void Single1Handler::updateUI(Midi8UI* ui)
 
     if(ui->learnBtn.IsFalling())
     {
-        Serial.println("Toggle learn!");
+        //Serial.println("Toggle learn!");
         //toggle learn mode on/off
         if(m_LearnIdx ==-1)
         {

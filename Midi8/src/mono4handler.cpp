@@ -16,13 +16,13 @@ Mono4Handler::Mono4Handler()
 void Mono4Handler::NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
 {
     //
-    Serial.print("M4 On  ");
-    Serial.print(Channel, HEX);
-    Serial.print(" ");
-    Serial.print(MidiNote, HEX);
-    //
-    Serial.print(" L ");
-    Serial.println(m_LearnIdx);
+    // Serial.print("M4 On  ");
+    // Serial.print(Channel, HEX);
+    // Serial.print(" ");
+    // Serial.print(MidiNote, HEX);
+    // //
+    // Serial.print(" L ");
+    // Serial.println(m_LearnIdx);
     //
 
     if(m_LearnIdx == -1)
@@ -55,13 +55,13 @@ void Mono4Handler::NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
 void Mono4Handler::NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
 {
     //
-    Serial.print("M4 Off ");
-    Serial.print(Channel, HEX);
-    Serial.print(" ");
-    Serial.print(MidiNote, HEX);
-    //
-    Serial.print(" L ");
-    Serial.println(m_LearnIdx);
+    // Serial.print("M4 Off ");
+    // Serial.print(Channel, HEX);
+    // Serial.print(" ");
+    // Serial.print(MidiNote, HEX);
+    // //
+    // Serial.print(" L ");
+    // Serial.println(m_LearnIdx);
     //
 
     if(m_LearnIdx == -1)
@@ -88,7 +88,7 @@ void Mono4Handler::updateUI(Midi8UI* ui)
 
     if(ui->learnBtn.IsFalling())
     {
-        Serial.println("Toggle learn!");
+        //Serial.println("Toggle learn!");
         //toggle learn mode on/off
         if(m_LearnIdx ==-1)
         {

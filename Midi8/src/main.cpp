@@ -23,7 +23,7 @@ Poly4Handler poly4Handler;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(31250);//115200);
-  Serial.println("Midi8 v0.1...");
+  Serial.println("Midi8 v0.4...");
 
   midi8UI.begin();
 }

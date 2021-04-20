@@ -48,26 +48,26 @@ void MonoPVG4Out::updateUI(Midi8UI* ui)
     if(m_Learn)
     {
         LedOut(ui->ledsOut, m_Idx, LedOutBank::Blink);
-        LedOut(ui->ledsOut, m_Idx+1, LedOutBank::Blink);
+        //LedOut(ui->ledsOut, m_Idx+1, LedOutBank::Blink);
         LedOut(ui->ledsOut, m_Idx+4, LedOutBank::Blink); 
         LedOut(ui->ledsOut, m_Idx+5, LedOutBank::Blink);
 
         GateOut(ui->gatesOut, m_Idx, 0);
-        GateOut(ui->gatesOut, m_Idx+1, 0);
+        //GateOut(ui->gatesOut, m_Idx+1, 0);
     }
     else
     {
         // outputs
         int gate = 0<m_Stack.Size() ? 1:0;
         GateOut(ui->gatesOut, m_Idx, gate);
-        GateOut(ui->gatesOut, m_Idx+1, gate);
+        //GateOut(ui->gatesOut, m_Idx+1, gate);
         if(gate)
         {
             PitchOut(ui->cvOut, m_Idx, m_Stack.Note(0), m_BaseNote);
             VelocityOut(ui->cvOut, m_Idx+1, m_Stack.Velocity(0));
         }
         LedOut(ui->ledsOut, m_Idx, gate);
-        LedOut(ui->ledsOut, m_Idx+1, gate);
+        //LedOut(ui->ledsOut, m_Idx+1, gate);
         LedOut(ui->ledsOut, m_Idx+4, gate); 
         LedOut(ui->ledsOut, m_Idx+5, gate);
     }
