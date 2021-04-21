@@ -10,6 +10,7 @@
 #include "poly2handler.h"
 #include "poly4handler.h"
 #include "MidiParser.h"
+#include "clocksyncout.h"
 
 Midi8UI midi8UI;
 MidiParser midiParserSerial;
@@ -19,13 +20,18 @@ Mono2Handler mono2Handler;
 Mono4Handler mono4Handler;
 Poly2Handler poly2Handler;
 Poly4Handler poly4Handler;
+ClockSyncOut clockSyncOut;
 
-void setup() {
+void setup()
+{
   // put your setup code here, to run once:
-  Serial.begin(31250);//115200);
+  Serial.begin(31250); //115200);
   Serial.println("Midi8 v0.4...");
 
   midi8UI.begin();
+  clockSyncOut.Begin(2, 4); //gate 2 + gate 4
+  mono4Handler.begin(&clockSyncOut);
+  poly4Handler.begin(&clockSyncOut);
 }
 
 void testUi()
@@ -33,36 +39,31 @@ void testUi()
   //TODO read dip switch for debug/test y/n
   testAnalogOutBank(midi8UI.cvOut, 1);
   testDigitalOutBank(midi8UI.gatesOut, 1);
-  testLedOutBank(midi8UI.ledsOut,1);
+  testLedOutBank(midi8UI.ledsOut, 1);
 }
 
-void handleMidi(MidiHandler& midiHandler)
+void handleMidi(MidiHandler &midiHandler)
 {
   // read serial midi in -> parser -> midi out
-    // limit # bytes for performance issues
-    int numBytesIn = Serial.available();
-    const int maxNumBytesIn = 3;
-    if (maxNumBytesIn < numBytesIn)
-    {
-      numBytesIn = maxNumBytesIn;
-    }
-    while (0 < numBytesIn)
-    {
-      uint8_t byte = Serial.read();
-      //Serial.println(byte,HEX);
-      midiParserSerial.Parse(byte, midiHandler);
-      --numBytesIn;
-    }
+  // limit # bytes for performance issues
+  int numBytesIn = Serial.available();
+  const int maxNumBytesIn = 3;
+  if (maxNumBytesIn < numBytesIn)
+  {
+    numBytesIn = maxNumBytesIn;
+  }
+  while (0 < numBytesIn)
+  {
+    uint8_t byte = Serial.read();
+    //Serial.println(byte,HEX);
+    midiParserSerial.Parse(byte, midiHandler);
+    --numBytesIn;
+  }
 }
 
 int paramSize()
 {
-  return 2 + single1Handler.paramSize()
-  + single2Handler.paramSize()
-  + mono2Handler.paramSize()
-  + poly2Handler.paramSize()
-  + mono4Handler.paramSize()
-  + poly4Handler.paramSize();
+  return 2 + single1Handler.paramSize() + single2Handler.paramSize() + mono2Handler.paramSize() + poly2Handler.paramSize() + mono4Handler.paramSize() + poly4Handler.paramSize();
 }
 
 void saveParams()
@@ -73,7 +74,7 @@ void saveParams()
   EEPROM.update(off++, '8');
   uint8_t version = 0x01;
   EEPROM.update(off++, version);
-  uint8_t size = paramSize();//Assumes <256!!
+  uint8_t size = paramSize(); //Assumes <256!!
   EEPROM.update(off++, size);
   //  mode/grouping
   EEPROM.update(off++, midi8UI.mode);
@@ -97,21 +98,20 @@ void loadParams()
 {
   int off = 0;
   // header
-  if(EEPROM.read(off++)=='M' 
-  && EEPROM.read(off++) == '8')
+  if (EEPROM.read(off++) == 'M' && EEPROM.read(off++) == '8')
   {
     uint8_t version = EEPROM.read(off++);
     uint8_t size = EEPROM.read(off++);
-    if(version == 0x01 && 0x00<size)
+    if (version == 0x01 && 0x00 < size)
     {
       // mode/grouping
       char mode = EEPROM.read(off++);
-      if(mode == Midi8UI::SingleMode || mode == Midi8UI::MonoMode || mode == Midi8UI::PolyMode)
+      if (mode == Midi8UI::SingleMode || mode == Midi8UI::MonoMode || mode == Midi8UI::PolyMode)
       {
         midi8UI.mode = mode;
       }
       char grouping = EEPROM.read(off++);
-      if(grouping == Midi8UI::Grouping1 || grouping == Midi8UI::Grouping2 || grouping == Midi8UI::Grouping4)
+      if (grouping == Midi8UI::Grouping1 || grouping == Midi8UI::Grouping2 || grouping == Midi8UI::Grouping4)
       {
         midi8UI.grouping = mode;
       }
@@ -138,7 +138,7 @@ void printParams()
   Serial.println("params:");
   const int headerSize = 4;
   int size = headerSize + paramSize();
-  for(int off = 0; off<size; ++off)
+  for (int off = 0; off < size; ++off)
   {
     uint8_t val = EEPROM.read(off);
     Serial.print("0x");
@@ -149,11 +149,12 @@ void printParams()
   }
 }
 
-void loop() {
+void loop()
+{
   // put your main code here, to run repeatedly:
-  
+
   //need to update enough times for the debouncing to work
-  for(int repeat = 0; repeat<100; ++repeat)
+  for (int repeat = 0; repeat < 100; ++repeat)
   {
     midi8UI.update();
     delay(1);
@@ -163,51 +164,51 @@ void loop() {
     //testUi();
     printParams();
   }
-  testLedOutBank(midi8UI.ledsOut,1);
+  testLedOutBank(midi8UI.ledsOut, 1);
   loadParams();
 
-  unsigned long debugCntr =0;
+  unsigned long debugCntr = 0;
   while (true)
   {
     midi8UI.update();
-    if(midi8UI.extraBtn.IsFalling())
+    if (midi8UI.extraBtn.IsFalling())
     {
       saveParams();
       //TODO blink all leds before/after or all leds on during save
     }
-    if(midi8UI.grouping == Midi8UI::Grouping1)
+    if (midi8UI.grouping == Midi8UI::Grouping1)
     {
       // always single mode!
       handleMidi(single1Handler);
       single1Handler.updateUI(&midi8UI);
     }
-    else if(midi8UI.grouping==Midi8UI::Grouping2)
+    else if (midi8UI.grouping == Midi8UI::Grouping2)
     {
-      if(midi8UI.mode==Midi8UI::MonoMode)
+      if (midi8UI.mode == Midi8UI::MonoMode)
       {
         handleMidi(mono2Handler);
         mono2Handler.updateUI(&midi8UI);
       }
-      else if(midi8UI.mode==Midi8UI::PolyMode)
+      else if (midi8UI.mode == Midi8UI::PolyMode)
       {
         handleMidi(poly2Handler);
         poly2Handler.updateUI(&midi8UI);
       }
-      else if(midi8UI.mode==Midi8UI::SingleMode)
+      else if (midi8UI.mode == Midi8UI::SingleMode)
       {
         handleMidi(single2Handler);
         single2Handler.updateUI(&midi8UI);
       }
     }
-    else if(midi8UI.grouping==Midi8UI::Grouping4)
+    else if (midi8UI.grouping == Midi8UI::Grouping4)
     {
       // only mono or poly
-      if(midi8UI.mode==Midi8UI::MonoMode)
+      if (midi8UI.mode == Midi8UI::MonoMode)
       {
         handleMidi(mono4Handler);
         mono4Handler.updateUI(&midi8UI);
       }
-      else if(midi8UI.mode==Midi8UI::PolyMode)
+      else if (midi8UI.mode == Midi8UI::PolyMode)
       {
         handleMidi(poly4Handler);
         poly4Handler.updateUI(&midi8UI);
@@ -215,7 +216,7 @@ void loop() {
     }
 
     ++debugCntr;
-    if(2000<=debugCntr)
+    if (2000 <= debugCntr)
     {
       {
         Serial.print(debugCntr);
@@ -229,5 +230,4 @@ void loop() {
       debugCntr = 0;
     }
   }
-
 }
