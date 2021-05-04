@@ -14,11 +14,11 @@
 #include "diginoise.h"
 #include "comparepulser.h"
 
-#define	LED_PIN		PB3//PB0
+#define LED_PIN PB3 //PB0
 
 // RandomGate gate;
 // PulseGate gate2;
-// MasterClock clockOut;
+MasterClock masterClock;
 // ButtonIn buttonIn;
 // ButtonIn rotaryInA;
 // ButtonIn rotaryInB;
@@ -26,70 +26,72 @@
 // RotaryEncoder rotaryEncoder;
 //MasterClock2 masterClock;
 //DigiNoise digiNoise;
-ComparePulser comparePulser;
+//ComparePulser comparePulser;
 
-void setup() {
- // put your setup code here, to run once:
+void setup()
+{
+  // put your setup code here, to run once:
 
- //attiny_random_init(500);//TODO random from EEPROM!!!
- //gate.setup();
- //gate2.setup();
- //clockOut.setup();
-//  rotaryInA.begin(PB0, 10);
-//  rotaryInB.begin(PB2, 10);
-//  //buttonIn.begin(PB1, 10);
-//  attiny_pin_mode(PB3, ATTINY_OUTPUT);
-//  attiny_digital_write(PB3,ATTINY_HIGH);
+  //attiny_random_init(500);//TODO random from EEPROM!!!
+  //gate.setup();
+  //gate2.setup();
+  //clockOut.setup();
+  //  rotaryInA.begin(PB0, 10);
+  //  rotaryInB.begin(PB2, 10);
+  //  //buttonIn.begin(PB1, 10);
+  //  attiny_pin_mode(PB3, ATTINY_OUTPUT);
+  //  attiny_digital_write(PB3,ATTINY_HIGH);
 
-//  attiny_pin_mode(PB4, ATTINY_OUTPUT);
-//  attiny_digital_write(PB4,ATTINY_HIGH);
+  //  attiny_pin_mode(PB4, ATTINY_OUTPUT);
+  //  attiny_digital_write(PB4,ATTINY_HIGH);
 
-//  attiny_pin_mode(PB1, ATTINY_OUTPUT);
-//  attiny_timer_mode(FAST_PWM);
-//  attiny_timer_prescale(1);
-//  Cntr = 0;
- //masterClock.setup();
- //digiNoise.setup();
- comparePulser.setup();
+  //  attiny_pin_mode(PB1, ATTINY_OUTPUT);
+  //  attiny_timer_mode(FAST_PWM);
+  //  attiny_timer_prescale(1);
+  //  Cntr = 0;
+  masterClock.setup();
+  //digiNoise.setup();
+  //comparePulser.setup();
 }
 
-void loop() {
-  //gate.loop();  
+void loop()
+{
+  //gate.loop();
   //gate2.loop();
 
   // put your main code here, to run repeatedly:
   attiny_digital_toggle(LED_PIN);
-	attiny_sleep(200);
+  attiny_sleep(200);
   attiny_digital_toggle(LED_PIN);
-	attiny_sleep(200);
-  
+  attiny_sleep(200);
+
   attiny_digital_toggle(LED_PIN);
-	attiny_sleep(800);
+  attiny_sleep(800);
 
   attiny_digital_toggle(LED_PIN);
   //TODO loop int randomPeriod = attiny_random()>>6;
-  attiny_sleep(500);//range 2^10 = 1024 msec
+  attiny_sleep(500); //range 2^10 = 1024 msec
   //TODO variable cntr + delay per millisecond??
 
   attiny_digital_toggle(LED_PIN);
-	attiny_sleep(800);
+  attiny_sleep(800);
 
-//  int period = attiny_analog_read(ADC2);
-  attiny_sleep(1000);//problem : compile time constant into sleep!!!
+  //  int period = attiny_analog_read(ADC2);
+  attiny_sleep(1000); //problem : compile time constant into sleep!!!
   //TODO variable cntr + delay per millisecond??
 
-//  g_test.update();
+  //  g_test.update();
 }
 
 int main()
 {
   setup();
 
-  while(true)
+  while (true)
   {
-    //masterClock.loop();
+    masterClock.loop();
     //digiNoise.loop();
-    comparePulser.loop();
+    //comparePulser.loop();
   }
 
   return 0;
