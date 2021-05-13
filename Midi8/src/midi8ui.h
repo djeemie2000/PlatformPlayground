@@ -9,6 +9,7 @@
 
 struct Midi8UI
 {
+    //TODO mapping between 2 char code and int modeNbr
     static const char SingleMode = 'S';
     static const char MonoMode = 'M';
     static const char PolyMode = 'P';
@@ -16,6 +17,23 @@ struct Midi8UI
     static const char Grouping1 = '1';
     static const char Grouping2 = '2';
     static const char Grouping4 = '4';
+
+    static const int Single1Mode = 0;
+    static const int Single2Mode = 1;
+    static const int Mono2Mode = 2;
+    static const int Poly2Mode = 3;
+    static const int Mono4Mode = 4;
+    static const int Poly4Mode = 5;
+
+    // grouping (1/2/4) + mode (single/mono/poly)
+    int modeNbr;
+
+    bool debug;
+
+    static const int NoLearn = 0;
+    static const int Learn1 = 1;
+    static const int Learn2 = 2;
+    Select learnMode;
 
     DigitalOutBank gatesOut; //(4,5,6,7);
     AnalogOutBank cvOut;     //(4);// 2x DAC => use CS pins 10,9
@@ -25,48 +43,25 @@ struct Midi8UI
     ButtonIn learnBtn; // pin 2
     ButtonIn extraBtn; // pin 3
 
-    // grouping (1/2/4) + mode (single/mono/poly)
-    char grouping;
-    char mode;
-
-    ButtonIn modeBtn1; // pin A0
-    ButtonIn modeBtn2; // pin A1
-    ButtonIn modeBtn3; // pin A2
-    ButtonIn modeBtn4; // pin A3
-    ButtonIn modeBtn5; // pin A4
-    ButtonIn modeBtn6; // pin A5
     //TODO analogRead ==0 or not // pin A6
     //TODO analogRead ==0 or not // pin A7
 
-    bool debug;
-
-    static const int NoLearn = 0;
-    static const int Learn1 = 1;
-    static const int Learn2 = 2;
-    Select learnMode;
-
     Midi8UI()
-        : gatesOut(), cvOut(4), ledsOut(8), learnBtn(), debug(true)
+        : modeNbr(Single1Mode), debug(true), learnMode(), gatesOut(), cvOut(4), ledsOut(8), learnBtn(), extraBtn()
     {
     }
 
     void begin()
     {
+        modeNbr = Single1Mode;
+        learnMode.Set(NoLearn);
+
         gatesOut.begin(4, 5, 6, 7);
         cvOut.begin();
         ledsOut.begin();
         const int debounce = 30;
         learnBtn.begin(2, debounce);
         extraBtn.begin(3, debounce);
-        modeBtn1.begin(A0, debounce);
-        modeBtn2.begin(A1, debounce);
-        modeBtn3.begin(A2, debounce);
-        modeBtn4.begin(A3, debounce);
-        modeBtn5.begin(A4, debounce);
-        modeBtn6.begin(A5, debounce);
-
-        grouping = Grouping1;
-        mode = SingleMode;
     }
 
     void update()
@@ -77,42 +72,77 @@ struct Midi8UI
         ledsOut.update(blink);
         learnBtn.read();
         extraBtn.read();
-        modeBtn1.read();
-        modeBtn2.read();
-        modeBtn3.read();
-        modeBtn4.read();
-        modeBtn5.read();
-        modeBtn6.read();
+    }
 
-        if (modeBtn1.Get())
+    char mode() const
+    {
+        if (modeNbr == Single1Mode || modeNbr == Single2Mode)
         {
-            grouping = Grouping1;
-            mode = SingleMode;
+            return SingleMode;
         }
-        else if (modeBtn2.Get())
+        if (modeNbr == Poly4Mode || modeNbr == Poly2Mode)
         {
-            grouping = Grouping2;
-            mode = SingleMode;
+            return PolyMode;
         }
-        else if (modeBtn3.Get())
+        return MonoMode;
+    }
+
+    char grouping() const
+    {
+        if (modeNbr == Single2Mode || modeNbr == Mono2Mode || modeNbr == Poly2Mode)
         {
-            grouping = Grouping2;
-            mode = MonoMode;
+            return Grouping2;
         }
-        else if (modeBtn4.Get())
+        if (modeNbr == Poly4Mode || modeNbr == Mono4Mode)
         {
-            grouping = Grouping2;
-            mode = PolyMode;
+            return Grouping4;
         }
-        else if (modeBtn5.Get())
+        return Grouping1;
+    }
+
+    void setMode(char mode, char grouping)
+    {
+        if (grouping == Midi8UI::Grouping1)
         {
-            grouping = Grouping4;
-            mode = MonoMode;
+            modeNbr = Midi8UI::Single1Mode;
         }
-        else if (modeBtn6.Get())
+        else if (grouping == Midi8UI::Grouping2)
         {
-            grouping = Grouping4;
-            mode = PolyMode;
+            if (mode == Midi8UI::SingleMode)
+            {
+                modeNbr = Midi8UI::Single2Mode;
+            }
+            else if (mode == Midi8UI::MonoMode)
+            {
+                modeNbr = Midi8UI::Mono2Mode;
+            }
+            else if (mode == Midi8UI::PolyMode)
+            {
+                modeNbr = Midi8UI::Poly2Mode;
+            }
         }
+        else if (grouping == Midi8UI::Grouping4)
+        {
+            if (mode == Midi8UI::MonoMode)
+            {
+                modeNbr = Midi8UI::Mono4Mode;
+            }
+            else if (mode == Midi8UI::PolyMode)
+            {
+                modeNbr = Midi8UI::Poly4Mode;
+            }
+        }
+    }
+
+    void showMode()
+    {
+        // show mode for a short time
+        for (int idx = 0; idx < LedOutBank::Capacity; ++idx)
+        {
+            ledsOut.set(idx, LedOutBank::Off);
+        }
+        ledsOut.set(modeNbr, LedOutBank::On);
+        ledsOut.update(1);
+        delay(200);
     }
 };

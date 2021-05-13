@@ -77,8 +77,8 @@ void saveParams()
   uint8_t size = paramSize(); //Assumes <256!!
   EEPROM.update(off++, size);
   //  mode/grouping
-  EEPROM.update(off++, midi8UI.mode);
-  EEPROM.update(off++, midi8UI.grouping);
+  EEPROM.update(off++, midi8UI.mode());
+  EEPROM.update(off++, midi8UI.grouping());
   // data
   single1Handler.saveParams(off);
   off += single1Handler.paramSize();
@@ -106,15 +106,9 @@ void loadParams()
     {
       // mode/grouping
       char mode = EEPROM.read(off++);
-      if (mode == Midi8UI::SingleMode || mode == Midi8UI::MonoMode || mode == Midi8UI::PolyMode)
-      {
-        midi8UI.mode = mode;
-      }
       char grouping = EEPROM.read(off++);
-      if (grouping == Midi8UI::Grouping1 || grouping == Midi8UI::Grouping2 || grouping == Midi8UI::Grouping4)
-      {
-        midi8UI.grouping = grouping;
-      }
+      //TODO mapping between 2 char code and mode int
+      midi8UI.setMode(mode, grouping);
       // data
       single1Handler.loadParams(off);
       off += single1Handler.paramSize();
@@ -159,60 +153,64 @@ void loop()
     midi8UI.update();
     delay(1);
   }
-  //if(midi8UI.modeBtn8.Get())
+  if (midi8UI.debug)
   {
     //testUi();
     printParams();
   }
   testLedOutBank(midi8UI.ledsOut, 1);
   loadParams();
+  //show mode for a short time!
+  midi8UI.showMode();
 
   unsigned long debugCntr = 0;
   while (true)
   {
     midi8UI.update();
+
+    // handle mode toggle
+    // very crude but it works
     if (midi8UI.extraBtn.IsFalling())
     {
+      ++midi8UI.modeNbr;
+      if (midi8UI.modeNbr > Midi8UI::Poly4Mode)
+      {
+        midi8UI.modeNbr = Midi8UI::Single1Mode;
+      }
+      midi8UI.showMode();
       saveParams();
-      //TODO blink all leds before/after or all leds on during save
     }
-    if (midi8UI.grouping == Midi8UI::Grouping1)
+
+    if (midi8UI.modeNbr == Midi8UI::Single1Mode)
     {
       // always single mode!
       handleMidi(single1Handler);
       single1Handler.updateUI(&midi8UI);
     }
-    else if (midi8UI.grouping == Midi8UI::Grouping2)
+    else if (midi8UI.modeNbr == Midi8UI::Mono2Mode)
     {
-      if (midi8UI.mode == Midi8UI::MonoMode)
-      {
-        handleMidi(mono2Handler);
-        mono2Handler.updateUI(&midi8UI);
-      }
-      else if (midi8UI.mode == Midi8UI::PolyMode)
-      {
-        handleMidi(poly2Handler);
-        poly2Handler.updateUI(&midi8UI);
-      }
-      else if (midi8UI.mode == Midi8UI::SingleMode)
-      {
-        handleMidi(single2Handler);
-        single2Handler.updateUI(&midi8UI);
-      }
+      handleMidi(mono2Handler);
+      mono2Handler.updateUI(&midi8UI);
     }
-    else if (midi8UI.grouping == Midi8UI::Grouping4)
+    else if (midi8UI.modeNbr == Midi8UI::Poly2Mode)
     {
-      // only mono or poly
-      if (midi8UI.mode == Midi8UI::MonoMode)
-      {
-        handleMidi(mono4Handler);
-        mono4Handler.updateUI(&midi8UI);
-      }
-      else if (midi8UI.mode == Midi8UI::PolyMode)
-      {
-        handleMidi(poly4Handler);
-        poly4Handler.updateUI(&midi8UI);
-      }
+      handleMidi(poly2Handler);
+      poly2Handler.updateUI(&midi8UI);
+    }
+    else if (midi8UI.modeNbr == Midi8UI::Single2Mode)
+    {
+      handleMidi(single2Handler);
+      single2Handler.updateUI(&midi8UI);
+    }
+    else if (midi8UI.modeNbr == Midi8UI::Mono4Mode)
+    {
+      handleMidi(mono4Handler);
+      mono4Handler.updateUI(&midi8UI);
+    }
+    else if (midi8UI.modeNbr == Midi8UI::Poly4Mode)
+    {
+      handleMidi(poly4Handler);
+      poly4Handler.updateUI(&midi8UI);
     }
 
     // midi learn -> off => trigger auto save
@@ -236,12 +234,13 @@ void loop()
 
         Serial.print(" ");
         Serial.print(midi8UI.learnMode.Get());
-        Serial.print(" ");
-        Serial.print(midi8UI.learnMode.Previous());
 
         Serial.print(" ");
-        Serial.print(midi8UI.mode);
-        Serial.println(midi8UI.grouping);
+        Serial.print(midi8UI.modeNbr);
+
+        Serial.print(" ");
+        Serial.print(midi8UI.mode());
+        Serial.println(midi8UI.grouping());
       }
       debugCntr = 0;
     }
