@@ -11,12 +11,9 @@ class Mono4Handler : public MidiHandler
 {
 public:
     Mono4Handler();
-    void begin(ClockSyncOut *clockSyncOut);
 
     void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity);  //override
     void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity); //override
-    void MidiClock();                                                  //override
-    void MidiContinue();                                               //override
 
     void updateUI(Midi10UI *ui);
     bool IsLearning() const;
@@ -31,6 +28,4 @@ private:
     MonoPVG4Out m_Out[Size];
 
     int m_LearnIdx;
-
-    ClockSyncOut *m_ClockSyncOut;
 };

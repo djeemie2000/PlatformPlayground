@@ -2,7 +2,6 @@
 #include "midi10ui.h"
 #include "cvfunctions.h"
 #include "EEPROM.h"
-#include "clocksyncout.h"
 
 Poly4Handler::Poly4Handler()
     : m_LearnIdx(-1)
@@ -14,21 +13,6 @@ Poly4Handler::Poly4Handler()
         m_MidiNote[idx] = 0xFF;
         m_Velocity[idx] = 0xFF;
     }
-}
-
-void Poly4Handler::begin(ClockSyncOut *clockSyncOut)
-{
-    m_ClockSyncOut = clockSyncOut;
-}
-
-void Poly4Handler::MidiClock()
-{
-    m_ClockSyncOut->MidiClock();
-}
-
-void Poly4Handler::MidiContinue()
-{
-    m_ClockSyncOut->MidiContinue();
 }
 
 void Poly4Handler::NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
@@ -109,43 +93,40 @@ bool Poly4Handler::IsLearning() const
 
 void Poly4Handler::updateUI(Midi10UI *ui)
 {
+    // gates : 01 23
+    // leds  : 45 67
+    // pitch : 0 2
+    // velocity : 1 3
     for (int idx = 0; idx < Size; ++idx)
     {
         int column = 2 * idx;
         if (m_LearnIdx != -1)
         {
-            //TODO all leds will blink same as in poly2
-            ui->ledsOut.set(column, LedOutBank::Blink);
-            //ui->ledsOut.set(column+1, LedOutBank::Blink);
-            ui->ledsOut.set(column + 4, LedOutBank::Blink);
-            ui->ledsOut.set(column + 5, LedOutBank::Blink);
-            ui->gatesOut.set(column, 0);
-            //ui->gatesOut.set(column+1, 0);
-            ui->cvOut.set(column, 0);
-            ui->cvOut.set(column + 1, 0);
+            ui->ledsOut.set(column, LedOutBank::Off);       //gate
+            ui->ledsOut.set(column + 1, LedOutBank::Off);   //gate
+            ui->ledsOut.set(column + 4, LedOutBank::Blink); //led
+            ui->ledsOut.set(column + 5, LedOutBank::Blink); //led
+            ui->cvOut.set(column, 0);                       //pitch
+            ui->cvOut.set(column + 1, 0);                   //velocity
         }
         else if (m_MidiNote[idx] != 0xFF)
         {
             // note is on
-            ui->ledsOut.set(column, LedOutBank::On);
-            //ui->ledsOut.set(column+1, LedOutBank::On);
-            ui->ledsOut.set(column + 4, LedOutBank::On);
-            ui->ledsOut.set(column + 5, LedOutBank::On);
-            ui->gatesOut.set(column, 1);
-            //ui->gatesOut.set(column+1, 1);
-            PitchOut(ui->cvOut, column, m_MidiNote[idx], m_BaseNote);
-            VelocityOut(ui->cvOut, column + 1, m_Velocity[idx]);
+            ui->ledsOut.set(column, LedOutBank::On);                  //gate
+            ui->ledsOut.set(column + 1, LedOutBank::On);              //gate
+            ui->ledsOut.set(column + 4, LedOutBank::On);              //led
+            ui->ledsOut.set(column + 5, LedOutBank::On);              //led
+            PitchOut(ui->cvOut, column, m_MidiNote[idx], m_BaseNote); //pitch
+            VelocityOut(ui->cvOut, column + 1, m_Velocity[idx]);      //velocity
         }
         else
         {
             // note is off
-            ui->ledsOut.set(column, LedOutBank::Off);
-            //ui->ledsOut.set(column+1, LedOutBank::Off);
-            ui->ledsOut.set(column + 4, LedOutBank::Off);
-            ui->ledsOut.set(column + 5, LedOutBank::Off);
-            ui->gatesOut.set(column, 0);
-            //ui->gatesOut.set(column+1, 0);
-            // leave midi note, velocity unchanged
+            ui->ledsOut.set(column, LedOutBank::Off);     //gate
+            ui->ledsOut.set(column + 1, LedOutBank::Off); //gate
+            ui->ledsOut.set(column + 4, LedOutBank::Off); //led
+            ui->ledsOut.set(column + 5, LedOutBank::Off); //led
+            // leave midi note/pitch, velocity unchanged
         }
     }
 

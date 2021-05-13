@@ -1,15 +1,16 @@
 #pragma once
 
 #include <Arduino.h>
+#include "MidiHandler.h"
 
 class Midi10UI;
 
-class ClockSyncOut
+class ClockSyncHandler : public MidiHandler
 {
 public:
-    ClockSyncOut();
+    ClockSyncHandler();
 
-    void Begin(int idxClock, int idxReset);
+    void Begin(int idxClock, int idxReset, int idxClockLed, int idxResetLed);
 
     void MidiClock();
     void MidiContinue();
@@ -18,6 +19,8 @@ public:
 
 private:
     int m_IdxClock;
+    int m_IdxClockLed;
     int m_IdxReset;
+    int m_IdxResetLed;
     uint8_t m_Cntr;
 };

@@ -20,7 +20,7 @@ Mono2Handler mono2Handler;
 Mono4Handler mono4Handler;
 Poly2Handler poly2Handler;
 Poly4Handler poly4Handler;
-ClockSyncOut clockSyncOut;
+ClockSyncHandler clockSyncHandler;
 
 void setup()
 {
@@ -29,9 +29,7 @@ void setup()
   Serial.println("Midi8 v0.4...");
 
   Midi10UI.begin();
-  clockSyncOut.Begin(2, 4); //gate 2 + gate 4
-  mono4Handler.begin(&clockSyncOut);
-  poly4Handler.begin(&clockSyncOut);
+  clockSyncHandler.Begin(0, 1, 2, 3); //gate 0 1 led 2 3
 }
 
 void testUi()
@@ -42,7 +40,7 @@ void testUi()
   testLedOutBank(Midi10UI.ledsOut, 1);
 }
 
-void handleMidi(MidiHandler &midiHandler)
+void handleMidi(MidiHandler &midiHandler, MidiHandler &midiHandler2, MidiHandler &midiHandler3)
 {
   // read serial midi in -> parser -> midi out
   // limit # bytes for performance issues
@@ -176,6 +174,11 @@ void loop()
       saveParams();
       //TODO blink all leds before/after or all leds on during save
     }
+
+    //TODO multi midi handler :
+    //    clocksync
+    //    single1
+    //    single/mono/poly 2/4
     if (Midi10UI.grouping == Midi10UI::Grouping1)
     {
       // always single mode!

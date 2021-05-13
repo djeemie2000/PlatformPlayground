@@ -2,7 +2,6 @@
 #include "midi10ui.h"
 #include "cvfunctions.h"
 #include "EEPROM.h"
-#include "clocksyncout.h"
 
 Mono4Handler::Mono4Handler()
     : m_LearnIdx(-1)
@@ -12,21 +11,6 @@ Mono4Handler::Mono4Handler()
         int column = 2 * idx;
         m_Out[idx].Begin(column);
     }
-}
-
-void Mono4Handler::begin(ClockSyncOut *clockSyncOut)
-{
-    m_ClockSyncOut = clockSyncOut;
-}
-
-void Mono4Handler::MidiClock()
-{
-    m_ClockSyncOut->MidiClock();
-}
-
-void Mono4Handler::MidiContinue()
-{
-    m_ClockSyncOut->MidiContinue();
 }
 
 void Mono4Handler::NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity)
@@ -97,8 +81,6 @@ bool Mono4Handler::IsLearning() const
 
 void Mono4Handler::updateUI(Midi10UI *ui)
 {
-    m_ClockSyncOut->updateUI(ui);
-
     for (int idx = 0; idx < Size; ++idx)
     {
         m_Out[idx].updateUI(ui);

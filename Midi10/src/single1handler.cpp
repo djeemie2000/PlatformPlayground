@@ -82,40 +82,24 @@ bool Single1Handler::IsLearning() const
 
 void Single1Handler::updateUI(Midi10UI *ui)
 {
-    for (int idx = 0; idx < 4; ++idx)
+    // gate 8  9 10 11
+    // led 12 13 14 15
+    for (int idx = 0; idx < Size; ++idx)
     {
         if (idx == m_LearnIdx)
         {
-            ui->ledsOut.set(idx, LedOutBank::Blink);
-            ui->gatesOut.set(idx, 0);
+            ui->ledsOut.set(8 + idx, LedOutBank::Off);    //gate
+            ui->ledsOut.set(12 + idx, LedOutBank::Blink); //led
         }
         else if (m_Gate[idx])
         {
-            ui->ledsOut.set(idx, LedOutBank::On);
-            ui->gatesOut.set(idx, 1);
+            ui->ledsOut.set(8 + idx, LedOutBank::On);  //gate
+            ui->ledsOut.set(12 + idx, LedOutBank::On); //led
         }
         else
         {
-            ui->ledsOut.set(idx, LedOutBank::Off);
-            ui->gatesOut.set(idx, 0);
-        }
-    }
-    for (int idx = 4; idx < 8; ++idx)
-    {
-        if (idx == m_LearnIdx)
-        {
-            ui->ledsOut.set(idx, LedOutBank::Blink);
-            GateOut(ui->cvOut, idx - 4, 0);
-        }
-        else if (m_Gate[idx])
-        {
-            ui->ledsOut.set(idx, LedOutBank::On);
-            GateOut(ui->cvOut, idx - 4, 1);
-        }
-        else
-        {
-            ui->ledsOut.set(idx, LedOutBank::Off);
-            GateOut(ui->cvOut, idx - 4, 0);
+            ui->ledsOut.set(8 + idx, LedOutBank::Off);  //gate
+            ui->ledsOut.set(12 + idx, LedOutBank::Off); //led
         }
     }
 
@@ -148,7 +132,9 @@ void Single1Handler::saveParams(int offset)
 
 int Single1Handler::paramSize() const
 {
-    return 2 + Size * 2;
+    // hack for compatibility with Midi8!!
+    // return 2 + Size * 2;
+    return 2 + 8 * 2;
 }
 
 void Single1Handler::loadParams(int offset)

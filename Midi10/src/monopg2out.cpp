@@ -42,24 +42,26 @@ void MonoPG2Out::NoteOff(uint8_t channel, uint8_t midiNote)
 
 void MonoPG2Out::updateUI(Midi10UI *ui)
 {
+    // gate idx
+    // led idx+4
+    // pitch idx
     if (m_Learn)
     {
-        LedOut(ui->ledsOut, m_Idx, LedOutBank::Blink);
-        LedOut(ui->ledsOut, m_Idx + 4, LedOutBank::Blink);
-
-        GateOut(ui->gatesOut, m_Idx, 0);
+        LedOut(ui->ledsOut, m_Idx, LedOutBank::Off);       //gate
+        LedOut(ui->ledsOut, m_Idx + 4, LedOutBank::Blink); //led
+        ui->cvOut.set(m_Idx, 0);                           //pitch
     }
     else
     {
         // outputs
-        int gate = 0 < m_Stack.Size() ? 1 : 0;
-        GateOut(ui->gatesOut, m_Idx, gate);
+        int gate = 0 < m_Stack.Size() ? LedOutBank::On : LedOutBank::Off;
+        LedOut(ui->ledsOut, m_Idx, gate);     //gate
+        LedOut(ui->ledsOut, m_Idx + 4, gate); //led
         if (gate)
         {
             PitchOut(ui->cvOut, m_Idx, m_Stack.Note(0), m_BaseNote);
         }
-        LedOut(ui->ledsOut, m_Idx, gate);
-        LedOut(ui->ledsOut, m_Idx + 4, gate);
+        // no gate => do not change pitch
     }
 }
 

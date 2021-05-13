@@ -90,31 +90,30 @@ bool Poly2Handler::IsLearning() const
 
 void Poly2Handler::updateUI(Midi10UI *ui)
 {
+    // gates : 0 1 2 3
+    // leds  : 4 5 6 7
+    // pitch : 0 1 2 3
     for (int idx = 0; idx < Size; ++idx)
     {
         if (m_LearnIdx != -1)
         {
-            //TODO all will blink same as in poly4
-            ui->ledsOut.set(idx, LedOutBank::Blink);
-            ui->ledsOut.set(idx + 4, LedOutBank::Blink);
-            ui->gatesOut.set(idx, 0);
-            ui->cvOut.set(idx, 0);
+            ui->ledsOut.set(idx, LedOutBank::Off);       // gate
+            ui->ledsOut.set(idx + 4, LedOutBank::Blink); // led
+            ui->cvOut.set(idx, 0);                       // pitch
         }
         else if (m_MidiNote[idx] != 0xFF)
         {
             // note is on
-            ui->ledsOut.set(idx, LedOutBank::On);
-            ui->ledsOut.set(idx + 4, LedOutBank::On);
-            ui->gatesOut.set(idx, 1);
-            PitchOut(ui->cvOut, idx, m_MidiNote[idx], m_BaseNote);
+            ui->ledsOut.set(idx, LedOutBank::On);                  //gate
+            ui->ledsOut.set(idx + 4, LedOutBank::On);              //led
+            PitchOut(ui->cvOut, idx, m_MidiNote[idx], m_BaseNote); //pitch
         }
         else
         {
             // note is off
-            ui->ledsOut.set(idx, LedOutBank::Off);
-            ui->ledsOut.set(idx + 4, LedOutBank::Off);
-            ui->gatesOut.set(idx, 0);
-            // leave midi note unchanged
+            ui->ledsOut.set(idx, LedOutBank::Off);     //gate
+            ui->ledsOut.set(idx + 4, LedOutBank::Off); //led
+            // leave midi note / pitch unchanged
         }
     }
 

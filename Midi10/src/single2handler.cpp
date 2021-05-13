@@ -85,27 +85,27 @@ bool Single2Handler::IsLearning() const
 
 void Single2Handler::updateUI(Midi10UI *ui)
 {
+    // gate 0 1 2 3
+    // led  4 5 6 7
+    // velocity 0 1 2 3
     for (int idx = 0; idx < Size; ++idx)
     {
         if (idx == m_LearnIdx)
         {
-            ui->ledsOut.set(idx, LedOutBank::Blink);
-            ui->ledsOut.set(idx + 4, LedOutBank::Blink);
-            ui->gatesOut.set(idx, 0);
-            ui->cvOut.set(idx, 0);
+            ui->ledsOut.set(idx, LedOutBank::Off);       //gate
+            ui->ledsOut.set(idx + 4, LedOutBank::Blink); //led
+            ui->cvOut.set(idx, 0);                       //velocity
         }
         else if (m_Gate[idx])
         {
-            ui->ledsOut.set(idx, LedOutBank::On);
-            ui->ledsOut.set(idx + 4, LedOutBank::On);
-            ui->gatesOut.set(idx, 1);
-            VelocityOut(ui->cvOut, idx, m_Velocity[idx]);
+            ui->ledsOut.set(idx, LedOutBank::On);         //gate
+            ui->ledsOut.set(idx + 4, LedOutBank::On);     //led
+            VelocityOut(ui->cvOut, idx, m_Velocity[idx]); //velocity
         }
         else
         {
-            ui->ledsOut.set(idx, LedOutBank::Off);
-            ui->ledsOut.set(idx + 4, LedOutBank::Off);
-            ui->gatesOut.set(idx, 0);
+            ui->ledsOut.set(idx, LedOutBank::Off);     //gate
+            ui->ledsOut.set(idx + 4, LedOutBank::Off); //led
             // velocity unchanged
         }
     }

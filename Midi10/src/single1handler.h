@@ -21,7 +21,7 @@ public:
     void loadParams(int offset);
 
 private:
-    static const int Size = 8;
+    static const int Size = 4;
 
     uint8_t m_Channel[Size];
     uint8_t m_MidiNote[Size];
