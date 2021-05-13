@@ -151,7 +151,10 @@ void Poly4Handler::updateUI(Midi8UI *ui)
 
     if (ui->learnBtn.IsFalling())
     {
-        //Serial.println("Toggle learn!");
+        if (ui->debug)
+        {
+            Serial.println("Toggle learn!");
+        }
         //toggle learn mode on/off
         if (m_LearnIdx == -1)
         {
@@ -162,6 +165,8 @@ void Poly4Handler::updateUI(Midi8UI *ui)
             m_LearnIdx = -1;
         }
     }
+
+    ui->learnMode.Set(IsLearning() ? Midi8UI::Learn1 : Midi8UI::NoLearn);
 }
 
 void Poly4Handler::saveParams(int offset)

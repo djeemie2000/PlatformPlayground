@@ -113,7 +113,7 @@ void loadParams()
       char grouping = EEPROM.read(off++);
       if (grouping == Midi8UI::Grouping1 || grouping == Midi8UI::Grouping2 || grouping == Midi8UI::Grouping4)
       {
-        midi8UI.grouping = mode;
+        midi8UI.grouping = grouping;
       }
       // data
       single1Handler.loadParams(off);
@@ -215,13 +215,29 @@ void loop()
       }
     }
 
+    // midi learn -> off => trigger auto save
+    if (midi8UI.learnMode.Get() == Midi8UI::NoLearn && midi8UI.learnMode.Previous() != Midi8UI::NoLearn)
+    {
+      if (midi8UI.debug)
+      {
+        Serial.println("AutoSave!");
+      }
+      saveParams();
+    }
+
     ++debugCntr;
     if (2000 <= debugCntr)
     {
+      if (midi8UI.debug)
       {
         Serial.print(debugCntr);
         Serial.print(" -> ");
         Serial.print(millis());
+
+        Serial.print(" ");
+        Serial.print(midi8UI.learnMode.Get());
+        Serial.print(" ");
+        Serial.print(midi8UI.learnMode.Previous());
 
         Serial.print(" ");
         Serial.print(midi8UI.mode);

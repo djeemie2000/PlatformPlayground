@@ -5,6 +5,7 @@
 #include "ledoutbank.h"
 #include "DigitalOutBank.h"
 #include "buttonin.h"
+#include "select.h"
 
 struct Midi8UI
 {
@@ -37,8 +38,15 @@ struct Midi8UI
     //TODO analogRead ==0 or not // pin A6
     //TODO analogRead ==0 or not // pin A7
 
+    bool debug;
+
+    static const int NoLearn = 0;
+    static const int Learn1 = 1;
+    static const int Learn2 = 2;
+    Select learnMode;
+
     Midi8UI()
-        : gatesOut(), cvOut(4), ledsOut(8), learnBtn()
+        : gatesOut(), cvOut(4), ledsOut(8), learnBtn(), debug(true)
     {
     }
 
