@@ -47,7 +47,7 @@ struct Midi8UI
     //TODO analogRead ==0 or not // pin A7
 
     Midi8UI()
-        : modeNbr(Single1Mode), debug(true), learnMode(), gatesOut(), cvOut(4), ledsOut(8), learnBtn(), extraBtn()
+        : modeNbr(Single1Mode), debug(true), learnMode(), gatesOut(), cvOut(), ledsOut(8), learnBtn(), extraBtn()
     {
     }
 
@@ -56,8 +56,8 @@ struct Midi8UI
         modeNbr = Single1Mode;
         learnMode.Set(NoLearn);
 
-        gatesOut.begin(4, 5, 6, 7);
-        cvOut.begin();
+        gatesOut.begin(4, 5, 6, 7, A0, A1, A2, A3, A4, A5);
+        cvOut.begin(4);
         ledsOut.begin();
         const int debounce = 30;
         learnBtn.begin(2, debounce);
@@ -144,5 +144,15 @@ struct Midi8UI
         ledsOut.set(modeNbr, LedOutBank::On);
         ledsOut.update(1);
         delay(200);
+    }
+
+    void printToggleLearn(char mode, char grouping)
+    {
+        if (debug)
+        {
+            Serial.print(mode);
+            Serial.print(grouping);
+            Serial.println(" toggle learn!");
+        }
     }
 };

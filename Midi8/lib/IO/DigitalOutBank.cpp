@@ -9,7 +9,7 @@ DigitalOutBank::DigitalOutBank()
     }
 }
 
-void DigitalOutBank::begin(int pin0, int pin1, int pin2, int pin3, int pin4, int pin5, int pin6, int pin7)
+void DigitalOutBank::begin(int pin0, int pin1, int pin2, int pin3, int pin4, int pin5, int pin6, int pin7, int pin8, int pin9)
 {
     m_Pins[0] = pin0;
     m_Pins[1] = pin1;
@@ -19,6 +19,8 @@ void DigitalOutBank::begin(int pin0, int pin1, int pin2, int pin3, int pin4, int
     m_Pins[5] = pin5;
     m_Pins[6] = pin6;
     m_Pins[7] = pin7;
+    m_Pins[8] = pin8;
+    m_Pins[9] = pin9;
 
     for (int idx = 0; idx < Capacity; ++idx)
     {
@@ -30,7 +32,7 @@ void DigitalOutBank::begin(int pin0, int pin1, int pin2, int pin3, int pin4, int
     }
 }
 
-void DigitalOutBank::set(int idx, int value)
+void DigitalOutBank::set(int idx, uint8_t value)
 {
     if (0 <= idx && idx < Capacity)
     {

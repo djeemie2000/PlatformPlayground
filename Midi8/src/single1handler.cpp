@@ -82,61 +82,47 @@ bool Single1Handler::IsLearning() const
 
 void Single1Handler::updateUI(Midi8UI *ui)
 {
-    for (int idx = 0; idx < 4; ++idx)
+    const int offset = 4;
+    for (int idx = 0; idx < Size; ++idx)
     {
         if (idx == m_LearnIdx)
         {
-            ui->ledsOut.set(idx, LedOutBank::Blink);
-            ui->gatesOut.set(idx, 0);
+            ui->ledsOut.set(offset + idx, LedOutBank::Blink);
+            ui->gatesOut.set(offset + idx, 0);
         }
         else if (m_Gate[idx])
         {
-            ui->ledsOut.set(idx, LedOutBank::On);
-            ui->gatesOut.set(idx, 1);
+            ui->ledsOut.set(offset + idx, LedOutBank::On);
+            ui->gatesOut.set(offset + idx, 1);
         }
         else
         {
-            ui->ledsOut.set(idx, LedOutBank::Off);
-            ui->gatesOut.set(idx, 0);
-        }
-    }
-    for (int idx = 4; idx < 8; ++idx)
-    {
-        if (idx == m_LearnIdx)
-        {
-            ui->ledsOut.set(idx, LedOutBank::Blink);
-            GateOut(ui->cvOut, idx - 4, 0);
-        }
-        else if (m_Gate[idx])
-        {
-            ui->ledsOut.set(idx, LedOutBank::On);
-            GateOut(ui->cvOut, idx - 4, 1);
-        }
-        else
-        {
-            ui->ledsOut.set(idx, LedOutBank::Off);
-            GateOut(ui->cvOut, idx - 4, 0);
+            ui->ledsOut.set(offset + idx, LedOutBank::Off);
+            ui->gatesOut.set(offset + idx, 0);
         }
     }
 
     if (ui->learnBtn.IsFalling())
     {
-        if (ui->debug)
+        ui->printToggleLearn('S', '1');
+
+        if (ui->learnMode.Get() == Midi8UI::Learn2)
         {
-            Serial.println("Toggle learn!");
-        }
-        //toggle learn mode on/off
-        if (m_LearnIdx == -1)
-        {
-            m_LearnIdx = 0;
+            //toggle learn mode on/off
+            if (m_LearnIdx == -1)
+            {
+                m_LearnIdx = 0;
+            }
         }
         else
         {
             m_LearnIdx = -1;
         }
     }
-
-    ui->learnMode.Set(IsLearning() ? Midi8UI::Learn1 : Midi8UI::NoLearn);
+    else if (ui->learnMode.Get() != Midi8UI::Learn1)
+    {
+        ui->learnMode.Set(IsLearning() ? Midi8UI::Learn2 : Midi8UI::NoLearn);
+    }
 }
 
 void Single1Handler::saveParams(int offset)
@@ -153,7 +139,8 @@ void Single1Handler::saveParams(int offset)
 
 int Single1Handler::paramSize() const
 {
-    return 2 + Size * 2;
+    // backwards compatible size 8
+    return 2 + 8 /*Size*/ * 2;
 }
 
 void Single1Handler::loadParams(int offset)

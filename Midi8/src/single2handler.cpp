@@ -90,21 +90,18 @@ void Single2Handler::updateUI(Midi8UI *ui)
         if (idx == m_LearnIdx)
         {
             ui->ledsOut.set(idx, LedOutBank::Blink);
-            ui->ledsOut.set(idx + 4, LedOutBank::Blink);
             ui->gatesOut.set(idx, 0);
             ui->cvOut.set(idx, 0);
         }
         else if (m_Gate[idx])
         {
             ui->ledsOut.set(idx, LedOutBank::On);
-            ui->ledsOut.set(idx + 4, LedOutBank::On);
             ui->gatesOut.set(idx, 1);
             VelocityOut(ui->cvOut, idx, m_Velocity[idx]);
         }
         else
         {
             ui->ledsOut.set(idx, LedOutBank::Off);
-            ui->ledsOut.set(idx + 4, LedOutBank::Off);
             ui->gatesOut.set(idx, 0);
             // velocity unchanged
         }
@@ -113,21 +110,24 @@ void Single2Handler::updateUI(Midi8UI *ui)
     if (ui->learnBtn.IsFalling())
     {
         //toggle learn mode on/off
-        if (ui->debug)
+        ui->printToggleLearn('S', '2');
+
+        if (ui->learnMode.Get() == Midi8UI::Learn1)
         {
-            Serial.println("Toggle learn!");
-        }
-        if (m_LearnIdx == -1)
-        {
-            m_LearnIdx = 0;
+            if (m_LearnIdx == -1)
+            {
+                m_LearnIdx = 0;
+            }
         }
         else
         {
             m_LearnIdx = -1;
         }
     }
-
-    ui->learnMode.Set(IsLearning() ? Midi8UI::Learn1 : Midi8UI::NoLearn);
+    else if (ui->learnMode.Get() != Midi8UI::Learn2)
+    {
+        ui->learnMode.Set(IsLearning() ? Midi8UI::Learn1 : Midi8UI::NoLearn);
+    }
 }
 
 void Single2Handler::saveParams(int offset)

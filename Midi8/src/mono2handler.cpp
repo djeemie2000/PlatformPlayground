@@ -88,15 +88,16 @@ void Mono2Handler::updateUI(Midi8UI *ui)
 
     if (ui->learnBtn.IsFalling())
     {
-        if (ui->debug)
-        {
-            Serial.println("Toggle learn!");
-        }
+        ui->printToggleLearn('M', '2');
+
         //toggle learn mode on/off
-        if (m_LearnIdx == -1)
+        if (ui->learnMode.Get() == Midi8UI::Learn1)
         {
-            m_LearnIdx = 0;
-            m_Out[m_LearnIdx].Learn(true);
+            if (m_LearnIdx == -1)
+            {
+                m_LearnIdx = 0;
+                m_Out[m_LearnIdx].Learn(true);
+            }
         }
         else
         {
@@ -104,8 +105,10 @@ void Mono2Handler::updateUI(Midi8UI *ui)
             m_LearnIdx = -1;
         }
     }
-
-    ui->learnMode.Set(IsLearning() ? Midi8UI::Learn1 : Midi8UI::NoLearn);
+    else if (ui->learnMode.Get() != Midi8UI::Learn2)
+    {
+        ui->learnMode.Set(IsLearning() ? Midi8UI::Learn1 : Midi8UI::NoLearn);
+    }
 }
 
 void Mono2Handler::saveParams(int offset)

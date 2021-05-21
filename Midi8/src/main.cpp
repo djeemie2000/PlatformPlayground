@@ -11,6 +11,7 @@
 #include "poly4handler.h"
 #include "MidiParser.h"
 #include "clocksyncout.h"
+#include "multimidihandler.h"
 
 Midi8UI midi8UI;
 MidiParser midiParserSerial;
@@ -20,7 +21,8 @@ Mono2Handler mono2Handler;
 Mono4Handler mono4Handler;
 Poly2Handler poly2Handler;
 Poly4Handler poly4Handler;
-ClockSyncOut clockSyncOut;
+ClockSyncOut clockSyncHandler;
+MultiMidiHandler multiMidiHandler;
 
 void setup()
 {
@@ -29,9 +31,7 @@ void setup()
   Serial.println("Midi8 v0.4...");
 
   midi8UI.begin();
-  clockSyncOut.Begin(2, 4); //gate 2 + gate 4
-  mono4Handler.begin(&clockSyncOut);
-  poly4Handler.begin(&clockSyncOut);
+  clockSyncHandler.Begin(8, 9); //gate 8 and 9
 }
 
 void testUi()
@@ -44,6 +44,8 @@ void testUi()
 
 void handleMidi(MidiHandler &midiHandler)
 {
+  multiMidiHandler.Begin(&midiHandler, &single1Handler, &clockSyncHandler);
+
   // read serial midi in -> parser -> midi out
   // limit # bytes for performance issues
   int numBytesIn = Serial.available();
@@ -56,7 +58,7 @@ void handleMidi(MidiHandler &midiHandler)
   {
     uint8_t byte = Serial.read();
     //Serial.println(byte,HEX);
-    midiParserSerial.Parse(byte, midiHandler);
+    midiParserSerial.Parse(byte, multiMidiHandler);
     --numBytesIn;
   }
 }
@@ -175,19 +177,30 @@ void loop()
       ++midi8UI.modeNbr;
       if (midi8UI.modeNbr > Midi8UI::Poly4Mode)
       {
-        midi8UI.modeNbr = Midi8UI::Single1Mode;
+        midi8UI.modeNbr = Midi8UI::Single2Mode;
       }
       midi8UI.showMode();
       saveParams();
     }
 
-    if (midi8UI.modeNbr == Midi8UI::Single1Mode)
+    //handle midi learn toggle
+    if (midi8UI.learnBtn.IsFalling())
     {
-      // always single mode!
-      handleMidi(single1Handler);
-      single1Handler.updateUI(&midi8UI);
+      if (midi8UI.learnMode.Get() == Midi8UI::NoLearn)
+      {
+        midi8UI.learnMode.Set(Midi8UI::Learn1);
+      }
+      else if (midi8UI.learnMode.Get() == Midi8UI::Learn1)
+      {
+        midi8UI.learnMode.Set(Midi8UI::Learn2);
+      }
+      else //if (midi8UI.learnMode == Midi8UI::Learn2)
+      {
+        midi8UI.learnMode.Set(Midi8UI::NoLearn);
+      }
     }
-    else if (midi8UI.modeNbr == Midi8UI::Mono2Mode)
+
+    if (midi8UI.modeNbr == Midi8UI::Mono2Mode)
     {
       handleMidi(mono2Handler);
       mono2Handler.updateUI(&midi8UI);
@@ -212,8 +225,10 @@ void loop()
       handleMidi(poly4Handler);
       poly4Handler.updateUI(&midi8UI);
     }
+    single1Handler.updateUI(&midi8UI);
+    clockSyncHandler.updateUI(&midi8UI);
 
-    // midi learn -> off => trigger auto save
+    // midi learn on -> off => trigger auto save
     if (midi8UI.learnMode.Get() == Midi8UI::NoLearn && midi8UI.learnMode.Previous() != Midi8UI::NoLearn)
     {
       if (midi8UI.debug)

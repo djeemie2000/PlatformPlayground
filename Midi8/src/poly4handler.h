@@ -4,18 +4,14 @@
 #include "MidiHandler.h"
 
 class Midi8UI;
-class ClockSyncOut;
 
 class Poly4Handler : public MidiHandler
 {
 public:
     Poly4Handler();
-    void begin(ClockSyncOut *clockSyncOut);
 
     void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity);  //override
     void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity); //override
-    void MidiClock();                                                  //override
-    void MidiContinue();                                               //override
 
     void updateUI(Midi8UI *ui);
     bool IsLearning() const;
@@ -33,6 +29,4 @@ private:
     uint8_t m_Velocity[Size];
 
     int m_LearnIdx;
-
-    ClockSyncOut *m_ClockSyncOut;
 };

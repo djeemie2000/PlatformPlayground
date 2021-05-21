@@ -96,7 +96,6 @@ void Poly2Handler::updateUI(Midi8UI *ui)
         {
             //TODO all will blink same as in poly4
             ui->ledsOut.set(idx, LedOutBank::Blink);
-            ui->ledsOut.set(idx + 4, LedOutBank::Blink);
             ui->gatesOut.set(idx, 0);
             ui->cvOut.set(idx, 0);
         }
@@ -104,7 +103,6 @@ void Poly2Handler::updateUI(Midi8UI *ui)
         {
             // note is on
             ui->ledsOut.set(idx, LedOutBank::On);
-            ui->ledsOut.set(idx + 4, LedOutBank::On);
             ui->gatesOut.set(idx, 1);
             PitchOut(ui->cvOut, idx, m_MidiNote[idx], m_BaseNote);
         }
@@ -112,7 +110,6 @@ void Poly2Handler::updateUI(Midi8UI *ui)
         {
             // note is off
             ui->ledsOut.set(idx, LedOutBank::Off);
-            ui->ledsOut.set(idx + 4, LedOutBank::Off);
             ui->gatesOut.set(idx, 0);
             // leave midi note unchanged
         }
@@ -120,22 +117,25 @@ void Poly2Handler::updateUI(Midi8UI *ui)
 
     if (ui->learnBtn.IsFalling())
     {
-        if (ui->debug)
-        {
-            Serial.println("Toggle learn!");
-        }
+        ui->printToggleLearn('P', '2');
+
         //toggle learn mode on/off
-        if (m_LearnIdx == -1)
+        if (ui->learnMode.Get() == Midi8UI::Learn1)
         {
-            m_LearnIdx = 0;
+            if (m_LearnIdx == -1)
+            {
+                m_LearnIdx = 0;
+            }
         }
         else
         {
             m_LearnIdx = -1;
         }
     }
-
-    ui->learnMode.Set(IsLearning() ? Midi8UI::Learn1 : Midi8UI::NoLearn);
+    else if (ui->learnMode.Get() != Midi8UI::Learn2)
+    {
+        ui->learnMode.Set(IsLearning() ? Midi8UI::Learn1 : Midi8UI::NoLearn);
+    }
 }
 
 void Poly2Handler::saveParams(int offset)
