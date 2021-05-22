@@ -42,9 +42,9 @@ void testUi()
   testLedOutBank(midi8UI.ledsOut, 1);
 }
 
-void handleMidi(MidiHandler &midiHandler)
+void handleMidi(MidiHandler *midiHandler, MidiHandler *midiHandler2 = 0, MidiHandler *midiHandler3 = 0)
 {
-  multiMidiHandler.Begin(&midiHandler, &single1Handler, &clockSyncHandler);
+  multiMidiHandler.Begin(midiHandler, midiHandler2, midiHandler3);
 
   // read serial midi in -> parser -> midi out
   // limit # bytes for performance issues
@@ -214,31 +214,31 @@ void loop()
     bool learn1 = false;
     if (midi8UI.modeNbr == Midi8UI::Mono2Mode)
     {
-      handleMidi(mono2Handler);
+      handleMidi(&mono2Handler, &single1Handler, &clockSyncHandler);
       learn1 = mono2Handler.IsLearning();
       mono2Handler.updateUI(&midi8UI);
     }
     else if (midi8UI.modeNbr == Midi8UI::Poly2Mode)
     {
-      handleMidi(poly2Handler);
+      handleMidi(&poly2Handler, &single1Handler, &clockSyncHandler);
       learn1 = poly2Handler.IsLearning();
       poly2Handler.updateUI(&midi8UI);
     }
     else if (midi8UI.modeNbr == Midi8UI::Single2Mode)
     {
-      handleMidi(single2Handler);
+      handleMidi(&single2Handler, &single1Handler, &clockSyncHandler);
       learn1 = single2Handler.IsLearning();
       single2Handler.updateUI(&midi8UI);
     }
     else if (midi8UI.modeNbr == Midi8UI::Mono4Mode)
     {
-      handleMidi(mono4Handler);
+      handleMidi(&mono4Handler, &single1Handler, &clockSyncHandler);
       learn1 = mono4Handler.IsLearning();
       mono4Handler.updateUI(&midi8UI);
     }
     else if (midi8UI.modeNbr == Midi8UI::Poly4Mode)
     {
-      handleMidi(poly4Handler);
+      handleMidi(&poly4Handler, &single1Handler, &clockSyncHandler);
       learn1 = poly4Handler.IsLearning();
       poly4Handler.updateUI(&midi8UI);
     }

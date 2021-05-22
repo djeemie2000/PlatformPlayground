@@ -144,4 +144,14 @@ struct Midi8UI
         ledsOut.update(1);
         delay(200);
     }
+
+    // void printToggleLearn(char mode, char grouping)
+    // {
+    //     if (debug)
+    //     {
+    //         Serial.print(mode);
+    //         Serial.print(grouping);
+    //         Serial.println(" toggle learn!");
+    //     }
+    // }
 };
