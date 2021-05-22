@@ -11,12 +11,13 @@ class Mono2Handler : public MidiHandler
 public:
     Mono2Handler();
 
-    void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity);//override
-    void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity) ;//override
+    void NoteOn(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity);  //override
+    void NoteOff(uint8_t Channel, uint8_t MidiNote, uint8_t Velocity); //override
 
-    void updateUI(Midi8UI* ui);
+    void updateUI(Midi8UI *ui);
     bool IsLearning() const;
-    
+    void Learn(bool learn);
+
     void saveParams(int offset);
     int paramSize() const;
     void loadParams(int offset);

@@ -79,6 +79,23 @@ bool Mono2Handler::IsLearning() const
     return m_LearnIdx != -1;
 }
 
+void Mono2Handler::Learn(bool learn)
+{
+    if (learn)
+    {
+        if (m_LearnIdx == -1)
+        {
+            m_LearnIdx = 0;
+            m_Out[m_LearnIdx].Learn(true);
+        }
+    }
+    else if (m_LearnIdx != 1)
+    {
+        m_Out[m_LearnIdx].Learn(false);
+        m_LearnIdx = -1;
+    }
+}
+
 void Mono2Handler::updateUI(Midi8UI *ui)
 {
     for (int idx = 0; idx < Size; ++idx)
@@ -91,19 +108,7 @@ void Mono2Handler::updateUI(Midi8UI *ui)
         ui->printToggleLearn('M', '2');
 
         //toggle learn mode on/off
-        if (ui->learnMode.Get() == Midi8UI::Learn1)
-        {
-            if (m_LearnIdx == -1)
-            {
-                m_LearnIdx = 0;
-                m_Out[m_LearnIdx].Learn(true);
-            }
-        }
-        else
-        {
-            m_Out[m_LearnIdx].Learn(false);
-            m_LearnIdx = -1;
-        }
+        Learn(ui->learnMode.Get() == Midi8UI::Learn1);
     }
     else if (ui->learnMode.Get() != Midi8UI::Learn2)
     {

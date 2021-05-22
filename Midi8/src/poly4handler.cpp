@@ -91,6 +91,21 @@ bool Poly4Handler::IsLearning() const
     return m_LearnIdx != -1;
 }
 
+void Poly4Handler::Learn(bool learn)
+{
+    if (learn)
+    {
+        if (m_LearnIdx == -1)
+        {
+            m_LearnIdx = 0;
+        }
+    }
+    else //if(m_LearnIdx != -1)
+    {
+        m_LearnIdx = -1;
+    }
+}
+
 void Poly4Handler::updateUI(Midi8UI *ui)
 {
     for (int idx = 0; idx < Size; ++idx)
@@ -132,17 +147,7 @@ void Poly4Handler::updateUI(Midi8UI *ui)
         ui->printToggleLearn('P', '4');
 
         //toggle learn mode on/off
-        if (ui->learnMode.Get() == Midi8UI::Learn1)
-        {
-            if (m_LearnIdx == -1)
-            {
-                m_LearnIdx = 0;
-            }
-        }
-        else
-        {
-            m_LearnIdx = -1;
-        }
+        Learn(ui->learnMode.Get() == Midi8UI::Learn1);
     }
     else if (ui->learnMode.Get() != Midi8UI::Learn2)
     {

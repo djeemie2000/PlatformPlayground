@@ -15,6 +15,7 @@ public:
 
     void updateUI(Midi8UI *ui);
     bool IsLearning() const;
+    void Learn(bool learn);
 
     void saveParams(int offset);
     int paramSize() const;

@@ -80,6 +80,21 @@ bool Single1Handler::IsLearning() const
     return m_LearnIdx != -1;
 }
 
+void Single1Handler::Learn(bool learn)
+{
+    if (learn)
+    {
+        if (m_LearnIdx == -1)
+        {
+            m_LearnIdx = 0;
+        }
+    }
+    else //if(m_LearnIdx != -1)
+    {
+        m_LearnIdx = -1;
+    }
+}
+
 void Single1Handler::updateUI(Midi8UI *ui)
 {
     const int offset = 4;
@@ -106,18 +121,20 @@ void Single1Handler::updateUI(Midi8UI *ui)
     {
         ui->printToggleLearn('S', '1');
 
-        if (ui->learnMode.Get() == Midi8UI::Learn2)
-        {
-            //toggle learn mode on/off
-            if (m_LearnIdx == -1)
-            {
-                m_LearnIdx = 0;
-            }
-        }
-        else
-        {
-            m_LearnIdx = -1;
-        }
+        Learn(ui->learnMode.Get() == Midi8UI::Learn2);
+
+        // if (ui->learnMode.Get() == Midi8UI::Learn2)
+        // {
+        //     //toggle learn mode on/off
+        //     if (m_LearnIdx == -1)
+        //     {
+        //         m_LearnIdx = 0;
+        //     }
+        // }
+        // else
+        // {
+        //     m_LearnIdx = -1;
+        // }
     }
     else if (ui->learnMode.Get() != Midi8UI::Learn1)
     {
