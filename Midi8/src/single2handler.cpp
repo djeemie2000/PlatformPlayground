@@ -121,18 +121,6 @@ void Single2Handler::updateUI(Midi8UI *ui)
             // velocity unchanged
         }
     }
-
-    if (ui->learnBtn.IsFalling())
-    {
-        //toggle learn mode on/off
-        ui->printToggleLearn('S', '2');
-
-        Learn(ui->learnMode.Get() == Midi8UI::Learn1);
-    }
-    else if (ui->learnMode.Get() != Midi8UI::Learn2)
-    {
-        ui->learnMode.Set(IsLearning() ? Midi8UI::Learn1 : Midi8UI::NoLearn);
-    }
 }
 
 void Single2Handler::saveParams(int offset)

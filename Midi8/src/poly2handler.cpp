@@ -129,18 +129,6 @@ void Poly2Handler::updateUI(Midi8UI *ui)
             // leave midi note unchanged
         }
     }
-
-    if (ui->learnBtn.IsFalling())
-    {
-        ui->printToggleLearn('P', '2');
-
-        //toggle learn mode on/off
-        Learn(ui->learnMode.Get() == Midi8UI::Learn1);
-    }
-    else if (ui->learnMode.Get() != Midi8UI::Learn2)
-    {
-        ui->learnMode.Set(IsLearning() ? Midi8UI::Learn1 : Midi8UI::NoLearn);
-    }
 }
 
 void Poly2Handler::saveParams(int offset)

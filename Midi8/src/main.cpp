@@ -161,6 +161,7 @@ void loop()
     printParams();
   }
   testLedOutBank(midi8UI.ledsOut, 1);
+  testDigitalOutBank(midi8UI.gatesOut, 1);
   loadParams();
   //show mode for a short time!
   midi8UI.showMode();
@@ -186,56 +187,90 @@ void loop()
     //handle midi learn toggle
     if (midi8UI.learnBtn.IsFalling())
     {
-      if (midi8UI.learnMode.Get() == Midi8UI::NoLearn)
+      if (midi8UI.learnMode == Midi8UI::NoLearn)
       {
-        midi8UI.learnMode.Set(Midi8UI::Learn1);
+        midi8UI.learnMode = Midi8UI::Learn1;
       }
-      else if (midi8UI.learnMode.Get() == Midi8UI::Learn1)
+      else if (midi8UI.learnMode == Midi8UI::Learn1)
       {
-        midi8UI.learnMode.Set(Midi8UI::Learn2);
+        midi8UI.learnMode = Midi8UI::Learn2;
       }
       else //if (midi8UI.learnMode == Midi8UI::Learn2)
       {
-        midi8UI.learnMode.Set(Midi8UI::NoLearn);
+        midi8UI.learnMode = Midi8UI::NoLearn;
       }
     }
 
+    // set learn on all handlers
+    single1Handler.Learn(midi8UI.learnMode == Midi8UI::Learn2);
+
+    single2Handler.Learn(midi8UI.learnMode == Midi8UI::Learn1);
+    mono2Handler.Learn(midi8UI.learnMode == Midi8UI::Learn1);
+    poly2Handler.Learn(midi8UI.learnMode == Midi8UI::Learn1);
+    mono4Handler.Learn(midi8UI.learnMode == Midi8UI::Learn1);
+    poly4Handler.Learn(midi8UI.learnMode == Midi8UI::Learn1);
+
+    //TODO bool isLearning -> fill in on current handler after handleMidi
+    bool learn1 = false;
     if (midi8UI.modeNbr == Midi8UI::Mono2Mode)
     {
       handleMidi(mono2Handler);
+      learn1 = mono2Handler.IsLearning();
       mono2Handler.updateUI(&midi8UI);
     }
     else if (midi8UI.modeNbr == Midi8UI::Poly2Mode)
     {
       handleMidi(poly2Handler);
+      learn1 = poly2Handler.IsLearning();
       poly2Handler.updateUI(&midi8UI);
     }
     else if (midi8UI.modeNbr == Midi8UI::Single2Mode)
     {
       handleMidi(single2Handler);
+      learn1 = single2Handler.IsLearning();
       single2Handler.updateUI(&midi8UI);
     }
     else if (midi8UI.modeNbr == Midi8UI::Mono4Mode)
     {
       handleMidi(mono4Handler);
+      learn1 = mono4Handler.IsLearning();
       mono4Handler.updateUI(&midi8UI);
     }
     else if (midi8UI.modeNbr == Midi8UI::Poly4Mode)
     {
       handleMidi(poly4Handler);
+      learn1 = poly4Handler.IsLearning();
       poly4Handler.updateUI(&midi8UI);
     }
+    // both handlers below were called upon handleMidi()
     single1Handler.updateUI(&midi8UI);
     clockSyncHandler.updateUI(&midi8UI);
 
-    // midi learn on -> off => trigger auto save
-    if (midi8UI.learnMode.Get() == Midi8UI::NoLearn && midi8UI.learnMode.Previous() != Midi8UI::NoLearn)
+    if (midi8UI.learnMode == Midi8UI::Learn1)
     {
-      if (midi8UI.debug)
+      // if Learn1 mode and current handler is no longer learning after handleMidi => trigger auto save, learn mode to no learn
+      if (!learn1)
       {
-        Serial.println("AutoSave!");
+        midi8UI.learnMode = Midi8UI::NoLearn;
+        if (midi8UI.debug)
+        {
+          Serial.println("AutoSave!");
+        }
+        saveParams();
       }
-      saveParams();
+    }
+    else if (midi8UI.learnMode == Midi8UI::Learn2)
+    {
+      // if Learn2 mode and sngle1  handler is no longer learning after handleMidi => trigger auto save, learn mode to no learn
+      if (!single1Handler.IsLearning())
+      {
+        midi8UI.learnMode = Midi8UI::NoLearn;
+        if (midi8UI.debug)
+        {
+          Serial.println("AutoSave!");
+        }
+        saveParams();
+      }
     }
 
     ++debugCntr;
@@ -248,7 +283,7 @@ void loop()
         Serial.print(millis());
 
         Serial.print(" ");
-        Serial.print(midi8UI.learnMode.Get());
+        Serial.print(midi8UI.learnMode);
 
         Serial.print(" ");
         Serial.print(midi8UI.modeNbr);

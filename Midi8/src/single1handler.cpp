@@ -116,30 +116,6 @@ void Single1Handler::updateUI(Midi8UI *ui)
             ui->gatesOut.set(offset + idx, 0);
         }
     }
-
-    if (ui->learnBtn.IsFalling())
-    {
-        ui->printToggleLearn('S', '1');
-
-        Learn(ui->learnMode.Get() == Midi8UI::Learn2);
-
-        // if (ui->learnMode.Get() == Midi8UI::Learn2)
-        // {
-        //     //toggle learn mode on/off
-        //     if (m_LearnIdx == -1)
-        //     {
-        //         m_LearnIdx = 0;
-        //     }
-        // }
-        // else
-        // {
-        //     m_LearnIdx = -1;
-        // }
-    }
-    else if (ui->learnMode.Get() != Midi8UI::Learn1)
-    {
-        ui->learnMode.Set(IsLearning() ? Midi8UI::Learn2 : Midi8UI::NoLearn);
-    }
 }
 
 void Single1Handler::saveParams(int offset)

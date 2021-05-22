@@ -102,18 +102,6 @@ void Mono2Handler::updateUI(Midi8UI *ui)
     {
         m_Out[idx].updateUI(ui);
     }
-
-    if (ui->learnBtn.IsFalling())
-    {
-        ui->printToggleLearn('M', '2');
-
-        //toggle learn mode on/off
-        Learn(ui->learnMode.Get() == Midi8UI::Learn1);
-    }
-    else if (ui->learnMode.Get() != Midi8UI::Learn2)
-    {
-        ui->learnMode.Set(IsLearning() ? Midi8UI::Learn1 : Midi8UI::NoLearn);
-    }
 }
 
 void Mono2Handler::saveParams(int offset)
