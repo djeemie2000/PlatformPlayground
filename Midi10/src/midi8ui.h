@@ -76,7 +76,9 @@ struct Midi10UI
         cvOut.update();
         gateDigitalOut.update(blink);
         learnBtn.read();
+        learnBtn2.read();
         extraBtn.read();
+        extraBtn2.read();
     }
 
     char mode() const
@@ -144,9 +146,9 @@ struct Midi10UI
         // show mode for a short time
         for (int idx = 0; idx < LedOutBank::Capacity; ++idx)
         {
-            gateDigitalOut.set(idx, LedOutBank::Off);
+            gateDigitalOut.set(8 + idx, LedOutBank::Off);
         }
-        gateDigitalOut.set(modeNbr, LedOutBank::On);
+        gateDigitalOut.set(8 + modeNbr, LedOutBank::On);
         gateDigitalOut.update(1);
         delay(200);
     }

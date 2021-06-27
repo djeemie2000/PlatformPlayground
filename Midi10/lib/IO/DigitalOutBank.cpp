@@ -71,13 +71,15 @@ void testDigitalOutBank(DigitalOutBank &bank, int repeats)
     {
         for (int idx = 0; idx < DigitalOutBank::Capacity; ++idx)
         {
-            bank.set(idx, 1);
-            bank.update(1);
-            delay(200);
-            bank.set(idx, 0);
-            bank.update(1);
-            delay(200);
-            bank.set(idx, 1);
+            for (int val = 2; 0 <= val; --val)
+            {
+                bank.set(idx, 1);
+                bank.update(1);
+                delay(200);
+                bank.set(idx, 0);
+                bank.update(1);
+                delay(200);
+            }
         }
     }
 }

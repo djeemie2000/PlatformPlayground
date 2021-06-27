@@ -2,9 +2,7 @@
 #include <SPI.h>
 
 LedOutBank::LedOutBank(int csPin)
- : m_CsPin(csPin)
- , m_ValuesOn(0x00)
- , m_ValuesOff(0x00)
+    : m_CsPin(csPin), m_ValuesOn(0x00), m_ValuesOff(0x00)
 {
 }
 
@@ -22,28 +20,28 @@ void LedOutBank::set(int idx, int value)
 {
     if (0 <= idx && idx < Capacity)
     {
-        if(value == On)
+        if (value == On)
         {
-            bitSet(m_ValuesOn,idx); 
-            bitSet(m_ValuesOff,idx); 
+            bitSet(m_ValuesOn, idx);
+            bitSet(m_ValuesOff, idx);
         }
-        else if(value == Off)
+        else if (value == Off)
         {
-            bitClear(m_ValuesOn,idx); 
-            bitClear(m_ValuesOff,idx); 
+            bitClear(m_ValuesOn, idx);
+            bitClear(m_ValuesOff, idx);
         }
         else
         {
-            bitSet(m_ValuesOn,idx); 
-            bitClear(m_ValuesOff,idx); 
-        }        
+            bitSet(m_ValuesOn, idx);
+            bitClear(m_ValuesOff, idx);
+        }
     }
 }
 
 void LedOutBank::update(int blinkOn)
 {
     digitalWrite(m_CsPin, LOW);
-    SPI.transfer(blinkOn ? m_ValuesOn : m_ValuesOff);
+    SPI.transfer16(blinkOn ? m_ValuesOn : m_ValuesOff);
     digitalWrite(m_CsPin, HIGH);
 }
 
@@ -53,12 +51,13 @@ void testLedOutBank(LedOutBank &bank, int repeats)
     {
         for (int idx = 0; idx < LedOutBank::Capacity; ++idx)
         {
-            for(int val = 2; 0<=val; --val)
+            for (int val = 2; 0 <= val; --val)
             {
-                bank.set(idx, val);
+                bank.set(idx, 1);
                 bank.update(1);
                 delay(200);
-                bank.update(0);
+                bank.set(idx, 0);
+                bank.update(1);
                 delay(200);
             }
         }

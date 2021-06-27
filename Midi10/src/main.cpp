@@ -147,7 +147,13 @@ void printParams()
 void loop()
 {
   // put your main code here, to run repeatedly:
-
+  // while (true)
+  // {
+  //   Serial.println("Test Clock");
+  //   testDigitalOutBank(midi10UI.clockDigitalOut, 1);
+  //   Serial.println("Test digital");
+  //   testLedOutBank(midi10UI.gateDigitalOut, 1);
+  // }
   //need to update enough times for the debouncing to work
   for (int repeat = 0; repeat < 100; ++repeat)
   {
@@ -159,7 +165,7 @@ void loop()
   loadParams();
   if (midi10UI.debug)
   {
-    testUi();
+    //testUi();
     printParams();
   }
 
@@ -290,6 +296,7 @@ void loop()
 
         Serial.print(" ");
         Serial.print(midi10UI.learnMode);
+        Serial.print(midi10UI.learnMode2);
 
         Serial.print(" ");
         Serial.print(midi10UI.modeNbr);
