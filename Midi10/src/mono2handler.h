@@ -16,6 +16,7 @@ public:
 
     void updateUI(Midi10UI *ui);
     bool IsLearning() const;
+    void Learn(bool learn);
 
     void saveParams(int offset);
     int paramSize() const;

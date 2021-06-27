@@ -1,6 +1,6 @@
 #include "clocksyncout.h"
 #include "cvfunctions.h"
-#include "midi10ui.h"
+#include "midi8ui.h"
 
 ClockSyncHandler::ClockSyncHandler()
     : m_IdxClock(0), m_IdxReset(0), m_Cntr(0x00)
@@ -31,30 +31,30 @@ void ClockSyncHandler::updateUI(Midi10UI *ui)
 {
     if (m_Cntr == 0xFF)
     {
-        ui->gatesOut.set(m_IdxReset, DigitalOutBank::On);
-        ui->gatesOut.set(m_IdxResetLed, DigitalOutBank::On);
+        ui->clockDigitalOut.set(m_IdxReset, DigitalOutBank::On);
+        ui->clockDigitalOut.set(m_IdxResetLed, DigitalOutBank::On);
     }
     else
     {
-        ui->gatesOut.set(m_IdxReset, DigitalOutBank::Off);
-        ui->gatesOut.set(m_IdxResetLed, DigitalOutBank::Off);
+        ui->clockDigitalOut.set(m_IdxReset, DigitalOutBank::Off);
+        ui->clockDigitalOut.set(m_IdxResetLed, DigitalOutBank::Off);
     }
 
     if (m_Cntr & 0x01)
     {
-        ui->gatesOut.set(m_IdxClock, DigitalOutBank::On);
+        ui->clockDigitalOut.set(m_IdxClock, DigitalOutBank::On);
     }
     else
     {
-        ui->gatesOut.set(m_IdxClock, DigitalOutBank::Off);
+        ui->clockDigitalOut.set(m_IdxClock, DigitalOutBank::Off);
     }
     // clock led each 4th tick
     if (m_Cntr & 0x07)
     {
-        ui->gatesOut.set(m_IdxClockLed, DigitalOutBank::On);
+        ui->clockDigitalOut.set(m_IdxClockLed, DigitalOutBank::On);
     }
     else
     {
-        ui->gatesOut.set(m_IdxClockLed, DigitalOutBank::Off);
+        ui->clockDigitalOut.set(m_IdxClockLed, DigitalOutBank::Off);
     }
 }

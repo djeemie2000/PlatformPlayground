@@ -1,6 +1,6 @@
 #include "monopvg4out.h"
 #include "cvfunctions.h"
-#include "midi10ui.h"
+#include "midi8ui.h"
 #include "EEPROM.h"
 
 MonoPVG4Out::MonoPVG4Out()
@@ -44,25 +44,26 @@ void MonoPVG4Out::updateUI(Midi10UI *ui)
 {
     if (m_Learn)
     {
-        LedOut(ui->ledsOut, m_Idx, LedOutBank::Off);       //gate
-        LedOut(ui->ledsOut, m_Idx + 1, LedOutBank::Off);   //gate
-        LedOut(ui->ledsOut, m_Idx + 4, LedOutBank::Blink); //led
-        LedOut(ui->ledsOut, m_Idx + 5, LedOutBank::Blink); //led
+        ui->gateDigitalOut.set(m_Idx, LedOutBank::Off);     //gate
+        ui->gateDigitalOut.set(m_Idx + 1, LedOutBank::Off); //gate
+
+        ui->gateDigitalOut.set(m_Idx + 8, LedOutBank::Blink); //led
+        ui->gateDigitalOut.set(m_Idx + 9, LedOutBank::Blink); //led
         // pitch/velocity??
     }
     else
     {
         // outputs
         int gate = 0 < m_Stack.Size() ? LedOutBank::On : LedOutBank::Off;
-        ui->ledsOut.set(m_Idx, gate);         ///gate
-        ui->ledsOut.set(m_Idx + 1, gate);     //gate
-        LedOut(ui->ledsOut, m_Idx + 4, gate); //led
-        LedOut(ui->ledsOut, m_Idx + 5, gate); //led
+        ui->gateDigitalOut.set(m_Idx, gate);     ///gate
+        ui->gateDigitalOut.set(m_Idx + 1, gate); //gate
         if (gate)
         {
             PitchOut(ui->cvOut, m_Idx, m_Stack.Note(0), m_BaseNote);
             VelocityOut(ui->cvOut, m_Idx + 1, m_Stack.Velocity(0));
         }
+        ui->gateDigitalOut.set(m_Idx + 8, gate); //led
+        ui->gateDigitalOut.set(m_Idx + 9, gate); //led
     }
 }
 

@@ -1,5 +1,5 @@
 #include "single2handler.h"
-#include "midi10ui.h"
+#include "midi8ui.h"
 #include "cvfunctions.h"
 #include "EEPROM.h"
 
@@ -83,44 +83,45 @@ bool Single2Handler::IsLearning() const
     return m_LearnIdx != -1;
 }
 
-void Single2Handler::updateUI(Midi10UI *ui)
+void Single2Handler::Learn(bool learn)
 {
-    // gate 0 1 2 3
-    // led  4 5 6 7
-    // velocity 0 1 2 3
-    for (int idx = 0; idx < Size; ++idx)
+    if (learn)
     {
-        if (idx == m_LearnIdx)
-        {
-            ui->ledsOut.set(idx, LedOutBank::Off);       //gate
-            ui->ledsOut.set(idx + 4, LedOutBank::Blink); //led
-            ui->cvOut.set(idx, 0);                       //velocity
-        }
-        else if (m_Gate[idx])
-        {
-            ui->ledsOut.set(idx, LedOutBank::On);         //gate
-            ui->ledsOut.set(idx + 4, LedOutBank::On);     //led
-            VelocityOut(ui->cvOut, idx, m_Velocity[idx]); //velocity
-        }
-        else
-        {
-            ui->ledsOut.set(idx, LedOutBank::Off);     //gate
-            ui->ledsOut.set(idx + 4, LedOutBank::Off); //led
-            // velocity unchanged
-        }
-    }
-
-    if (ui->learnBtn.IsFalling())
-    {
-        //Serial.println("Toggle learn!");
-        //toggle learn mode on/off
         if (m_LearnIdx == -1)
         {
             m_LearnIdx = 0;
         }
+    }
+    else //if(m_LearnIdx != -1)
+    {
+        m_LearnIdx = -1;
+    }
+}
+
+void Single2Handler::updateUI(Midi10UI *ui)
+{
+    // gate 	0 1  2  3
+    // led  	8 9 10 11
+    // velocity 0 1  2  3
+    for (int idx = 0; idx < Size; ++idx)
+    {
+        if (idx == m_LearnIdx)
+        {
+            ui->gateDigitalOut.set(idx, LedOutBank::Off);       //gate
+            ui->gateDigitalOut.set(idx + 8, LedOutBank::Blink); //led
+            ui->cvOut.set(idx, 0);                              //velocity
+        }
+        else if (m_Gate[idx])
+        {
+            ui->gateDigitalOut.set(idx, LedOutBank::On);     //gate
+            ui->gateDigitalOut.set(idx + 8, LedOutBank::On); //led
+            VelocityOut(ui->cvOut, idx, m_Velocity[idx]);    //velocity
+        }
         else
         {
-            m_LearnIdx = -1;
+            ui->gateDigitalOut.set(idx, LedOutBank::Off);     //gate
+            ui->gateDigitalOut.set(idx + 8, LedOutBank::Off); //led
+            // velocity unchanged
         }
     }
 }

@@ -1,5 +1,5 @@
 #include "single1handler.h"
-#include "midi10ui.h"
+#include "midi8ui.h"
 #include "cvfunctions.h"
 #include "EEPROM.h"
 
@@ -80,40 +80,41 @@ bool Single1Handler::IsLearning() const
     return m_LearnIdx != -1;
 }
 
+void Single1Handler::Learn(bool learn)
+{
+    if (learn)
+    {
+        if (m_LearnIdx == -1)
+        {
+            m_LearnIdx = 0;
+        }
+    }
+    else //if(m_LearnIdx != -1)
+    {
+        m_LearnIdx = -1;
+    }
+}
+
 void Single1Handler::updateUI(Midi10UI *ui)
 {
-    // gate 8  9 10 11
+    // gate 4  5  6  7
     // led 12 13 14 15
     for (int idx = 0; idx < Size; ++idx)
     {
         if (idx == m_LearnIdx)
         {
-            ui->ledsOut.set(8 + idx, LedOutBank::Off);    //gate
-            ui->ledsOut.set(12 + idx, LedOutBank::Blink); //led
+            ui->gateDigitalOut.set(4 + idx, LedOutBank::Off);    //gate
+            ui->gateDigitalOut.set(12 + idx, LedOutBank::Blink); //led
         }
         else if (m_Gate[idx])
         {
-            ui->ledsOut.set(8 + idx, LedOutBank::On);  //gate
-            ui->ledsOut.set(12 + idx, LedOutBank::On); //led
+            ui->gateDigitalOut.set(4 + idx, LedOutBank::On);  //gate
+            ui->gateDigitalOut.set(12 + idx, LedOutBank::On); //led
         }
         else
         {
-            ui->ledsOut.set(8 + idx, LedOutBank::Off);  //gate
-            ui->ledsOut.set(12 + idx, LedOutBank::Off); //led
-        }
-    }
-
-    if (ui->learnBtn.IsFalling())
-    {
-        //Serial.println("Toggle learn!");
-        //toggle learn mode on/off
-        if (m_LearnIdx == -1)
-        {
-            m_LearnIdx = 0;
-        }
-        else
-        {
-            m_LearnIdx = -1;
+            ui->gateDigitalOut.set(4 + idx, LedOutBank::Off);  //gate
+            ui->gateDigitalOut.set(12 + idx, LedOutBank::Off); //led
         }
     }
 }
@@ -134,7 +135,8 @@ int Single1Handler::paramSize() const
 {
     // hack for compatibility with Midi8!!
     // return 2 + Size * 2;
-    return 2 + 8 * 2;
+    // backwards compatible size 8
+    return 2 + 8 /*Size*/ * 2;
 }
 
 void Single1Handler::loadParams(int offset)

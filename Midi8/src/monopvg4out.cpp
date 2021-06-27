@@ -44,11 +44,11 @@ void MonoPVG4Out::updateUI(Midi8UI *ui)
 {
     if (m_Learn)
     {
-        ui->ledsOut.set(m_Idx, LedOutBank::Blink);
-        ui->ledsOut.set(m_Idx + 1, LedOutBank::Blink);
-
         ui->gatesOut.set(m_Idx, 0);
         ui->gatesOut.set(m_Idx + 1, 0);
+
+        ui->ledsOut.set(m_Idx, LedOutBank::Blink);
+        ui->ledsOut.set(m_Idx + 1, LedOutBank::Blink);
     }
     else
     {

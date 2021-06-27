@@ -4,7 +4,6 @@
 #include "MidiHandler.h"
 
 class Midi10UI;
-class ClockSyncOut;
 
 class Poly4Handler : public MidiHandler
 {
@@ -16,6 +15,7 @@ public:
 
     void updateUI(Midi10UI *ui);
     bool IsLearning() const;
+    void Learn(bool learn);
 
     void saveParams(int offset);
     int paramSize() const;

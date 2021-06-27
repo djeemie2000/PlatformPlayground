@@ -132,6 +132,8 @@ void Single1Handler::saveParams(int offset)
 
 int Single1Handler::paramSize() const
 {
+    // hack for compatibility with Midi8!!
+    // return 2 + Size * 2;
     // backwards compatible size 8
     return 2 + 8 /*Size*/ * 2;
 }

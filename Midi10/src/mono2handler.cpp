@@ -1,5 +1,5 @@
 #include "mono2handler.h"
-#include "midi10ui.h"
+#include "midi8ui.h"
 #include "cvfunctions.h"
 #include "EEPROM.h"
 
@@ -79,27 +79,28 @@ bool Mono2Handler::IsLearning() const
     return m_LearnIdx != -1;
 }
 
-void Mono2Handler::updateUI(Midi10UI *ui)
+void Mono2Handler::Learn(bool learn)
 {
-    for (int idx = 0; idx < Size; ++idx)
+    if (learn)
     {
-        m_Out[idx].updateUI(ui);
-    }
-
-    if (ui->learnBtn.IsFalling())
-    {
-        //Serial.println("Toggle learn!");
-        //toggle learn mode on/off
         if (m_LearnIdx == -1)
         {
             m_LearnIdx = 0;
             m_Out[m_LearnIdx].Learn(true);
         }
-        else
-        {
-            m_Out[m_LearnIdx].Learn(false);
-            m_LearnIdx = -1;
-        }
+    }
+    else if (m_LearnIdx != 1)
+    {
+        m_Out[m_LearnIdx].Learn(false);
+        m_LearnIdx = -1;
+    }
+}
+
+void Mono2Handler::updateUI(Midi10UI *ui)
+{
+    for (int idx = 0; idx < Size; ++idx)
+    {
+        m_Out[idx].updateUI(ui);
     }
 }
 

@@ -1,5 +1,5 @@
 #include "poly2handler.h"
-#include "midi10ui.h"
+#include "midi8ui.h"
 #include "cvfunctions.h"
 #include "EEPROM.h"
 
@@ -88,46 +88,47 @@ bool Poly2Handler::IsLearning() const
     return m_LearnIdx != -1;
 }
 
+void Poly2Handler::Learn(bool learn)
+{
+    if (learn)
+    {
+        if (m_LearnIdx == -1)
+        {
+            m_LearnIdx = 0;
+        }
+    }
+    else //if(m_LearnIdx != -1)
+    {
+        m_LearnIdx = -1;
+    }
+}
+
 void Poly2Handler::updateUI(Midi10UI *ui)
 {
     // gates : 0 1 2 3
-    // leds  : 4 5 6 7
+    // leds  : 8 9 10 11
     // pitch : 0 1 2 3
     for (int idx = 0; idx < Size; ++idx)
     {
         if (m_LearnIdx != -1)
         {
-            ui->ledsOut.set(idx, LedOutBank::Off);       // gate
-            ui->ledsOut.set(idx + 4, LedOutBank::Blink); // led
-            ui->cvOut.set(idx, 0);                       // pitch
+            ui->gateDigitalOut.set(idx, LedOutBank::Off);       // gate
+            ui->gateDigitalOut.set(idx + 8, LedOutBank::Blink); // led
+            ui->cvOut.set(idx, 0);                              // pitch
         }
         else if (m_MidiNote[idx] != 0xFF)
         {
             // note is on
-            ui->ledsOut.set(idx, LedOutBank::On);                  //gate
-            ui->ledsOut.set(idx + 4, LedOutBank::On);              //led
+            ui->gateDigitalOut.set(idx, LedOutBank::On);           //gate
+            ui->gateDigitalOut.set(idx + 4, LedOutBank::On);       //led
             PitchOut(ui->cvOut, idx, m_MidiNote[idx], m_BaseNote); //pitch
         }
         else
         {
             // note is off
-            ui->ledsOut.set(idx, LedOutBank::Off);     //gate
-            ui->ledsOut.set(idx + 4, LedOutBank::Off); //led
+            ui->gateDigitalOut.set(idx, LedOutBank::Off);     //gate
+            ui->gateDigitalOut.set(idx + 8, LedOutBank::Off); //led
             // leave midi note / pitch unchanged
-        }
-    }
-
-    if (ui->learnBtn.IsFalling())
-    {
-        //Serial.println("Toggle learn!");
-        //toggle learn mode on/off
-        if (m_LearnIdx == -1)
-        {
-            m_LearnIdx = 0;
-        }
-        else
-        {
-            m_LearnIdx = -1;
         }
     }
 }

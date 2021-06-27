@@ -1,5 +1,5 @@
 #include "poly4handler.h"
-#include "midi10ui.h"
+#include "midi8ui.h"
 #include "cvfunctions.h"
 #include "EEPROM.h"
 
@@ -91,10 +91,25 @@ bool Poly4Handler::IsLearning() const
     return m_LearnIdx != -1;
 }
 
+void Poly4Handler::Learn(bool learn)
+{
+    if (learn)
+    {
+        if (m_LearnIdx == -1)
+        {
+            m_LearnIdx = 0;
+        }
+    }
+    else //if(m_LearnIdx != -1)
+    {
+        m_LearnIdx = -1;
+    }
+}
+
 void Poly4Handler::updateUI(Midi10UI *ui)
 {
     // gates : 01 23
-    // leds  : 45 67
+    // leds  : 89 1011
     // pitch : 0 2
     // velocity : 1 3
     for (int idx = 0; idx < Size; ++idx)
@@ -102,45 +117,31 @@ void Poly4Handler::updateUI(Midi10UI *ui)
         int column = 2 * idx;
         if (m_LearnIdx != -1)
         {
-            ui->ledsOut.set(column, LedOutBank::Off);       //gate
-            ui->ledsOut.set(column + 1, LedOutBank::Off);   //gate
-            ui->ledsOut.set(column + 4, LedOutBank::Blink); //led
-            ui->ledsOut.set(column + 5, LedOutBank::Blink); //led
-            ui->cvOut.set(column, 0);                       //pitch
-            ui->cvOut.set(column + 1, 0);                   //velocity
+            ui->gateDigitalOut.set(column, LedOutBank::Off);       //gate
+            ui->gateDigitalOut.set(column + 1, LedOutBank::Off);   //gate
+            ui->gateDigitalOut.set(column + 8, LedOutBank::Blink); //led
+            ui->gateDigitalOut.set(column + 9, LedOutBank::Blink); //led
+            ui->cvOut.set(column, 0);                              //pitch
+            ui->cvOut.set(column + 1, 0);                          //velocity
         }
         else if (m_MidiNote[idx] != 0xFF)
         {
             // note is on
-            ui->ledsOut.set(column, LedOutBank::On);                  //gate
-            ui->ledsOut.set(column + 1, LedOutBank::On);              //gate
-            ui->ledsOut.set(column + 4, LedOutBank::On);              //led
-            ui->ledsOut.set(column + 5, LedOutBank::On);              //led
+            ui->gateDigitalOut.set(column, LedOutBank::On);           //gate
+            ui->gateDigitalOut.set(column + 1, LedOutBank::On);       //gate
+            ui->gateDigitalOut.set(column + 8, LedOutBank::On);       //led
+            ui->gateDigitalOut.set(column + 9, LedOutBank::On);       //led
             PitchOut(ui->cvOut, column, m_MidiNote[idx], m_BaseNote); //pitch
             VelocityOut(ui->cvOut, column + 1, m_Velocity[idx]);      //velocity
         }
         else
         {
             // note is off
-            ui->ledsOut.set(column, LedOutBank::Off);     //gate
-            ui->ledsOut.set(column + 1, LedOutBank::Off); //gate
-            ui->ledsOut.set(column + 4, LedOutBank::Off); //led
-            ui->ledsOut.set(column + 5, LedOutBank::Off); //led
+            ui->gateDigitalOut.set(column, LedOutBank::Off);     //gate
+            ui->gateDigitalOut.set(column + 1, LedOutBank::Off); //gate
+            ui->gateDigitalOut.set(column + 8, LedOutBank::Off); //led
+            ui->gateDigitalOut.set(column + 9, LedOutBank::Off); //led
             // leave midi note/pitch, velocity unchanged
-        }
-    }
-
-    if (ui->learnBtn.IsFalling())
-    {
-        //Serial.println("Toggle learn!");
-        //toggle learn mode on/off
-        if (m_LearnIdx == -1)
-        {
-            m_LearnIdx = 0;
-        }
-        else
-        {
-            m_LearnIdx = -1;
         }
     }
 }

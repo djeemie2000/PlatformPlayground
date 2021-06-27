@@ -6,7 +6,7 @@
 #include "DigitalOutBank.h"
 #include "buttonin.h"
 
-struct Midi8UI
+struct Midi10UI
 {
     //TODO mapping between 2 char code and int modeNbr
     static const char SingleMode = 'S';
@@ -30,23 +30,25 @@ struct Midi8UI
     bool debug;
 
     static const int NoLearn = 0;
-    static const int Learn1 = 1;
-    static const int Learn2 = 2;
+    static const int Learn = 1;
     int learnMode;
+    int learnMode2;
 
-    DigitalOutBank gatesOut; //(4,5,6,7);
-    AnalogOutBank cvOut;     //(4);// 2x DAC => use CS pins 10,9
-    LedOutBank ledsOut;      //(8);//use CS pin 8
+    DigitalOutBank clockDigitalOut; //(6 = 2 led + 4 gate);
+    AnalogOutBank cvOut;            //(4);// 2x DAC => use CS pins 10,9
+    LedOutBank gateDigitalOut;      //(16 = 8 gate + 8 led);//use CS pin 8
 
     // toggle learn on/off
-    ButtonIn learnBtn; // pin 2
-    ButtonIn extraBtn; // pin 3
+    ButtonIn learnBtn;  // pin A0
+    ButtonIn learnBtn2; // pin A1
+    ButtonIn extraBtn;  // pin A2
+    ButtonIn extraBtn2; // pin A3
 
     //TODO analogRead ==0 or not // pin A6
     //TODO analogRead ==0 or not // pin A7
 
-    Midi8UI()
-        : modeNbr(Single1Mode), debug(true), learnMode(0), gatesOut(), cvOut(), ledsOut(8), learnBtn(), extraBtn()
+    Midi10UI()
+        : modeNbr(Single1Mode), debug(true), learnMode(0), learnMode2(0), clockDigitalOut(), cvOut(), gateDigitalOut(8), learnBtn(), learnBtn2(), extraBtn(), extraBtn2()
     {
     }
 
@@ -55,20 +57,24 @@ struct Midi8UI
         modeNbr = Single1Mode;
         learnMode = NoLearn;
 
-        gatesOut.begin(4, 5, 6, 7, A0, A1, A2, A3, A4, A5);
+        // led out 2 3
+        // gate out 4 5 6 7
+        clockDigitalOut.begin(2, 3, 4, 5, 6, 7);
         cvOut.begin(4);
-        ledsOut.begin();
+        gateDigitalOut.begin();
         const int debounce = 30;
-        learnBtn.begin(2, debounce);
-        extraBtn.begin(3, debounce);
+        learnBtn.begin(A0, debounce);
+        learnBtn2.begin(A1, debounce);
+        extraBtn.begin(A2, debounce);
+        extraBtn2.begin(A3, debounce);
     }
 
     void update()
     {
         int blink = (millis() >> 7) & 1; //period 256 msec
-        gatesOut.update();
+        clockDigitalOut.update(blink);
         cvOut.update();
-        ledsOut.update(blink);
+        gateDigitalOut.update(blink);
         learnBtn.read();
         extraBtn.read();
     }
@@ -101,34 +107,34 @@ struct Midi8UI
 
     void setMode(char mode, char grouping)
     {
-        if (grouping == Midi8UI::Grouping1)
+        if (grouping == Midi10UI::Grouping1)
         {
-            modeNbr = Midi8UI::Single1Mode;
+            modeNbr = Midi10UI::Single1Mode;
         }
-        else if (grouping == Midi8UI::Grouping2)
+        else if (grouping == Midi10UI::Grouping2)
         {
-            if (mode == Midi8UI::SingleMode)
+            if (mode == Midi10UI::SingleMode)
             {
-                modeNbr = Midi8UI::Single2Mode;
+                modeNbr = Midi10UI::Single2Mode;
             }
-            else if (mode == Midi8UI::MonoMode)
+            else if (mode == Midi10UI::MonoMode)
             {
-                modeNbr = Midi8UI::Mono2Mode;
+                modeNbr = Midi10UI::Mono2Mode;
             }
-            else if (mode == Midi8UI::PolyMode)
+            else if (mode == Midi10UI::PolyMode)
             {
-                modeNbr = Midi8UI::Poly2Mode;
+                modeNbr = Midi10UI::Poly2Mode;
             }
         }
-        else if (grouping == Midi8UI::Grouping4)
+        else if (grouping == Midi10UI::Grouping4)
         {
-            if (mode == Midi8UI::MonoMode)
+            if (mode == Midi10UI::MonoMode)
             {
-                modeNbr = Midi8UI::Mono4Mode;
+                modeNbr = Midi10UI::Mono4Mode;
             }
-            else if (mode == Midi8UI::PolyMode)
+            else if (mode == Midi10UI::PolyMode)
             {
-                modeNbr = Midi8UI::Poly4Mode;
+                modeNbr = Midi10UI::Poly4Mode;
             }
         }
     }
@@ -138,10 +144,10 @@ struct Midi8UI
         // show mode for a short time
         for (int idx = 0; idx < LedOutBank::Capacity; ++idx)
         {
-            ledsOut.set(idx, LedOutBank::Off);
+            gateDigitalOut.set(idx, LedOutBank::Off);
         }
-        ledsOut.set(modeNbr, LedOutBank::On);
-        ledsOut.update(1);
+        gateDigitalOut.set(modeNbr, LedOutBank::On);
+        gateDigitalOut.update(1);
         delay(200);
     }
 

@@ -2,7 +2,7 @@
 #include <SPI.h>
 #include <EEPROM.h>
 
-#include "midi10ui.h"
+#include "midi8ui.h"
 #include "single1handler.h"
 #include "single2handler.h"
 #include "mono2handler.h"
@@ -11,8 +11,9 @@
 #include "poly4handler.h"
 #include "MidiParser.h"
 #include "clocksyncout.h"
+#include "multimidihandler.h"
 
-Midi10UI Midi10UI;
+Midi10UI midi10UI;
 MidiParser midiParserSerial;
 Single1Handler single1Handler;
 Single2Handler single2Handler;
@@ -21,27 +22,30 @@ Mono4Handler mono4Handler;
 Poly2Handler poly2Handler;
 Poly4Handler poly4Handler;
 ClockSyncHandler clockSyncHandler;
+MultiMidiHandler multiMidiHandler;
 
 void setup()
 {
   // put your setup code here, to run once:
   Serial.begin(31250); //115200);
-  Serial.println("Midi8 v0.4...");
+  Serial.println("Midi10 v0.4...");
 
-  Midi10UI.begin();
+  midi10UI.begin();
   clockSyncHandler.Begin(0, 1, 2, 3); //gate 0 1 led 2 3
 }
 
 void testUi()
 {
   //TODO read dip switch for debug/test y/n
-  testAnalogOutBank(Midi10UI.cvOut, 1);
-  testDigitalOutBank(Midi10UI.gatesOut, 1);
-  testLedOutBank(Midi10UI.ledsOut, 1);
+  testAnalogOutBank(midi10UI.cvOut, 1);
+  testDigitalOutBank(midi10UI.clockDigitalOut, 1);
+  testLedOutBank(midi10UI.gateDigitalOut, 1);
 }
 
-void handleMidi(MidiHandler &midiHandler, MidiHandler &midiHandler2, MidiHandler &midiHandler3)
+void handleMidi(MidiHandler *midiHandler, MidiHandler *midiHandler2 = 0, MidiHandler *midiHandler3 = 0)
 {
+  multiMidiHandler.Begin(midiHandler, midiHandler2, midiHandler3);
+
   // read serial midi in -> parser -> midi out
   // limit # bytes for performance issues
   int numBytesIn = Serial.available();
@@ -54,7 +58,7 @@ void handleMidi(MidiHandler &midiHandler, MidiHandler &midiHandler2, MidiHandler
   {
     uint8_t byte = Serial.read();
     //Serial.println(byte,HEX);
-    midiParserSerial.Parse(byte, midiHandler);
+    midiParserSerial.Parse(byte, multiMidiHandler);
     --numBytesIn;
   }
 }
@@ -75,8 +79,8 @@ void saveParams()
   uint8_t size = paramSize(); //Assumes <256!!
   EEPROM.update(off++, size);
   //  mode/grouping
-  EEPROM.update(off++, Midi10UI.mode);
-  EEPROM.update(off++, Midi10UI.grouping);
+  EEPROM.update(off++, midi10UI.mode());
+  EEPROM.update(off++, midi10UI.grouping());
   // data
   single1Handler.saveParams(off);
   off += single1Handler.paramSize();
@@ -104,15 +108,8 @@ void loadParams()
     {
       // mode/grouping
       char mode = EEPROM.read(off++);
-      if (mode == Midi10UI::SingleMode || mode == Midi10UI::MonoMode || mode == Midi10UI::PolyMode)
-      {
-        Midi10UI.mode = mode;
-      }
       char grouping = EEPROM.read(off++);
-      if (grouping == Midi10UI::Grouping1 || grouping == Midi10UI::Grouping2 || grouping == Midi10UI::Grouping4)
-      {
-        Midi10UI.grouping = mode;
-      }
+      midi10UI.setMode(mode, grouping);
       // data
       single1Handler.loadParams(off);
       off += single1Handler.paramSize();
@@ -154,67 +151,132 @@ void loop()
   //need to update enough times for the debouncing to work
   for (int repeat = 0; repeat < 100; ++repeat)
   {
-    Midi10UI.update();
+    midi10UI.update();
     delay(1);
   }
-  //if(Midi10UI.modeBtn8.Get())
+  testLedOutBank(midi10UI.gateDigitalOut, 1);
+  testDigitalOutBank(midi10UI.clockDigitalOut, 1);
+  loadParams();
+  if (midi10UI.debug)
   {
-    //testUi();
+    testUi();
     printParams();
   }
-  testLedOutBank(Midi10UI.ledsOut, 1);
-  loadParams();
+
+  //show mode for a short time!
+  midi10UI.showMode();
 
   unsigned long debugCntr = 0;
   while (true)
   {
-    Midi10UI.update();
-    if (Midi10UI.extraBtn.IsFalling())
+    midi10UI.update();
+
+    if (midi10UI.extraBtn.IsFalling())
     {
+      ++midi10UI.modeNbr;
+      if (midi10UI.modeNbr > Midi10UI::Poly4Mode)
+      {
+        midi10UI.modeNbr = Midi10UI::Single2Mode;
+      }
+      midi10UI.showMode();
       saveParams();
-      //TODO blink all leds before/after or all leds on during save
     }
 
-    //TODO multi midi handler :
-    //    clocksync
-    //    single1
-    //    single/mono/poly 2/4
-    if (Midi10UI.grouping == Midi10UI::Grouping1)
+    //handle midi learn toggle
+    if (midi10UI.learnBtn.IsFalling())
     {
-      // always single mode!
-      handleMidi(single1Handler);
-      single1Handler.updateUI(&Midi10UI);
-    }
-    else if (Midi10UI.grouping == Midi10UI::Grouping2)
-    {
-      if (Midi10UI.mode == Midi10UI::MonoMode)
+      if (midi10UI.learnMode == Midi10UI::NoLearn)
       {
-        handleMidi(mono2Handler);
-        mono2Handler.updateUI(&Midi10UI);
+        midi10UI.learnMode = Midi10UI::Learn;
       }
-      else if (Midi10UI.mode == Midi10UI::PolyMode)
+      else
       {
-        handleMidi(poly2Handler);
-        poly2Handler.updateUI(&Midi10UI);
-      }
-      else if (Midi10UI.mode == Midi10UI::SingleMode)
-      {
-        handleMidi(single2Handler);
-        single2Handler.updateUI(&Midi10UI);
+        midi10UI.learnMode = Midi10UI::NoLearn;
       }
     }
-    else if (Midi10UI.grouping == Midi10UI::Grouping4)
+
+    if (midi10UI.learnBtn2.IsFalling())
     {
-      // only mono or poly
-      if (Midi10UI.mode == Midi10UI::MonoMode)
+      if (midi10UI.learnMode2 == Midi10UI::NoLearn)
       {
-        handleMidi(mono4Handler);
-        mono4Handler.updateUI(&Midi10UI);
+        midi10UI.learnMode2 = Midi10UI::Learn;
       }
-      else if (Midi10UI.mode == Midi10UI::PolyMode)
+      else
       {
-        handleMidi(poly4Handler);
-        poly4Handler.updateUI(&Midi10UI);
+        midi10UI.learnMode2 = Midi10UI::NoLearn;
+      }
+    }
+
+    // set learn on all handlers
+    single2Handler.Learn(midi10UI.learnMode == Midi10UI::Learn);
+    mono2Handler.Learn(midi10UI.learnMode == Midi10UI::Learn);
+    poly2Handler.Learn(midi10UI.learnMode == Midi10UI::Learn);
+    mono4Handler.Learn(midi10UI.learnMode == Midi10UI::Learn);
+    poly4Handler.Learn(midi10UI.learnMode == Midi10UI::Learn);
+
+    single1Handler.Learn(midi10UI.learnMode2 == Midi10UI::Learn);
+
+    // bool isLearning -> fill in on current handler after handleMidi
+    bool learn1 = false;
+    if (midi10UI.modeNbr == Midi10UI::Mono2Mode)
+    {
+      handleMidi(&mono2Handler, &single1Handler, &clockSyncHandler);
+      learn1 = mono2Handler.IsLearning();
+      mono2Handler.updateUI(&midi10UI);
+    }
+    else if (midi10UI.modeNbr == Midi10UI::Poly2Mode)
+    {
+      handleMidi(&poly2Handler, &single1Handler, &clockSyncHandler);
+      learn1 = poly2Handler.IsLearning();
+      poly2Handler.updateUI(&midi10UI);
+    }
+    else if (midi10UI.modeNbr == Midi10UI::Single2Mode)
+    {
+      handleMidi(&single2Handler, &single1Handler, &clockSyncHandler);
+      learn1 = single2Handler.IsLearning();
+      single2Handler.updateUI(&midi10UI);
+    }
+    else if (midi10UI.modeNbr == Midi10UI::Mono4Mode)
+    {
+      handleMidi(&mono4Handler, &single1Handler, &clockSyncHandler);
+      learn1 = mono4Handler.IsLearning();
+      mono4Handler.updateUI(&midi10UI);
+    }
+    else if (midi10UI.modeNbr == Midi10UI::Poly4Mode)
+    {
+      handleMidi(&poly4Handler, &single1Handler, &clockSyncHandler);
+      learn1 = poly4Handler.IsLearning();
+      poly4Handler.updateUI(&midi10UI);
+    }
+    // both handlers below were called upon handleMidi()
+    single1Handler.updateUI(&midi10UI);
+    clockSyncHandler.updateUI(&midi10UI);
+
+    if (midi10UI.learnMode == Midi10UI::Learn)
+    {
+      // if Learn mode and current handler is no longer learning after handleMidi => trigger auto save, learn mode to no learn
+      if (!learn1)
+      {
+        midi10UI.learnMode = Midi10UI::NoLearn;
+        if (midi10UI.debug)
+        {
+          Serial.println("AutoSave!");
+        }
+        saveParams();
+      }
+    }
+
+    if (midi10UI.learnMode2 == Midi10UI::Learn)
+    {
+      // if Learn mode and single1  handler is no longer learning after handleMidi => trigger auto save, learn mode to no learn
+      if (!single1Handler.IsLearning())
+      {
+        midi10UI.learnMode2 = Midi10UI::NoLearn;
+        if (midi10UI.debug)
+        {
+          Serial.println("AutoSave!");
+        }
+        saveParams();
       }
     }
 
@@ -227,8 +289,14 @@ void loop()
         Serial.print(millis());
 
         Serial.print(" ");
-        Serial.print(Midi10UI.mode);
-        Serial.println(Midi10UI.grouping);
+        Serial.print(midi10UI.learnMode);
+
+        Serial.print(" ");
+        Serial.print(midi10UI.modeNbr);
+
+        Serial.print(" ");
+        Serial.print(midi10UI.mode());
+        Serial.println(midi10UI.grouping());
       }
       debugCntr = 0;
     }

@@ -4,7 +4,7 @@
 class ShiftOutBank
 {
 public:
-    static const int Capacity = 8;
+    static const int Capacity = 16;
 
     ShiftOutBank(int csPin);
 
@@ -14,7 +14,7 @@ public:
 
 private:
     int m_CsPin;
-    uint8_t m_Values;
+    uint16_t m_Values;
 };
 
 void testDigitalOutBank(ShiftOutBank &bank, int repeats = -1);
