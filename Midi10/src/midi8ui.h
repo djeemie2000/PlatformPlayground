@@ -146,9 +146,9 @@ struct Midi10UI
         // show mode for a short time
         for (int idx = 0; idx < LedOutBank::Capacity; ++idx)
         {
-            gateDigitalOut.set(8 + idx, LedOutBank::Off);
+            gateDigitalOut.set(8 + idx, LedOutBank::On);
         }
-        gateDigitalOut.set(8 + modeNbr, LedOutBank::On);
+        gateDigitalOut.set(8 + modeNbr, LedOutBank::Off);
         gateDigitalOut.update(1);
         delay(200);
     }
