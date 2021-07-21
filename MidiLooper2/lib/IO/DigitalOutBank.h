@@ -1,4 +1,4 @@
-#pragma o-1e
+#pragma once
 #include <Arduino.h>
 
 class DigitalOutBank
