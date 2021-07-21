@@ -16,7 +16,7 @@ void DigitalInBank::begin()
 {
     for (int idx = 0; idx < Capacity; ++idx)
     {
-        if (NC != m_Pins[idx])
+        if (-1 != m_Pins[idx])
         {
             pinMode(m_Pins[idx], INPUT_PULLUP);//PULLUP?
             m_Values[idx] = -1;
@@ -37,7 +37,7 @@ void DigitalInBank::update()
 {
     for (int idx = 0; idx < Capacity; ++idx)
     {
-        if (NC != m_Pins[idx])
+        if (-1 != m_Pins[idx])
         {
             m_Values[idx] = digitalRead(m_Pins[idx]);
         }

@@ -16,7 +16,7 @@ void DigitalOutBank::begin()
 {
     for (int idx = 0; idx < Capacity; ++idx)
     {
-        if (NC != m_Pins[idx])
+        if (-1 != m_Pins[idx])
         {
             pinMode(m_Pins[idx], OUTPUT);
         }
@@ -35,7 +35,7 @@ void DigitalOutBank::update()
 {
     for (int idx = 0; idx < Capacity; ++idx)
     {
-        if (NC != m_Pins[idx])
+        if (-1 != m_Pins[idx])
         {
             digitalWrite(m_Pins[idx], m_Values[idx]); //??
         }
