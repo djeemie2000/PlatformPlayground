@@ -170,9 +170,7 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
 
   const int MetronomePad = 9;
   const int TrackPads[] = {1,2, 4,5, 7,8, 10,11};
-  //6 tracks + metronome
-  const int recordingY[] = {2,3, 2,3, 2,3, 2,3, 1};
-  const int recordingX[] = {4,4, 5,5, 6,6, 7,7, 7};
+  // 8 tracks + metronome
   const int playY[] = {6,7, 6,7, 6,7, 6,7, 5};
   const int playX[] = {4,4, 5,5, 6,6, 7,7, 7};
   
@@ -329,60 +327,72 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
   }
 
   bool fastBlinkOn = (currMillis>>7) & 0x01;
+  bool slowBlinkOn = (currMillis>>8) & 0x01;
   for (int idx = 0; idx < MidiLooper::NumTracks; ++idx)
   {
-      // play leds on/off ~play/mute
-      if(midiLooper.m_Track[idx].m_Muted)
-      {
-        ledMatrix.Clear(playX[idx], playY[idx]);
-      }
-      else
-      {
-        ledMatrix.Set(playX[idx], playY[idx]);        
-      }
-      
+          
       // recording leds: blink if midi learn, on/off ~recording otherwise
       if(midiLooper.m_Track[idx].m_MidiLearn)
       { 
         if(fastBlinkOn)
         {
-            ledMatrix.Set(recordingX[idx], recordingY[idx]);
+            ledMatrix.Set(playX[idx], playY[idx]);
         }
         else
         {
-          ledMatrix.Clear(recordingX[idx], recordingY[idx]);
+          ledMatrix.Clear(playX[idx], playY[idx]);
         }      
       }
       else if(midiLooper.m_Track[idx].m_Recording)
       {
-        ledMatrix.Set(recordingX[idx], recordingY[idx]);
-      }
+        if(slowBlinkOn)
+        {
+            ledMatrix.Set(playX[idx], playY[idx]);
+        }
+        else
+        {
+          ledMatrix.Clear(playX[idx], playY[idx]);
+        }       }
       else
       {
-        ledMatrix.Clear(recordingX[idx], recordingY[idx]);
+        // play leds on/off ~play/mute
+        if(midiLooper.m_Track[idx].m_Muted)
+        {
+          ledMatrix.Clear(playX[idx], playY[idx]);
+        }
+        else
+        {
+          ledMatrix.Set(playX[idx], playY[idx]);        
+        }
       }
   }
 
   // metronome
   //   play led ~~ playing 
   //   recording led blink if midi learn
-  if(midiLooper.m_Metronome.IsPlaying())
+  if(midiLooper.m_Metronome.IsLearning())
   {
-    ledMatrix.Set(playX[MidiLooper::NumTracks], playY[MidiLooper::NumTracks]);
+    if(fastBlinkOn)
+    {
+      ledMatrix.Set(playX[MidiLooper::NumTracks], playY[MidiLooper::NumTracks]);
+    }
+    else
+    {
+      ledMatrix.Clear(playX[MidiLooper::NumTracks], playY[MidiLooper::NumTracks]);
+    }
   }
+  // no recording
   else
   {
-    ledMatrix.Clear(playX[MidiLooper::NumTracks], playY[MidiLooper::NumTracks]);        
+    if(midiLooper.m_Metronome.IsPlaying())
+    {
+      ledMatrix.Set(playX[MidiLooper::NumTracks], playY[MidiLooper::NumTracks]);
+    }
+    else
+    {
+      ledMatrix.Clear(playX[MidiLooper::NumTracks], playY[MidiLooper::NumTracks]);        
+    } 
   }
-  
-  if(midiLooper.m_Metronome.IsLearning() && fastBlinkOn)
-  {
-      ledMatrix.Set(recordingX[MidiLooper::NumTracks], recordingY[MidiLooper::NumTracks]);
-  }
-  else
-  {
-    ledMatrix.Clear(recordingX[MidiLooper::NumTracks], recordingY[MidiLooper::NumTracks]);
-  }    
 
   ledMatrix.WriteAll();
 }
