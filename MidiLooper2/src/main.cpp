@@ -165,16 +165,16 @@ void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &han
 void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& currentMode, Max7219Matrix& ledMatrix)
 {
   const int LearnModePad = 0;
-  const int RecordingModePad = 1;
-  const int PlayModePad = 2;
+  const int RecordingModePad = 3;
+  const int PlayModePad = 6;
 
-  const int MetronomePad = 3;
-  const int TrackPads[] = {4,5, 6,7,8, 9,10,11};
+  const int MetronomePad = 9;
+  const int TrackPads[] = {1,2, 4,5, 7,8, 10,11};
   //6 tracks + metronome
-  const int recordingY[] = {1,2, 0,1,2, 0,1,2, 0};
-  const int recordingX[] = {5,5, 6,6,6, 7,7,7, 5};
-  const int playY[] = {6,7, 5,6,7, 5,6,7, 5};
-  const int playX[] = {5,5, 6,6,6, 7,7,7, 5};
+  const int recordingY[] = {2,3, 2,3, 2,3, 2,3, 1};
+  const int recordingX[] = {4,4, 5,5, 6,6, 7,7, 7};
+  const int playY[] = {6,7, 6,7, 6,7, 6,7, 5};
+  const int playX[] = {4,4, 5,5, 6,6, 7,7, 7};
   
   touchPad.Read();
 
