@@ -27,6 +27,15 @@ void MidiLooperTicker::SetNumBars(uint16_t numBarShift)
     m_NumBarShift = numBarShift;
 }
 
+void MidiLooperTicker::ToggleNumBars(uint16_t minNumBarshift, uint16_t maxNumBarShift)
+{
+    ++m_NumBarShift;
+    if(maxNumBarShift<m_NumBarShift)
+    {
+        m_NumBarShift = minNumBarshift;
+    }
+}
+
 void MidiLooperTicker::reset()
 {
     m_Reset = true;

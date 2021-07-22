@@ -23,6 +23,7 @@ public:
 
     void onTick(int clock);
     void SetNumBars(uint16_t numBarShift); // 0/1/2/3/4 -> 1/2/4/8/16 bars
+    void ToggleNumBars(uint16_t minNumBarshift, uint16_t maxNumBarShift);
     void reset();
 
     bool clockIsRising() const;

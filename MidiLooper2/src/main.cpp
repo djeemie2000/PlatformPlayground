@@ -86,7 +86,7 @@ struct DevBoard
    void update()
    {
      //TODO!!!!!!!!!!!!!!
-    debugIsActive = (0 == digitalRead(debugPin));
+    debugIsActive = true;//TODO!!!(0 == digitalRead(debugPin));
     IOXP1.update();
     // IOXP2.update();
     // IOXP3.update();
@@ -137,7 +137,7 @@ void setup() {
   midiLooper.begin(&devBoard.serialMidi); //calls serialMidi.begin(31250);
 
   delay(1000);
-  devBoard.serialDebug.println("MidiLooper2 v0.1");
+  devBoard.serialDebug.println("MidiLooper2 v0.2");
 
   // memset(testBuffer, 0, sizeof(testBuffer));
 }
@@ -177,39 +177,30 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
   const int playX[] = {4,4, 5,5, 6,6, 7,7, 7};
   
   touchPad.Read();
-
   unsigned long currMillis = millis();
-
-  if (touchPad.IsClicked(LearnModePad))
-  {
-    currentMode = LearnMode;
-  }
-  if (touchPad.IsClicked(RecordingModePad))
-  {
-    currentMode = RecordingMode;
-  }
-  if (touchPad.IsClicked(PlayModePad))
-  {
-     currentMode = PlayMode;
-  }
-
   learnModePadState.update(currMillis, touchPad.Get(LearnModePad));
   recordingModePadState.update(currMillis, touchPad.Get(RecordingModePad));
   playModePadState.update(currMillis, touchPad.Get(PlayModePad));
-  if(learnModePadState.LongPressed())
+
+
+  // toggle num bars
+  if(playModePadState.Tapped())
   {
-    //serialDebug.println("learn pad long");
-    midiLooper.m_Ticker.SetNumBars(1);// 2 bars
+    midiLooper.m_Ticker.ToggleNumBars(1, 3);
   }
-  if(recordingModePadState.LongPressed())
+
+  // determine mode
+  if (touchPad.Get(LearnModePad))
   {
-    //serialDebug.println("rec   pad long");
-    midiLooper.m_Ticker.SetNumBars(2);// 4 bars
+    currentMode = LearnMode;
   }
-  if(playModePadState.LongPressed())
+  else if (touchPad.Get(RecordingModePad))
   {
-    //serialDebug.println("play  pad long");
-    midiLooper.m_Ticker.SetNumBars(3);// 8 bars
+    currentMode = RecordingMode;
+  }
+  else//if (touchPad.IsClicked(PlayModePad))
+  {
+     currentMode = PlayMode;
   }
 
 
@@ -223,10 +214,16 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
     {
       midiLooper.m_Metronome.ToggleMidiLearn();
     }
-    //if (touchPad.Get(PlayModePad))
     else if(currentMode == PlayMode)
     {
-      midiLooper.m_Metronome.onToggleMuted();
+      if(midiLooper.m_Metronome.IsLearning())
+      {
+        midiLooper.m_Metronome.ToggleMidiLearn();
+      }
+      else
+      {
+        midiLooper.m_Metronome.onToggleMuted();
+      }    
     }
   }
 
@@ -251,7 +248,18 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
         }
         else if(currentMode == PlayMode)
         {
-          midiLooper.m_Track[idx].onToggleMuted(midiLooper.m_MidiOut);
+          if(midiLooper.m_Track[idx].m_MidiLearn)
+          {
+            midiLooper.m_Track[idx].StopMidiLearn();
+          }
+          else if(midiLooper.m_Track[idx].m_Recording)
+          {
+            midiLooper.m_Track[idx].ToggleRecording();
+          }
+          else
+          {
+            midiLooper.m_Track[idx].onToggleMuted(midiLooper.m_MidiOut);
+          }
         }
     }
     else if(trackPadState[idx].LongPressed())
@@ -320,7 +328,7 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
     ledMatrix.Set(2, tickerState.m_Bar);
   }
 
-  bool blinkOn = (currMillis>>7) & 0x01;
+  bool fastBlinkOn = (currMillis>>7) & 0x01;
   for (int idx = 0; idx < MidiLooper::NumTracks; ++idx)
   {
       // play leds on/off ~play/mute
@@ -336,7 +344,7 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
       // recording leds: blink if midi learn, on/off ~recording otherwise
       if(midiLooper.m_Track[idx].m_MidiLearn)
       { 
-        if(blinkOn)
+        if(fastBlinkOn)
         {
             ledMatrix.Set(recordingX[idx], recordingY[idx]);
         }
@@ -367,7 +375,7 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
     ledMatrix.Clear(playX[MidiLooper::NumTracks], playY[MidiLooper::NumTracks]);        
   }
   
-  if(midiLooper.m_Metronome.IsLearning() && blinkOn)
+  if(midiLooper.m_Metronome.IsLearning() && fastBlinkOn)
   {
       ledMatrix.Set(recordingX[MidiLooper::NumTracks], recordingY[MidiLooper::NumTracks]);
   }
@@ -382,17 +390,23 @@ void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& cur
 void loop()
 {
   // put your main code here, to run repeatedly:
+  devBoard.serialDebug.println("starting up!");
+
 
   // startup checks
+  devBoard.update();
   if(devBoard.debugActive())
   {
+    devBoard.serialDebug.println("debug startup checks!");
+    
     ScanI2C(devBoard.serialDebug);
-
-    const int numRepeats = 16;
-    TestTouchPad(devBoard.MPR121A, devBoard.serialDebug, numRepeats);
 
     devBoard.serialDebug.println("test led matrix");
     testDigitalOutMatrix(devBoard.ledMatrix, 1);
+
+    devBoard.serialDebug.println("test touchpad");
+    const int numRepeats = 16;
+    TestTouchPad(devBoard.MPR121A, devBoard.serialDebug, numRepeats);
   }
 
   // make sure all notes are off on all midi channels
