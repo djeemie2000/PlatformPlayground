@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <Wire.h>
-//#include <SPI.h>
 #include "ScanI2C.h"
 #include "TestTouchPad.h"
 #include "TestDigitalOutMatrix.h"
@@ -10,7 +9,6 @@
 #include "DigitalOutBank.h"
 #include "ButtonState.h"
 #include "DevBoard.h"
-
 
 //SPIClass SPI2(HSPI);
 
@@ -72,17 +70,17 @@ void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &han
 
 void updateMidiLooper(MidiLooper &midiLooper, MultiTouchPad &touchPad, int& currentMode, Max7219Matrix& ledMatrix)
 {
-  const int LearnModePad = 0;
-  const int RecordingModePad = 4;
-  const int PlayModePad = 8;
+  const int LearnModePad = 12;
+  const int RecordingModePad = 13;
+  const int PlayModePad = 14;
 
   // 8 tracks + metronome
-  const int TrackPads[] = {1,2,3, 5,6,7, 10,11, 12,13,14,15, 16,17,18,19, 20,21,22,23};
-  const int MetronomePad = 9;
-  const int TrackLedY[] = {1,2,3, 1,2,3, 2,3, 4,5,6,7, 4,5,6,7, 4,5,6,7 };
-  const int TrackLedX[] = {5,5,5, 6,6,6, 7,7, 5,5,5,5, 6,6,6,6, 7,7,7,7 };
-  const int MetronomeLedY = 1;
-  const int MetronomeLedX = 7;
+  const int TrackPads[] = {0,1,2,3, 4,5,6,7, 8,9,10,11,   16,17,18,19, 20,21,22,23, 24,25,26,27};
+  const int MetronomePad = 15;
+  const int TrackLedY[] = {0,1,2,3, 0,1,2,3, 0,1,2,3,   4,5,6,7, 4,5,6,7, 4,5,6,7 };
+  const int TrackLedX[] = {5,5,5,5, 6,6,6,6, 7,7,7,7,   5,5,5,5, 6,6,6,6, 7,7,7,7 };
+  const int MetronomeLedY = 7;
+  const int MetronomeLedX = 4;
   
   touchPad.Read();//TODO devBoard.update()
   unsigned long currMillis = millis();
@@ -310,30 +308,9 @@ void loop()
   // put your main code here, to run repeatedly:
   devBoard.serialDebug.println("starting up!");
 
-  // ScanI2C(devBoard.serialDebug);
+  ScanI2C(devBoard.serialDebug);
 
-  // while(true)
-  // {
-
-  //   //devBoard.MPR121A.Read();
-  //   //devBoard.MPR121B.Read();
-  //   devBoard.touchPad.Read();
-  //   //PrintTouchPad(devBoard.MPR121A, devBoard.serialDebug);
-  //   //PrintTouchPad(devBoard.MPR121B, devBoard.serialDebug);
-  //   PrintTouchPad(devBoard.touchPad, devBoard.serialDebug);
-
-  //   //devBoard.serialDebug.print("Test TTP229 0x");
-  //   //SPI2.beginTransaction(SPISettings(14000000, MSBFIRST, SPI_MODE3));
-  //   //uint16_t touchState = SPI2.transfer16(0);
-  //   //SPI2.endTransaction();
-  //   // uint8_t byte1 = shiftIn(12,14, MSBFIRST);
-  //   // uint8_t byte2 = shiftIn(12,14, MSBFIRST);
-  //   // devBoard.serialDebug.print(byte1, HEX);
-  //   // devBoard.serialDebug.println(byte2, HEX);
-  //   delay(200);
-  // }
   
-
   // startup checks
   devBoard.update();
   if(devBoard.debugActive())

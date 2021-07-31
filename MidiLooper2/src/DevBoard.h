@@ -5,6 +5,7 @@
 #include "DigitalIn.h"
 #include "DigitalInBank.h"
 #include "MultiTouchPad.h"
+#include "TTP8229TouchPad.h"
 
 struct DevBoard
 {
@@ -30,7 +31,9 @@ struct DevBoard
 //  AnalogIn Pot2;
 //  AnalogIn Pot3;
   MPR121TouchPad MPR121A;
-  MPR121TouchPad MPR121B;
+  //MPR121TouchPad MPR121B;
+  TTP8229TouchPad_I2C TTP8299;
+
   MultiTouchPad touchPad;
   Max7219Matrix ledMatrix;//(1,PA4);//cs pin
 
@@ -45,7 +48,7 @@ struct DevBoard
   //  , Pot2()
   //  , Pot3()
    , MPR121A()
-   , MPR121B()
+//   , MPR121B()
    , ledMatrix(1, csPinLedMatrix)//cs pin
    {}
 
@@ -68,8 +71,12 @@ struct DevBoard
      // setup I2C for MPR121 MPR121A
      // Wire.begin() is called inside MPR121A.begin()
      MPR121A.Begin(irqPinTouchPadA); //irq pin
-     MPR121B.Begin(irqPinTouchPadB, MPR121TouchPad::DefaultTouchThreshold, MPR121TouchPad::DefaultReleaseThreshold, 0x5B); //irq pin
-     touchPad.Begin(&MPR121A, &MPR121B);
+     touchPad.Add(&MPR121A);
+    //  MPR121B.Begin(irqPinTouchPadB, MPR121TouchPad::DefaultTouchThreshold, MPR121TouchPad::DefaultReleaseThreshold, 0x5B); //irq pin
+    //  touchPad.Add(&MPR121B);
+     TTP8299.Begin();
+     touchPad.Add(&TTP8299);
+     touchPad.Begin();
      //TODO autoDetect I2C : MPR121A memBank
 
       //SPI CS external
@@ -88,9 +95,9 @@ struct DevBoard
     //  Pot2.Read();
     //  Pot3.Read();
     // update led matrix, touchpad here??
-    MPR121A.Read();
-    MPR121B.Read();
-    //touchPad.Read();
+    //MPR121A.Read();
+    //MPR121B.Read();
+    touchPad.Read();
     ledMatrix.WriteAll();
    }
 
