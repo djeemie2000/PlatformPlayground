@@ -4,13 +4,14 @@
 #include "Max7219Matrix.h"
 #include "DigitalIn.h"
 #include "DigitalInBank.h"
-
+#include "MultiTouchPad.h"
 
 struct DevBoard
 {
   static const int LedPin = 2;
   static const int csPinLedMatrix = 5;
-  static const int irqPinTouchPad = 15;
+  static const int irqPinTouchPadA = 15;
+  static const int irqPinTouchPadB = 4;
   static const int debugPin = 4;// TODO debugIn DIn
 
 
@@ -29,6 +30,8 @@ struct DevBoard
 //  AnalogIn Pot2;
 //  AnalogIn Pot3;
   MPR121TouchPad MPR121A;
+  MPR121TouchPad MPR121B;
+  MultiTouchPad touchPad;
   Max7219Matrix ledMatrix;//(1,PA4);//cs pin
 
   DevBoard()
@@ -42,6 +45,7 @@ struct DevBoard
   //  , Pot2()
   //  , Pot3()
    , MPR121A()
+   , MPR121B()
    , ledMatrix(1, csPinLedMatrix)//cs pin
    {}
 
@@ -63,7 +67,9 @@ struct DevBoard
 
      // setup I2C for MPR121 MPR121A
      // Wire.begin() is called inside MPR121A.begin()
-     MPR121A.Begin(irqPinTouchPad); //irq pin
+     MPR121A.Begin(irqPinTouchPadA); //irq pin
+     MPR121B.Begin(irqPinTouchPadB, MPR121TouchPad::DefaultTouchThreshold, MPR121TouchPad::DefaultReleaseThreshold, 0x5B); //irq pin
+     touchPad.Begin(&MPR121A, &MPR121B);
      //TODO autoDetect I2C : MPR121A memBank
 
       //SPI CS external
@@ -83,6 +89,8 @@ struct DevBoard
     //  Pot3.Read();
     // update led matrix, touchpad here??
     MPR121A.Read();
+    MPR121B.Read();
+    //touchPad.Read();
     ledMatrix.WriteAll();
    }
 

@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <Wire.h>
+#include <SPI.h>
 #include "ScanI2C.h"
 #include "TestTouchPad.h"
 #include "TestDigitalOutMatrix.h"
@@ -10,6 +11,8 @@
 #include "ButtonState.h"
 #include "DevBoard.h"
 
+
+SPIClass SPI2(HSPI);
 
 #define FAKECLOCK 1
 
@@ -34,6 +37,10 @@ MidiLooper midiLooper;
 void setup() {
   // put your setup code here, to run once:
   devBoard.Begin();
+
+  // SPI2.begin();
+  // SPI.beginTransaction(SPISettings(14000000, MSBFIRST, SPI_MODE3));
+  delay(500); // Allow 500ms for the 8229BSF to get ready after turn-on
 
   midiLooper.begin(&devBoard.serialMidi); //calls serialMidi.begin(31250);
 
@@ -63,7 +70,7 @@ void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &han
   }
 }
 
-void updateMidiLooper(MidiLooper &midiLooper, MPR121TouchPad &touchPad, int& currentMode, Max7219Matrix& ledMatrix)
+void updateMidiLooper(MidiLooper &midiLooper, MultiTouchPad &touchPad, int& currentMode, Max7219Matrix& ledMatrix)
 {
   const int LearnModePad = 0;
   const int RecordingModePad = 3;
@@ -303,6 +310,29 @@ void loop()
   // put your main code here, to run repeatedly:
   devBoard.serialDebug.println("starting up!");
 
+  // ScanI2C(devBoard.serialDebug);
+
+  // while(true)
+  // {
+
+  //   //devBoard.MPR121A.Read();
+  //   //devBoard.MPR121B.Read();
+  //   devBoard.touchPad.Read();
+  //   //PrintTouchPad(devBoard.MPR121A, devBoard.serialDebug);
+  //   //PrintTouchPad(devBoard.MPR121B, devBoard.serialDebug);
+  //   PrintTouchPad(devBoard.touchPad, devBoard.serialDebug);
+
+  //   //devBoard.serialDebug.print("Test TTP229 0x");
+  //   //SPI2.beginTransaction(SPISettings(14000000, MSBFIRST, SPI_MODE3));
+  //   //uint16_t touchState = SPI2.transfer16(0);
+  //   //SPI2.endTransaction();
+  //   // uint8_t byte1 = shiftIn(12,14, MSBFIRST);
+  //   // uint8_t byte2 = shiftIn(12,14, MSBFIRST);
+  //   // devBoard.serialDebug.print(byte1, HEX);
+  //   // devBoard.serialDebug.println(byte2, HEX);
+  //   delay(200);
+  // }
+  
 
   // startup checks
   devBoard.update();
@@ -317,7 +347,7 @@ void loop()
 
     devBoard.serialDebug.println("test touchpad");
     const int numRepeats = 16;
-    TestTouchPad(devBoard.MPR121A, devBoard.serialDebug, numRepeats);
+    TestTouchPad(devBoard.touchPad, devBoard.serialDebug, numRepeats);
   }
 
   // make sure all notes are off on all midi channels
@@ -377,7 +407,7 @@ void loop()
     // read midi in but limit # bytes for performance issues
     readMidiIn(devBoard.serialMidi, midiParser, midiLooper, 3);
 
-    updateMidiLooper(midiLooper, devBoard.MPR121A, currentMode, devBoard.ledMatrix);
+    updateMidiLooper(midiLooper, devBoard.touchPad, currentMode, devBoard.ledMatrix);
 
     ++debugCounter;
     if (debugCounter >= 1000) //TODO stopwatch 1 sec + # runs

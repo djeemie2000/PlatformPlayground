@@ -53,7 +53,7 @@ void TouchInBank::update()
             else
             {
                 const int smoothN = 3;// (7*m_value + value)/8
-                m_Values[idx] = (m_Values[idx]<<smoothN - m_Values[idx] + touchRead(m_Pins[idx])) >> smoothN;
+                m_Values[idx] = ( (m_Values[idx]<<smoothN) - m_Values[idx] + touchRead(m_Pins[idx])) >> smoothN;
             }
 
             if(m_State[idx] && m_HighThreshold<m_Values[idx])
