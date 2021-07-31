@@ -27,7 +27,7 @@ public:
  
     MidiOut m_MidiOut;
     MidiLooperTicker m_Ticker;
-    static const int NumTracks = 8;
+    static const int NumTracks = 20;
     MidiLooperTrack m_Track[NumTracks];
     MidiMetronome m_Metronome;
 
