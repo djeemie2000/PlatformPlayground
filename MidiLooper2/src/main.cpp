@@ -36,8 +36,6 @@ void setup() {
   // put your setup code here, to run once:
   devBoard.Begin();
 
-  // SPI2.begin();
-  // SPI.beginTransaction(SPISettings(14000000, MSBFIRST, SPI_MODE3));
   delay(500); // Allow 500ms for the 8229BSF to get ready after turn-on
 
   midiLooper.begin(&devBoard.serialMidi); //calls serialMidi.begin(31250);
@@ -45,7 +43,20 @@ void setup() {
   delay(1000);
   devBoard.serialDebug.println("MidiLooper2 v0.2");
 
-  // memset(testBuffer, 0, sizeof(testBuffer));
+  //TODO default midi channels on tracks: 
+  // 8x3 tracks each column has the same default midi address
+  midiLooper.m_Track[0].m_MidiChannel = 0x01;
+  midiLooper.m_Track[1].m_MidiChannel = 0x02;
+  midiLooper.m_Track[2].m_MidiChannel = 0x03;
+  midiLooper.m_Track[3].m_MidiChannel = 0x04;
+  midiLooper.m_Track[4].m_MidiChannel = 0x09;
+  midiLooper.m_Track[5].m_MidiChannel = 0x09;
+  midiLooper.m_Track[6].m_MidiChannel = 0x05;
+  midiLooper.m_Track[7].m_MidiChannel = 0x06;
+  for(int idx = 8; idx<MidiLooper::NumTracks; ++idx)
+  {
+    midiLooper.m_Track[idx].m_MidiChannel = midiLooper.m_Track[idx%8].m_MidiChannel;
+  }
 }
 
 void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &handler, int maxNumBytesRead = 3)
