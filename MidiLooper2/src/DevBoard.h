@@ -6,6 +6,7 @@
 #include "DigitalInBank.h"
 #include "MultiTouchPad.h"
 #include "TTP8229TouchPad.h"
+#include "AnalogIn.h"
 
 struct DevBoard
 {
@@ -27,7 +28,7 @@ struct DevBoard
   DigitalInBank IOXP1;
 //  DigitalOutBank IOXP2;
 //  DigitalOutBank IOXP3;
-//  AnalogIn Pot1;
+  AnalogIn Pot1;
 //  AnalogIn Pot2;
 //  AnalogIn Pot3;
   MPR121TouchPad MPR121A;
@@ -44,7 +45,7 @@ struct DevBoard
    , IOXP1(34, 35)
   //  , IOXP2(PB3, PA15, PA12, PA11)
   //  , IOXP3(PB7, PB6, PB5, PB4)
-  //  , Pot1()
+  , Pot1()
   //  , Pot2()
   //  , Pot3()
    , MPR121A()
@@ -64,7 +65,7 @@ struct DevBoard
     //  IOXP2.begin();
     //  IOXP3.begin();
 
-    //  Pot1.begin(PA0);
+    Pot1.begin(33);//clock speed pot
     //  Pot2.begin(PA1);
     //  Pot3.begin(PA2);
 
@@ -91,7 +92,7 @@ struct DevBoard
     // IOXP2.update();
     // IOXP3.update();
 
-    //  Pot1.Read();
+    Pot1.Read();
     //  Pot2.Read();
     //  Pot3.Read();
     // update led matrix, touchpad here??

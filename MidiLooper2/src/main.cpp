@@ -12,7 +12,7 @@
 
 //SPIClass SPI2(HSPI);
 
-#define FAKECLOCK 1
+//#define FAKECLOCK 1
 
 DevBoard devBoard;
 
@@ -352,10 +352,8 @@ void loop()
 
   int currentMode = LearnMode;
 
-  //fake clock
-  #ifdef FAKECLOCK
+  //  clock
   int clockCounter = 0;
-  #endif
   
   while (true)
   {
@@ -363,7 +361,23 @@ void loop()
     delay(1); //TODO check if needed when using external clock input
 
     #ifdef FAKECLOCK
-    const int fakeClockPeriod = 125;
+    int fakeClockPeriod = 125;
+    #endif
+
+    #ifndef FAKECLOCK
+    devBoard.Pot1.Read();
+    int bpmUnmapped = devBoard.Pot1.Get();
+    // 120 BPM -> 2Hz => 500 msec period / 4 ticks per beat = 125 msec
+    // range from 60 BPM to 180 BPM => middle position = 120 BPM
+    // -> 62.5 to 250 msec period
+    const int minBPM = 60;
+    const int maxBPM = 180;
+    int clockBPM = map(bpmUnmapped, 0, 1023, minBPM, maxBPM);
+    const int defaultBPM = 120;
+    const int defaultPeriod = 125;
+    int fakeClockPeriod = defaultPeriod * defaultBPM / clockBPM;
+    #endif
+
     if (clockCounter < fakeClockPeriod)
     {
       ++clockCounter;
@@ -373,13 +387,6 @@ void loop()
       clockCounter = 0;
     }
     int clock = clockCounter < (fakeClockPeriod / 2) ? 1 : 0;
-    #endif
-
-    #ifndef FAKECLOCK
-    // clock + reset from digitalIn
-    devBoard.IOXP1.update();
-    int clock = devBoard.IOXP1.get(0);
-    #endif
     
     midiLooper.onTick(clock);
     // turn the LED on/off
