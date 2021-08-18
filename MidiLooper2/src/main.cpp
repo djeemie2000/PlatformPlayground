@@ -10,6 +10,8 @@
 #include "ButtonState.h"
 #include "DevBoard.h"
 
+#include "ArduinoNvs.h"
+
 //SPIClass SPI2(HSPI);
 
 //#define FAKECLOCK 1
@@ -35,8 +37,9 @@ MidiLooper midiLooper;
 void setup() {
   // put your setup code here, to run once:
   devBoard.Begin();
-
   delay(500); // Allow 500ms for the 8229BSF to get ready after turn-on
+
+  NVS.begin();
 
   midiLooper.begin(&devBoard.serialMidi); //calls serialMidi.begin(31250);
 
@@ -360,6 +363,7 @@ void loop()
     //fake clock
     delay(1); //TODO check if needed when using external clock input
 
+    //TODO midiLooperClock class update(potValue), get(), begin()? cntr, period, dutycycle
     #ifdef FAKECLOCK
     int fakeClockPeriod = 125;
     #endif
