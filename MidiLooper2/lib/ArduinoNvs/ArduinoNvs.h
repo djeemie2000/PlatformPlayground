@@ -25,7 +25,6 @@
 #define __ARDUINO_NVS_H__
 
 #include <Arduino.h>
-#include <vector>
 
 extern "C" {
 #include "esp_partition.h"
@@ -56,6 +55,7 @@ public:
   bool    begin(String namespaceNvs = "storage");
   void    close();
 
+  //TODO const char* Key
   bool    eraseAll(bool forceCommit = true);
   bool    erase(String key, bool forceCommit = true);
 
@@ -66,23 +66,26 @@ public:
   bool    setInt(String key, uint32_t value, bool forceCommit = true);
   bool    setInt(String key, int64_t value, bool forceCommit = true);
   bool    setInt(String key, uint64_t value, bool forceCommit = true);
+  bool    setBool(String key, bool value, bool forceCommit = true);
   bool    setFloat(String key, float value, bool forceCommit = true);
   bool    setString(String key, String value, bool forceCommit = true);
   bool    setBlob(String key, uint8_t* blob, size_t length, bool forceCommit = true);
-  bool    setBlob(String key, std::vector<uint8_t>& blob, bool forceCommit = true);
 
-  int64_t getInt(String key, int64_t default_value = 0);  // In case of error, default_value will be returned
-  float   getFloat(String key, float default_value = 0);
-  
-  bool    getString(String key, String& res);
-  String  getString(String key);
-
-  size_t  getBlobSize(String key);  /// Returns the size of the stored blob
-  bool    getBlob(String key,  uint8_t* blob, size_t length);  /// User should proivde enought memory to store the loaded blob. If length < than required size to store blob, function fails.
-  bool    getBlob(String key, std::vector<uint8_t>& blob);  
-  std::vector<uint8_t> getBlob(String key); /// Less eficient but more simple in usage implemetation of `getBlob()`
+  bool    getInt(String key, uint8_t& value);
+  bool    getInt(String key, int16_t& value);
+  bool    getInt(String key, uint16_t& value);
+  bool    getInt(String key, int32_t& value);
+  bool    getInt(String key, uint32_t& value);
+  bool    getInt(String key, int64_t& value);
+  bool    getInt(String key, uint64_t& value);
+  bool    getBool(String key, bool& value);
+  bool    getFloat(String key, float& value);
+  bool    getString(String key, String& value);
+  bool    getBlobSize(String key, size_t& size);  /// Returns the size of the stored blob
+  bool    getBlob(String key, uint8_t* blob, size_t capacity, size_t& size);  /// User should proivde enought memory to store the loaded blob. If length < than required size to store blob, function fails.
 
   bool        commit();
+
 protected:
   nvs_handle  _nvs_handle;    
 };
