@@ -15,6 +15,7 @@ public:
     bool LoadPlayMute(uint8_t slot, uint8_t track, bool& playMute);
     bool SaveEvents(uint8_t slot, uint8_t track, MidiLooperEvent* events, int numEvents);
     bool LoadEvents(uint8_t slot, uint8_t track, MidiLooperEvent* events, int capacity, int& numEvents);
+    bool LoadNumEvents(uint8_t slot, uint8_t track, int& numEvents);
 private:
     void SetKey(uint8_t slot, uint8_t track, const char* id);
 

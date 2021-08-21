@@ -10,7 +10,7 @@
 #include "ButtonState.h"
 #include "DevBoard.h"
 
-#include "ArduinoNvs.h"
+#include "MidiLooperStorage.h"
 
 //SPIClass SPI2(HSPI);
 
@@ -32,14 +32,14 @@ static const int PlayMode = 2;
 //uint8_t testBuffer[16*1024];
 MidiParser midiParser;
 MidiLooper midiLooper;
-
+MidiLooperStorage midiLooperStorage;
 
 void setup() {
   // put your setup code here, to run once:
   devBoard.Begin();
   delay(500); // Allow 500ms for the 8229BSF to get ready after turn-on
 
-  NVS.begin();
+  midiLooperStorage.Begin();
 
   midiLooper.begin(&devBoard.serialMidi); //calls serialMidi.begin(31250);
 
@@ -317,13 +317,77 @@ void updateMidiLooper(MidiLooper &midiLooper, MultiTouchPad &touchPad, int& curr
   ledMatrix.WriteAll();
 }
 
+void SaveMidiLooper(MidiLooper& looper, MidiLooperStorage& storage, uint8_t slot)
+{
+  // iterate tracks:
+  // midi channel
+  // play/mute
+  // events??
+  for(int track = 0; track<MidiLooper::NumTracks; ++track)
+  {
+    storage.SaveMidiChannel(slot, track, looper.m_Track[track].m_MidiChannel);
+    storage.SavePlayMute(slot, track, looper.m_Track[track].m_MidiChannel);
+  }
+
+}
+
+void PrintStorage(DevBoard& db, MidiLooperStorage& storage, uint8_t slot)
+{
+  // iterate tracks:
+  // midi channel
+  // play/mute
+  // events?? events size??
+  db.serialDebug.print("Slot ");
+  db.serialDebug.println(slot, HEX);
+  for(int track = 0; track<MidiLooper::NumTracks; ++track)
+  {
+      db.serialDebug.print("Track 0x");
+      db.serialDebug.print(track, HEX);
+      db.serialDebug.print(" Ch 0x");
+      uint8_t ch = 0xFF;
+      if(storage.LoadMidiChannel(slot, track, ch))
+      {
+          db.serialDebug.print(ch, HEX);
+      }
+      else
+      {
+          db.serialDebug.print("??");
+      }
+      bool play = false;
+      db.serialDebug.print(" Pl ");
+      if(storage.LoadPlayMute(slot, track, play))
+      {
+          db.serialDebug.print(play);
+      }
+      else
+      {
+          db.serialDebug.print("??");
+      }
+      int numEvents = 0;
+      db.serialDebug.print(" Ev# ");
+      if(storage.LoadNumEvents(slot, track, numEvents))
+      {
+          db.serialDebug.print(numEvents);
+      }
+      else
+      {
+          db.serialDebug.print("??");
+      }
+      db.serialDebug.println();      
+  }
+}
+
+void LoadMidiLooper(MidiLooper& midiLooper, uint8_t slot)
+{
+
+}
+
 void loop()
 {
   // put your main code here, to run repeatedly:
   devBoard.serialDebug.println("starting up!");
 
   ScanI2C(devBoard.serialDebug);
-
   
   // startup checks
   devBoard.update();
@@ -339,6 +403,11 @@ void loop()
     devBoard.serialDebug.println("test touchpad");
     const int numRepeats = 16;
     TestTouchPad(devBoard.touchPad, devBoard.serialDebug, numRepeats);
+  
+    // test storage
+    SaveMidiLooper(midiLooper,midiLooperStorage, 0x00);
+    PrintStorage(devBoard, midiLooperStorage, 0x00);
+
   }
 
   // make sure all notes are off on all midi channels

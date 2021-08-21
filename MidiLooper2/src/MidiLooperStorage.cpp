@@ -77,3 +77,12 @@ bool MidiLooperStorage::LoadEvents(uint8_t slot, uint8_t track, MidiLooperEvent*
     numEvents = ok ? size/sizeof(MidiLooperEvent) : 0;
     return ok;
 }
+
+bool MidiLooperStorage::LoadNumEvents(uint8_t slot, uint8_t track, int& numEvents)
+{
+    SetKey(slot, track, "Ev");
+    size_t size = 0;
+    bool ok = NVS.getBlobSize(m_Key, size);
+    numEvents = ok ? size/sizeof(MidiLooperEvent) : 0;
+    return ok;
+}
