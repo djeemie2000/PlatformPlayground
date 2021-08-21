@@ -1,7 +1,7 @@
 #include "MidiLooperTicker.h"
 
 MidiLooperTicker::MidiLooperTicker()
-    : m_Clock(0), m_PrevClock(0), m_Counter(0), m_Reset(true), m_NumBarShift(2) {}
+    : m_Clock(0), m_PrevClock(0), m_Counter(0), m_Reset(true), m_NumBarShift(3) {}
 
  void MidiLooperTicker::onTick(int clock)
 {
