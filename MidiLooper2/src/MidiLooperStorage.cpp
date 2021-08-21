@@ -3,7 +3,41 @@
 #include "MidiLooperEvent.h"
 
 MidiLooperStorage::MidiLooperStorage()
-{}
+{
+    m_Lut[0] = '0';
+    m_Lut[1] = '1';
+    m_Lut[2] = '2';
+    m_Lut[3] = '3';
+    m_Lut[4] = '4';
+    m_Lut[5] = '5';
+    m_Lut[6] = '6';
+    m_Lut[7] = '7';
+    m_Lut[8] = '8';
+    m_Lut[9] = '9';
+    m_Lut[10] = 'A';
+    m_Lut[11] = 'B';
+    m_Lut[12] = 'C';
+    m_Lut[13] = 'D';
+    m_Lut[14] = 'E';
+    m_Lut[15] = 'F';
+    memset(m_Key, 7, 0);
+}
+
+void MidiLooperStorage::Begin()
+{
+    NVS.begin();
+}
+
+void MidiLooperStorage::SetKey(uint8_t slot, uint8_t track, const char* id)
+{
+    m_Key[0] = m_Lut[slot >> 4];
+    m_Key[1] = m_Lut[slot & 0x0F];
+    m_Key[2] = m_Lut[track >> 4];
+    m_Key[3] = m_Lut[track & 0x0F];
+    m_Key[4] = id[0];
+    m_Key[5] = id[1];
+    m_Key[6]= 0;//terminating zero
+}
 
 bool MidiLooperStorage::SaveMidiChannel(uint8_t slot, uint8_t track, uint8_t midiChannel)
 {

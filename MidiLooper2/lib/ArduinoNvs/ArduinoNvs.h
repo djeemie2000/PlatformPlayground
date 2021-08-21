@@ -57,32 +57,32 @@ public:
 
   //TODO const char* Key
   bool    eraseAll(bool forceCommit = true);
-  bool    erase(String key, bool forceCommit = true);
+  bool    erase(const char* key, bool forceCommit = true);
 
-  bool    setInt(String key, uint8_t value, bool forceCommit = true);
-  bool    setInt(String key, int16_t value, bool forceCommit = true);
-  bool    setInt(String key, uint16_t value, bool forceCommit = true);
-  bool    setInt(String key, int32_t value, bool forceCommit = true);
-  bool    setInt(String key, uint32_t value, bool forceCommit = true);
-  bool    setInt(String key, int64_t value, bool forceCommit = true);
-  bool    setInt(String key, uint64_t value, bool forceCommit = true);
-  bool    setBool(String key, bool value, bool forceCommit = true);
-  bool    setFloat(String key, float value, bool forceCommit = true);
-  bool    setString(String key, String value, bool forceCommit = true);
-  bool    setBlob(String key, uint8_t* blob, size_t length, bool forceCommit = true);
+  bool    setInt(const char* key, uint8_t value, bool forceCommit = true);
+  bool    setInt(const char* key, int16_t value, bool forceCommit = true);
+  bool    setInt(const char* key, uint16_t value, bool forceCommit = true);
+  bool    setInt(const char* key, int32_t value, bool forceCommit = true);
+  bool    setInt(const char* key, uint32_t value, bool forceCommit = true);
+  bool    setInt(const char* key, int64_t value, bool forceCommit = true);
+  bool    setInt(const char* key, uint64_t value, bool forceCommit = true);
+  bool    setBool(const char* key, bool value, bool forceCommit = true);
+  bool    setFloat(const char* key, float value, bool forceCommit = true);
+  bool    setString(const char* key, String value, bool forceCommit = true);
+  bool    setBlob(const char* key, uint8_t* blob, size_t length, bool forceCommit = true);
 
-  bool    getInt(String key, uint8_t& value);
-  bool    getInt(String key, int16_t& value);
-  bool    getInt(String key, uint16_t& value);
-  bool    getInt(String key, int32_t& value);
-  bool    getInt(String key, uint32_t& value);
-  bool    getInt(String key, int64_t& value);
-  bool    getInt(String key, uint64_t& value);
-  bool    getBool(String key, bool& value);
-  bool    getFloat(String key, float& value);
-  bool    getString(String key, String& value);
-  bool    getBlobSize(String key, size_t& size);  /// Returns the size of the stored blob
-  bool    getBlob(String key, uint8_t* blob, size_t capacity, size_t& size);  /// User should proivde enought memory to store the loaded blob. If length < than required size to store blob, function fails.
+  bool    getInt(const char* key, uint8_t& value);
+  bool    getInt(const char* key, int16_t& value);
+  bool    getInt(const char* key, uint16_t& value);
+  bool    getInt(const char* key, int32_t& value);
+  bool    getInt(const char* key, uint32_t& value);
+  bool    getInt(const char* key, int64_t& value);
+  bool    getInt(const char* key, uint64_t& value);
+  bool    getBool(const char* key, bool& value);
+  bool    getFloat(const char* key, float& value);
+  bool    getString(const char* key, String& value);
+  bool    getBlobSize(const char* key, size_t& size);  /// Returns the size of the stored blob
+  bool    getBlob(const char* key, uint8_t* blob, size_t capacity, size_t& size);  /// User should proivde enought memory to store the loaded blob. If length < than required size to store blob, function fails.
 
   bool        commit();
 
