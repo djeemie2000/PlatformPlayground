@@ -18,7 +18,9 @@
 
 DevBoard devBoard;
 
-//TODO midiLooperApp struct : button state + mode + midiLooper/midiParser
+//TODO app + (member or helper) functions 
+//TODO midiLooperApp struct : button state + mode + midiLooper/midiParser/midiLooperStorage
+
 ButtonState metronomePadState;
 ButtonState trackPadState[MidiLooper::NumTracks];
 ButtonState learnModePadState;
@@ -327,6 +329,7 @@ void SaveMidiLooper(MidiLooper& looper, MidiLooperStorage& storage, uint8_t slot
   {
     storage.SaveMidiChannel(slot, track, looper.m_Track[track].m_MidiChannel);
     storage.SavePlayMute(slot, track, looper.m_Track[track].m_MidiChannel);
+    //TODO events
   }
 
 }
@@ -386,8 +389,6 @@ void loop()
 {
   // put your main code here, to run repeatedly:
   devBoard.serialDebug.println("starting up!");
-
-  ScanI2C(devBoard.serialDebug);
   
   // startup checks
   devBoard.update();
@@ -399,6 +400,10 @@ void loop()
 
     devBoard.serialDebug.println("test led matrix");
     testDigitalOutMatrix(devBoard.ledMatrix, 1);
+
+
+    devBoard.serialDebug.println("test touch pins");
+    TestTouchInBank(devBoard.touchIn, devBoard.serialDebug, 16);
 
     devBoard.serialDebug.println("test touchpad");
     const int numRepeats = 16;

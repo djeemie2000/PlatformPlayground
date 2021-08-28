@@ -68,6 +68,16 @@ void TouchInBank::update()
     }
 }
 
+int TouchInBank::getValue(int idx)
+{
+    if (0 <= idx && idx < Capacity)
+    {
+        return m_Values[idx];
+    }
+    return -1;
+}
+
+
 // void testTouchInBank(TouchInBank &bank, int repeats)
 // {
 //     for (int repeat = 0; repeat < repeats || repeats < 0; ++repeat)
@@ -84,3 +94,34 @@ void TouchInBank::update()
 //         }
 //     }
 // }
+
+void PrintTouchInBank(TouchInBank &touchPad, HardwareSerial &debugSerial)
+{
+    debugSerial.print("touchPad ");
+    for (int pad = 0; pad < 8; ++pad)
+    {
+        debugSerial.print(touchPad.get(pad));
+    }
+    debugSerial.print("   ");
+    for (int pad = 0; pad < 8; ++pad)
+    {
+        debugSerial.print(touchPad.getValue(pad));
+        debugSerial.print(" ");
+    }
+    debugSerial.println();
+}
+
+void TestTouchInBank(TouchInBank &touchPad, HardwareSerial &debugSerial, int count)
+{
+    int cntr = 0;
+    while (cntr < count || count == -1)
+    {
+        for(int repeat = 0; repeat<100; ++repeat)
+        {
+            touchPad.update();
+            delay(5);
+        }
+        PrintTouchInBank(touchPad, debugSerial);
+        ++cntr;
+    }
+}

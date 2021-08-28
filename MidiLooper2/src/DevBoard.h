@@ -7,6 +7,7 @@
 #include "MultiTouchPad.h"
 #include "TTP8229TouchPad.h"
 #include "AnalogIn.h"
+#include "TouchInBank.h"
 
 struct DevBoard
 {
@@ -26,13 +27,9 @@ struct DevBoard
   HardwareSerial serialMidi;// uart 2
   // TODO membank
   DigitalInBank IOXP1;
-//  DigitalOutBank IOXP2;
-//  DigitalOutBank IOXP3;
   AnalogIn Pot1;
-//  AnalogIn Pot2;
-//  AnalogIn Pot3;
+  TouchInBank touchIn;
   MPR121TouchPad MPR121A;
-  //MPR121TouchPad MPR121B;
   TTP8229TouchPad_I2C TTP8299;
 
   MultiTouchPad touchPad;
@@ -43,13 +40,9 @@ struct DevBoard
    , debugIsActive(false)
    , serialMidi(2)
    , IOXP1(34, 35)
-  //  , IOXP2(PB3, PA15, PA12, PA11)
-  //  , IOXP3(PB7, PB6, PB5, PB4)
   , Pot1()
-  //  , Pot2()
-  //  , Pot3()
+  , touchIn(T4, T5, T6, T7)
    , MPR121A()
-//   , MPR121B()
    , ledMatrix(1, csPinLedMatrix)//cs pin
    {}
 
@@ -62,12 +55,9 @@ struct DevBoard
      serialMidi.begin(31250);
 
      IOXP1.begin();
-    //  IOXP2.begin();
-    //  IOXP3.begin();
+     Pot1.begin(33);//clock speed pot
+    touchIn.begin(30, 45);//hysteresis min max
 
-    Pot1.begin(33);//clock speed pot
-    //  Pot2.begin(PA1);
-    //  Pot3.begin(PA2);
 
      // setup I2C for MPR121 MPR121A
      // Wire.begin() is called inside MPR121A.begin()

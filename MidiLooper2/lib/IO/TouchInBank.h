@@ -12,6 +12,8 @@ public:
     int get(int idx) const;
     void update();
 
+    int getValue(int idx);
+
 private:
     int m_Pins[Capacity];
 
@@ -22,4 +24,5 @@ private:
     int m_State[Capacity];
 };
 
-//void testTouchInBank(TouchInBank &bank, int repeats = -1);
+void PrintTouchInBank(TouchInBank &touchPad, HardwareSerial &debugSerial);
+void TestTouchInBank(TouchInBank &touchPad, HardwareSerial &debugSerial, int count = -1);
