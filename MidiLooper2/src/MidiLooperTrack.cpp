@@ -1,4 +1,5 @@
 #include "MidiLooperTrack.h"
+#include "MidiLooperStorage.h"
 
 MidiLooperTrack::MidiLooperTrack()
     : m_MidiChannel(0), m_MidiLearn(true), m_Recording(false), m_Muted(false)
@@ -171,6 +172,44 @@ void MidiLooperTrack::AllNotesOff(MidiOut &midiOut)
         midiOut.NoteOff(m_MidiChannel, m_NoteStack.Pop(), 0x01);
     }
 }
+
+void MidiLooperTrack::Save(MidiLooperStorage& storage, uint8_t slot, uint8_t track)
+{
+    storage.SaveMidiChannel(slot, track, m_MidiChannel);
+    storage.SavePlayMute(slot, track, m_Muted);
+    storage.SaveEvents(slot, track, m_Events, m_NumEvents);
+}
+
+void MidiLooperTrack::Load(MidiLooperStorage& storage, uint8_t slot, uint8_t track)
+{
+    storage.LoadMidiChannel(slot, track, m_MidiChannel);
+    storage.LoadPlayMute(slot, track, m_Muted);
+    
+    return;//TODO test save events first
+    //TODO
+    // load events
+
+    if(storage.LoadEvents(slot, track, m_Events, EventCapacity, m_NumEvents))
+    {
+        // first erase all eventindex...
+        for(int idx = 0;idx<StepCapacity; ++idx)
+        {
+            m_StepSize[idx] = 0;
+        }
+        //then add all events to event index
+        for(int idxEvent = 0; idxEvent<m_NumEvents;++idxEvent)
+        {
+            uint8_t step = m_Events[idxEvent].m_Step;
+            uint8_t stepSize = m_StepSize[step];
+            if(stepSize<StepDepth)
+            {
+                m_StepEventIndex[step][stepSize] = idxEvent;
+                ++m_StepSize[step];
+            }
+        }
+    }
+}
+
 
 void MidiLooperTrack::printItems(HardwareSerial &serial)
 {

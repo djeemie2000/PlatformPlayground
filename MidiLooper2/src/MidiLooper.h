@@ -6,6 +6,8 @@
 #include "MidiLooperTrack.h"
 #include "MidiMetronome.h"
 
+class MidiLooperStorage;
+
 class MidiLooper : public MidiHandler
 {
 public:
@@ -22,6 +24,8 @@ public:
     void allNotesOff();
     void ToggleRecording(int idxTrack);
     void ToggleMidiLearn(int idxTrack);
+
+    void Save(MidiLooperStorage& storage, uint8_t slot);
 
     void printState(HardwareSerial &serial);
  

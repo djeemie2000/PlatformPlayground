@@ -125,6 +125,14 @@ void MidiLooper::ToggleMidiLearn(int idxTrack)
     }
 }
 
+void MidiLooper::Save(MidiLooperStorage& storage, uint8_t slot)
+{
+      // iterate tracks:
+  for(int track = 0; track<MidiLooper::NumTracks; ++track)
+  {
+    m_Track[track].Save(storage, slot, track);
+  }
+}
 
 
 void MidiLooper::printState(HardwareSerial &serial)

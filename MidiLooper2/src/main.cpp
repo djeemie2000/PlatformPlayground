@@ -319,21 +319,6 @@ void updateMidiLooper(MidiLooper &midiLooper, MultiTouchPad &touchPad, int& curr
   ledMatrix.WriteAll();
 }
 
-void SaveMidiLooper(MidiLooper& looper, MidiLooperStorage& storage, uint8_t slot)
-{
-  // iterate tracks:
-  // midi channel
-  // play/mute
-  // events??
-  for(int track = 0; track<MidiLooper::NumTracks; ++track)
-  {
-    storage.SaveMidiChannel(slot, track, looper.m_Track[track].m_MidiChannel);
-    storage.SavePlayMute(slot, track, looper.m_Track[track].m_MidiChannel);
-    //TODO events
-  }
-
-}
-
 void PrintStorage(DevBoard& db, MidiLooperStorage& storage, uint8_t slot)
 {
   // iterate tracks:
@@ -410,9 +395,9 @@ void loop()
     TestTouchPad(devBoard.touchPad, devBoard.serialDebug, numRepeats);
   
     // test storage
-    SaveMidiLooper(midiLooper,midiLooperStorage, 0x00);
+    devBoard.serialDebug.println("test storage");
+    midiLooper.Save(midiLooperStorage, 0x00);
     PrintStorage(devBoard, midiLooperStorage, 0x00);
-
   }
 
   // make sure all notes are off on all midi channels

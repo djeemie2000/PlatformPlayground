@@ -5,6 +5,8 @@
 #include "MidiLooperTicker.h"
 #include "MidiLooperEvent.h"
 
+class MidiLooperStorage;
+
 class MidiLooperTrack
 {
 public:
@@ -23,6 +25,9 @@ public:
     void onNoteOn(const MidiLooperTicker &ticker, MidiOut &midiOut, uint8_t midiChannel, uint8_t midiNote, uint8_t velocity);
     void onNoteOff(const MidiLooperTicker &ticker, uint8_t midiChannel, uint8_t midiNote, uint8_t velocity);
     void AllNotesOff(MidiOut &midiOut);
+
+    void Save(MidiLooperStorage& storage, uint8_t slot, uint8_t track);
+    void Load(MidiLooperStorage& storage, uint8_t slot, uint8_t track);
 
     void printItems(HardwareSerial &serial);
     void printState(HardwareSerial &serial);
