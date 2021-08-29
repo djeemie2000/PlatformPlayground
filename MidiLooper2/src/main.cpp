@@ -9,8 +9,8 @@
 #include "DigitalOutBank.h"
 #include "ButtonState.h"
 #include "DevBoard.h"
-
 #include "MidiLooperStorage.h"
+#include "MidiLooperClock.h"
 
 //SPIClass SPI2(HSPI);
 
@@ -32,6 +32,7 @@ static const int RecordingMode = 1;
 static const int PlayMode = 2;
 
 //uint8_t testBuffer[16*1024];
+MidiLooperClock looperClock;
 MidiParser midiParser;
 MidiLooper midiLooper;
 MidiLooperStorage midiLooperStorage;
@@ -42,7 +43,6 @@ void setup() {
   delay(500); // Allow 500ms for the 8229BSF to get ready after turn-on
 
   midiLooperStorage.Begin();
-
   midiLooper.begin(&devBoard.serialMidi); //calls serialMidi.begin(31250);
 
   delay(1000);
@@ -415,45 +415,27 @@ void loop()
   int currentMode = LearnMode;
 
   //  clock
-  int clockCounter = 0;
+  //int clockCounter = 0;
   
   while (true)
   {
     //fake clock
     delay(1); //TODO check if needed when using external clock input
 
-    //TODO midiLooperClock class update(potValue), get(), begin()? cntr, period, dutycycle
     #ifdef FAKECLOCK
-    int fakeClockPeriod = 125;
+    looperClock.Tick();
     #endif
 
     #ifndef FAKECLOCK
     devBoard.Pot1.Read();
     int bpmUnmapped = devBoard.Pot1.Get();
-    // 120 BPM -> 2Hz => 500 msec period / 4 ticks per beat = 125 msec
-    // range from 60 BPM to 180 BPM => middle position = 120 BPM
-    // -> 62.5 to 250 msec period
-    const int minBPM = 60;
-    const int maxBPM = 180;
-    int clockBPM = map(bpmUnmapped, 0, 1023, minBPM, maxBPM);
-    const int defaultBPM = 120;
-    const int defaultPeriod = 125;
-    int fakeClockPeriod = defaultPeriod * defaultBPM / clockBPM;
+    looperClock.Tick(bpmUnmapped);
     #endif
-
-    if (clockCounter < fakeClockPeriod)
-    {
-      ++clockCounter;
-    }
-    else
-    {
-      clockCounter = 0;
-    }
-    int clock = clockCounter < (fakeClockPeriod / 2) ? 1 : 0;
     
-    midiLooper.onTick(clock);
+    midiLooper.onTick(looperClock.Get());
+
     // turn the LED on/off
-    if(clock)
+    if(looperClock.Get())
     {
       devBoard.LedOn();
     }
