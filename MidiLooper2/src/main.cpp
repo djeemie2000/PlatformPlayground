@@ -18,53 +18,100 @@
 
 DevBoard devBoard;
 
-//TODO app + (member or helper) functions 
-//TODO midiLooperApp struct : button state + mode + midiLooper/midiParser/midiLooperStorage
+struct MidiLooperApp
+{
+  ButtonState metronomePadState;
+  ButtonState trackPadState[MidiLooper::NumTracks];
+  ButtonState learnModePadState;
+  ButtonState recordingModePadState;
+  ButtonState playModePadState;
 
-ButtonState metronomePadState;
-ButtonState trackPadState[MidiLooper::NumTracks];
-ButtonState learnModePadState;
-ButtonState recordingModePadState;
-ButtonState playModePadState;
+  static const int LearnMode =0;
+  static const int RecordingMode = 1;
+  static const int PlayMode = 2;
+  int currentMode;
 
-static const int LearnMode =0;
-static const int RecordingMode = 1;
-static const int PlayMode = 2;
+  uint8_t currentSlot;
 
-//uint8_t testBuffer[16*1024];
-MidiLooperClock looperClock;
-MidiParser midiParser;
-MidiLooper midiLooper;
-MidiLooperStorage midiLooperStorage;
+  MidiLooperClock looperClock;
+  MidiParser midiParser;
+  MidiLooper midiLooper;
+  MidiLooperStorage midiLooperStorage;
+
+  void Begin(HardwareSerial* serialMidi);
+  void AllNotesOff();
+
+  void Save(uint8_t slot);
+  void Load(uint8_t slot);//TODO
+
+  void Tick(int bpmUnmapped);
+  void readMidiIn(HardwareSerial &serialMidi, int maxNumBytesRead = 3);
+  void updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& ledMatrix);
+};
+
+MidiLooperApp midiLooperApp;
+
+void MidiLooperApp::Begin(HardwareSerial* serialMidi)
+{
+  currentMode = MidiLooperApp::LearnMode;
+  currentSlot = 0x00;
+  midiLooperStorage.Begin();
+  midiLooper.begin(&devBoard.serialMidi); //calls serialMidi.begin(31250);
+}
+
+void MidiLooperApp::Tick(int bpmUnmapped)
+{
+    #ifdef FAKECLOCK
+    looperClock.Tick();
+    #endif
+
+    #ifndef FAKECLOCK
+    looperClock.Tick(bpmUnmapped);
+    #endif
+
+    midiLooper.onTick(looperClock.Get());
+}
+
+void MidiLooperApp::AllNotesOff()
+{
+  for(int ch =0; ch<16; ++ch)
+  {
+    midiLooper.m_MidiOut.allNotesOff(ch);
+  }
+}
+
+void MidiLooperApp::Save(uint8_t slot)
+{
+  midiLooper.Save(midiLooperStorage, slot);
+}
 
 void setup() {
   // put your setup code here, to run once:
   devBoard.Begin();
   delay(500); // Allow 500ms for the 8229BSF to get ready after turn-on
 
-  midiLooperStorage.Begin();
-  midiLooper.begin(&devBoard.serialMidi); //calls serialMidi.begin(31250);
+  midiLooperApp.Begin(&devBoard.serialMidi); //calls serialMidi.begin(31250);
 
   delay(1000);
   devBoard.serialDebug.println("MidiLooper2 v0.2");
 
-  //TODO default midi channels on tracks: 
-  // 8x3 tracks each column has the same default midi address
-  midiLooper.m_Track[0].m_MidiChannel = 0x01;
-  midiLooper.m_Track[1].m_MidiChannel = 0x02;
-  midiLooper.m_Track[2].m_MidiChannel = 0x03;
-  midiLooper.m_Track[3].m_MidiChannel = 0x04;
-  midiLooper.m_Track[4].m_MidiChannel = 0x09;
-  midiLooper.m_Track[5].m_MidiChannel = 0x09;
-  midiLooper.m_Track[6].m_MidiChannel = 0x05;
-  midiLooper.m_Track[7].m_MidiChannel = 0x06;
-  for(int idx = 8; idx<MidiLooper::NumTracks; ++idx)
-  {
-    midiLooper.m_Track[idx].m_MidiChannel = midiLooper.m_Track[idx%8].m_MidiChannel;
-  }
+  // //TODO default midi channels on tracks: 
+  // // 8x3 tracks each column has the same default midi address
+  // midiLooper.m_Track[0].m_MidiChannel = 0x01;
+  // midiLooper.m_Track[1].m_MidiChannel = 0x02;
+  // midiLooper.m_Track[2].m_MidiChannel = 0x03;
+  // midiLooper.m_Track[3].m_MidiChannel = 0x04;
+  // midiLooper.m_Track[4].m_MidiChannel = 0x09;
+  // midiLooper.m_Track[5].m_MidiChannel = 0x09;
+  // midiLooper.m_Track[6].m_MidiChannel = 0x05;
+  // midiLooper.m_Track[7].m_MidiChannel = 0x06;
+  // for(int idx = 8; idx<MidiLooper::NumTracks; ++idx)
+  // {
+  //   midiLooper.m_Track[idx].m_MidiChannel = midiLooper.m_Track[idx%8].m_MidiChannel;
+  // }
 }
 
-void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &handler, int maxNumBytesRead = 3)
+void MidiLooperApp::readMidiIn(HardwareSerial &serialMidi, int maxNumBytesRead)
 {
   // read midi in but limit # bytes for performance issues
   int numBytesIn = serialMidi.available();
@@ -76,7 +123,7 @@ void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &han
   while (0 < numBytesIn)
   {
     uint8_t byte = serialMidi.read();
-    parser.Parse(byte, handler);
+    midiParser.Parse(byte, midiLooper);
 
     //devBoard.serialDebug.println(byte, HEX);
 
@@ -84,7 +131,7 @@ void readMidiIn(HardwareSerial &serialMidi, MidiParser &parser, MidiHandler &han
   }
 }
 
-void updateMidiLooper(MidiLooper &midiLooper, MultiTouchPad &touchPad, int& currentMode, Max7219Matrix& ledMatrix)
+void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& ledMatrix)
 {
   const int LearnModePad = 12;
   const int RecordingModePad = 13;
@@ -190,11 +237,12 @@ void updateMidiLooper(MidiLooper &midiLooper, MultiTouchPad &touchPad, int& curr
         // serialDebug.print(idx);
         // serialDebug.println(" long");
 
-        if(currentMode == RecordingMode)
+      // long press WHEN in recording mode of that track => erase layer
+        if(midiLooper.m_Track[idx].m_Recording)//record mode
         {
           midiLooper.m_Track[idx].onUndo(midiLooper.m_MidiOut);
         }
-        else if(currentMode == PlayMode)
+        else if(!midiLooper.m_Track[idx].m_MidiLearn)//play mode
         {
           midiLooper.m_Track[idx].AllNotesOff(midiLooper.m_MidiOut);
         }
@@ -202,59 +250,61 @@ void updateMidiLooper(MidiLooper &midiLooper, MultiTouchPad &touchPad, int& curr
   }
 
   // indicate current mode with leds (row 0)
+  const int modeRow = 0;
+  for(int col = 0;col<8; ++col)
+  {
+    ledMatrix.Clear(modeRow,col);
+  }
   if(currentMode == LearnMode)
   {
-    ledMatrix.Set(0,0);
-    ledMatrix.Set(0,1);
-    ledMatrix.Clear(0,3);
-    ledMatrix.Clear(0,4);
-    ledMatrix.Clear(0,6);
-    ledMatrix.Clear(0,7);
+    ledMatrix.Set(modeRow,0);
+    ledMatrix.Set(modeRow,1);
   }
   else if(currentMode == RecordingMode)
   {
-    ledMatrix.Clear(0,0);
-    ledMatrix.Clear(0,1);
-    ledMatrix.Set(0,3);
-    ledMatrix.Set(0,4);
-    ledMatrix.Clear(0,6);
-    ledMatrix.Clear(0,7);
+    ledMatrix.Set(modeRow,3);
+    ledMatrix.Set(modeRow,4);
   }
   else if(currentMode == PlayMode)
   {
-    ledMatrix.Clear(0,0);
-    ledMatrix.Clear(0,1);
-    ledMatrix.Clear(0,3);
-    ledMatrix.Clear(0,4);
-    ledMatrix.Set(0,6);
-    ledMatrix.Set(0,7);
+    ledMatrix.Set(modeRow,6);
+    ledMatrix.Set(modeRow,7);
   }
 
   // indicate ticker state (which bar) (row 2)
+    const int tickerRow = 2;
   TickerState tickerState;
   midiLooper.m_Ticker.GetTickerState(tickerState);
   for(int col = 0; col<8; ++col)
   {
     if(col<tickerState.m_NumBars)
     {
-      ledMatrix.Clear(2, col);
+      ledMatrix.Clear(tickerRow, col);
     }
     else
     {
-      ledMatrix.Set(2, col);
+      ledMatrix.Set(tickerRow, col);
     }
   }
   // blink on upon first tick of each beat
   if(tickerState.m_Tick==0)
   {
-    ledMatrix.Set(2, tickerState.m_Bar);
+    ledMatrix.Set(tickerRow, tickerState.m_Bar);
   }
 
+  // show current slot : row 3
+  const int slotRow = 3;
+  for(int col = 0;col<8; ++col)
+  {
+    ledMatrix.Clear(slotRow,col);
+  }
+  ledMatrix.Set(slotRow, currentSlot);
+
+  // tracks state : rows 5,6,7
   bool fastBlinkOn = (currMillis>>7) & 0x01;
   bool slowBlinkOn = (currMillis>>8) & 0x01;
   for (int idx = 0; idx < MidiLooper::NumTracks; ++idx)
-  {
-          
+  {          
       // recording leds: blink if midi learn, on/off ~recording otherwise
       if(midiLooper.m_Track[idx].m_MidiLearn)
       { 
@@ -291,7 +341,7 @@ void updateMidiLooper(MidiLooper &midiLooper, MultiTouchPad &touchPad, int& curr
       }
   }
 
-  // metronome
+  // metronome state: row 4
   if(midiLooper.m_Metronome.IsLearning())
   {
     if(fastBlinkOn)
@@ -365,13 +415,11 @@ void PrintStorage(DevBoard& db, MidiLooperStorage& storage, uint8_t slot)
   }
 }
 
-void LoadMidiLooper(MidiLooper& midiLooper, uint8_t slot)
-{
-
-}
-
 void loop()
 {
+  //TODO save button, 
+  //TODO new layer only when no note pressed
+
   // put your main code here, to run repeatedly:
   devBoard.serialDebug.println("starting up!");
   
@@ -396,46 +444,30 @@ void loop()
   
     // test storage
     devBoard.serialDebug.println("test storage");
-    midiLooper.Save(midiLooperStorage, 0x00);
-    PrintStorage(devBoard, midiLooperStorage, 0x00);
+    midiLooperApp.Save(0x00);
+    PrintStorage(devBoard, midiLooperApp.midiLooperStorage, 0x00);
   }
 
   // make sure all notes are off on all midi channels
   devBoard.serialDebug.println("all notes off");
-  for(int ch =0; ch<16; ++ch)
-  {
-    midiLooper.m_MidiOut.allNotesOff(ch); 
-  }
+  midiLooperApp.AllNotesOff();
 
   // main loop:
   int debugCounter = 0;
   StopWatch debugTimer;
   debugTimer.start();
-
-  int currentMode = LearnMode;
-
-  //  clock
-  //int clockCounter = 0;
   
   while (true)
   {
     //fake clock
     delay(1); //TODO check if needed when using external clock input
 
-    #ifdef FAKECLOCK
-    looperClock.Tick();
-    #endif
-
-    #ifndef FAKECLOCK
     devBoard.Pot1.Read();
     int bpmUnmapped = devBoard.Pot1.Get();
-    looperClock.Tick(bpmUnmapped);
-    #endif
+    midiLooperApp.Tick(bpmUnmapped);
     
-    midiLooper.onTick(looperClock.Get());
-
     // turn the LED on/off
-    if(looperClock.Get())
+    if(midiLooperApp.looperClock.Get())
     {
       devBoard.LedOn();
     }
@@ -445,9 +477,8 @@ void loop()
     }
    
     // read midi in but limit # bytes for performance issues
-    readMidiIn(devBoard.serialMidi, midiParser, midiLooper, 3);
-
-    updateMidiLooper(midiLooper, devBoard.touchPad, currentMode, devBoard.ledMatrix);
+    midiLooperApp.readMidiIn(devBoard.serialMidi, 3);
+    midiLooperApp.updateMidiLooper(devBoard.touchPad, devBoard.ledMatrix);
 
     ++debugCounter;
     if (debugCounter >= 1000) //TODO stopwatch 1 sec + # runs
