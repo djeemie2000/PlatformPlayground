@@ -9,8 +9,12 @@ public:
     TouchInBank(int pin0 = -1, int pin1 = -1, int pin2 = -1, int pin3 = -1, int pin4 = -1, int pin5 = -1, int pin6 = -1, int pin7 = -1);
 
     void begin(int lowThreshold, int highThreshold);
-    int get(int idx) const;
     void update();
+    
+    int get(int idx) const;
+    bool IsPushed(int Pad) const;
+    bool IsClicked(int Pad) const;
+    bool IsReleased(int Pad) const;
 
     int getValue(int idx);
 
@@ -22,6 +26,7 @@ private:
 
     int m_Values[Capacity];
     int m_State[Capacity];
+    int m_PrevState[Capacity];
 };
 
 void PrintTouchInBank(TouchInBank &touchPad, HardwareSerial &debugSerial);

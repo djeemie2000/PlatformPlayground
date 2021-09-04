@@ -21,6 +21,7 @@ void TouchInBank::begin(int lowThreshold, int highThreshold)
     {
         m_Values[idx] = -1;
         m_State[idx] = 0;
+        m_PrevState[idx] = 0;
         // if (-1 != m_Pins[idx])
         // {
         //     pinMode(m_Pins[idx], INPUT_PULLUP);//PULLUP?
@@ -44,6 +45,8 @@ void TouchInBank::update()
     {
         if (-1 != m_Pins[idx])
         {
+            m_PrevState[idx] = m_State[idx];
+
             // smoothing + hysteresis
             if(-1 == m_Values[idx])
             {
@@ -73,6 +76,29 @@ int TouchInBank::getValue(int idx)
     if (0 <= idx && idx < Capacity)
     {
         return m_Values[idx];
+    }
+    return -1;
+}
+
+bool TouchInBank::IsPushed(int Pad) const
+{
+    return get(Pad);
+}
+
+bool TouchInBank::IsClicked(int Pad) const
+{
+    if (0 <= Pad && Pad < Capacity)
+    {
+        return m_State[Pad] && !m_PrevState[Pad];
+    }
+    return -1;
+}
+
+bool TouchInBank::IsReleased(int Pad) const
+{
+    if (0 <= Pad && Pad < Capacity)
+    {
+        return !m_State[Pad] && m_PrevState[Pad];
     }
     return -1;
 }

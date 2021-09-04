@@ -17,12 +17,61 @@
 
 DevBoard devBoard;
 
+void PrintStorage(DevBoard& db, MidiLooperStorage& storage, uint8_t slot)//TODO hardwareserial , move to storage header
+{
+  // iterate tracks:
+  // midi channel
+  // play/mute
+  // events?? events size??
+  db.serialDebug.print("Slot ");
+  db.serialDebug.println(slot, HEX);
+  for(int track = 0; track<MidiLooper::NumTracks; ++track)
+  {
+      db.serialDebug.print("Track 0x");
+      db.serialDebug.print(track, HEX);
+      db.serialDebug.print(" Ch 0x");
+      uint8_t ch = 0xFF;
+      if(storage.LoadMidiChannel(slot, track, ch))
+      {
+          db.serialDebug.print(ch, HEX);
+      }
+      else
+      {
+          db.serialDebug.print("??");
+      }
+      bool play = false;
+      db.serialDebug.print(" Pl ");
+      if(storage.LoadPlayMute(slot, track, play))
+      {
+          db.serialDebug.print(play);
+      }
+      else
+      {
+          db.serialDebug.print("??");
+      }
+      int numEvents = 0;
+      db.serialDebug.print(" Ev# ");
+      if(storage.LoadNumEvents(slot, track, numEvents))
+      {
+          db.serialDebug.print(numEvents);
+      }
+      else
+      {
+          db.serialDebug.print("??");
+      }
+      db.serialDebug.println();      
+  }
+}
+
+
 struct MidiLooperApp
 {
-  static const int LearnMode =0;
-  static const int RecordingMode = 1;
-  static const int EraseLayerMode = 2;
-  static const int PlayMode = 3;
+  static const int SaveMode = 0;
+  static const int LoadMode = 1;
+  static const int LearnMode = 4;
+  static const int RecordingMode = 5;
+  static const int EraseLayerMode = 6;
+  static const int PlayMode = 7;
   int currentMode;
 
   uint8_t currentSlot;
@@ -40,7 +89,7 @@ struct MidiLooperApp
 
   void Tick(int bpmUnmapped);
   void readMidiIn(HardwareSerial &serialMidi, int maxNumBytesRead = 3);
-  void updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& ledMatrix);
+  void updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& ledMatrix, TouchInBank& touchIn);
 };
 
 MidiLooperApp midiLooperApp;
@@ -125,7 +174,7 @@ void MidiLooperApp::readMidiIn(HardwareSerial &serialMidi, int maxNumBytesRead)
   }
 }
 
-void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& ledMatrix)
+void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& ledMatrix, TouchInBank& touchIn)
 {
   const int LearnModePad = 12;
   const int RecordingModePad = 13;
@@ -149,8 +198,33 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& led
   //   midiLooper.m_Ticker.ToggleNumBars(1, 3);
   // }
 
+  touchIn.update();
+  if(touchIn.IsClicked(0))
+  {
+    //TODO check if track is clicked, => do not check other track stuff
+    Save(currentSlot);
+  }
+  if(touchIn.IsClicked(1))
+  {
+    //TODO check if track is clicked, => do not check other track stuff
+    Load(currentSlot);
+  }
+  else if(touchIn.IsClicked(2))
+  {
+    ::PrintStorage(devBoard, midiLooperStorage, currentSlot);
+  }
+
   // determine mode
-  if (touchPad.Get(LearnModePad))
+  if(touchIn.get(0))
+  {
+    currentMode = SaveMode;
+  }
+  else if(touchIn.get(1))
+  {
+    currentMode = LoadMode;
+  }
+  //TODO printstorage(~slot)
+  else if (touchPad.Get(LearnModePad))
   {
     currentMode = LearnMode;
   }
@@ -166,7 +240,6 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& led
   {
      currentMode = PlayMode;
   }
-
 
   // metronome update
   if (touchPad.IsClicked(MetronomePad))
@@ -252,29 +325,10 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& led
   {
     ledMatrix.Clear(modeRow,col);
   }
-  if(currentMode == LearnMode)
-  {
-    ledMatrix.Set(modeRow,0);
-    ledMatrix.Set(modeRow,1);
-  }
-  else if(currentMode == RecordingMode)
-  {
-    ledMatrix.Set(modeRow,2);
-    ledMatrix.Set(modeRow,3);
-  }
-  else if(currentMode == EraseLayerMode)
-  {
-    ledMatrix.Set(modeRow,4);
-    ledMatrix.Set(modeRow,5);
-  }
-  else if(currentMode == PlayMode)
-  {
-    ledMatrix.Set(modeRow,6);
-    ledMatrix.Set(modeRow,7);
-  }
+  ledMatrix.Set(modeRow, currentMode);
 
   // indicate ticker state (which bar) (row 2)
-    const int tickerRow = 2;
+  const int tickerRow = 2;
   TickerState tickerState;
   midiLooper.m_Ticker.GetTickerState(tickerState);
   for(int col = 0; col<8; ++col)
@@ -372,63 +426,19 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& led
   ledMatrix.WriteAll();
 }
 
-void PrintStorage(DevBoard& db, MidiLooperStorage& storage, uint8_t slot)
-{
-  // iterate tracks:
-  // midi channel
-  // play/mute
-  // events?? events size??
-  db.serialDebug.print("Slot ");
-  db.serialDebug.println(slot, HEX);
-  for(int track = 0; track<MidiLooper::NumTracks; ++track)
-  {
-      db.serialDebug.print("Track 0x");
-      db.serialDebug.print(track, HEX);
-      db.serialDebug.print(" Ch 0x");
-      uint8_t ch = 0xFF;
-      if(storage.LoadMidiChannel(slot, track, ch))
-      {
-          db.serialDebug.print(ch, HEX);
-      }
-      else
-      {
-          db.serialDebug.print("??");
-      }
-      bool play = false;
-      db.serialDebug.print(" Pl ");
-      if(storage.LoadPlayMute(slot, track, play))
-      {
-          db.serialDebug.print(play);
-      }
-      else
-      {
-          db.serialDebug.print("??");
-      }
-      int numEvents = 0;
-      db.serialDebug.print(" Ev# ");
-      if(storage.LoadNumEvents(slot, track, numEvents))
-      {
-          db.serialDebug.print(numEvents);
-      }
-      else
-      {
-          db.serialDebug.print("??");
-      }
-      db.serialDebug.println();      
-  }
-}
 
 void loop()
 {
-  // TODO mode button for erase layer
+  // mode button for erase layer
   //  => no need for button state/long press/tapped! 
   //    => more responsive
-  // NOT TODO touchin pad prev/curr state => clicked,... cfr touchpad
-  // TODO save/load ~touch in buttons => TODO how many slots??
+  // touchin pad prev/curr state => clicked,... cfr touchpad
+  // save/load ~touch in buttons
+  //     => TODO how many slots??
   // TODO new layer only when no note pressed
-  // TODO allnotesoff ~track 
-  // TODO print storage upon touchin pad
-  // TODO touchin pad => toggle start/stop cfr midi keyboard
+  // TODO touchin pad (?) allnotesoff ~track 
+  // print storage upon touchin pad
+  // TODO (?) touchin pad => toggle start/stop cfr midi keyboard
 
   // put your main code here, to run repeatedly:
   devBoard.serialDebug.println("starting up!");
@@ -488,7 +498,7 @@ void loop()
    
     // read midi in but limit # bytes for performance issues
     midiLooperApp.readMidiIn(devBoard.serialMidi, 3);
-    midiLooperApp.updateMidiLooper(devBoard.touchPad, devBoard.ledMatrix);
+    midiLooperApp.updateMidiLooper(devBoard.touchPad, devBoard.ledMatrix, devBoard.touchIn);
 
     ++debugCounter;
     if (debugCounter >= 1000) //TODO stopwatch 1 sec + # runs
