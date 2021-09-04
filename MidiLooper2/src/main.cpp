@@ -7,7 +7,6 @@
 #include "MidiLooper.h"
 #include "StopWatch.h"
 #include "DigitalOutBank.h"
-#include "ButtonState.h"
 #include "DevBoard.h"
 #include "MidiLooperStorage.h"
 #include "MidiLooperClock.h"
@@ -20,15 +19,10 @@ DevBoard devBoard;
 
 struct MidiLooperApp
 {
-  ButtonState metronomePadState;
-  ButtonState trackPadState[MidiLooper::NumTracks];
-  ButtonState learnModePadState;
-  ButtonState recordingModePadState;
-  ButtonState playModePadState;
-
   static const int LearnMode =0;
   static const int RecordingMode = 1;
-  static const int PlayMode = 2;
+  static const int EraseLayerMode = 2;
+  static const int PlayMode = 3;
   int currentMode;
 
   uint8_t currentSlot;
@@ -135,7 +129,7 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& led
 {
   const int LearnModePad = 12;
   const int RecordingModePad = 13;
-  const int PlayModePad = 14;
+  const int EraseLayerPad = 14;
 
   // 8 tracks + metronome
   const int TrackPads[] = {0,1,2,3, 4,5,6,7, 8,9,10,11,   16,17,18,19, 20,21,22,23, 24,25,26,27};
@@ -147,16 +141,13 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& led
   
   touchPad.Read();//TODO devBoard.update()
   unsigned long currMillis = millis();
-  learnModePadState.update(currMillis, touchPad.Get(LearnModePad));
-  recordingModePadState.update(currMillis, touchPad.Get(RecordingModePad));
-  playModePadState.update(currMillis, touchPad.Get(PlayModePad));
 
 
   // toggle num bars
-  if(playModePadState.Tapped())
-  {
-    midiLooper.m_Ticker.ToggleNumBars(1, 3);
-  }
+  // if(playModePadState.Tapped())
+  // {
+  //   midiLooper.m_Ticker.ToggleNumBars(1, 3);
+  // }
 
   // determine mode
   if (touchPad.Get(LearnModePad))
@@ -167,15 +158,18 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& led
   {
     currentMode = RecordingMode;
   }
-  else//if (touchPad.IsClicked(PlayModePad))
+  else if(touchPad.Get(EraseLayerPad))
+  {
+    currentMode = EraseLayerMode;
+  }
+  else
   {
      currentMode = PlayMode;
   }
 
 
   // metronome update
-  metronomePadState.update(currMillis, touchPad.Get(MetronomePad));
-  if (metronomePadState.Tapped())
+  if (touchPad.IsClicked(MetronomePad))
   {
     //serialDebug.println("metro pad tap");
     // => check which function(s) is pressed
@@ -199,14 +193,13 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& led
   // tracks update
   for (int idx = 0; idx < MidiLooper::NumTracks; ++idx)
   {
-    trackPadState[idx].update(currMillis, touchPad.Get(TrackPads[idx]));
-
-    if(trackPadState[idx].Tapped())
+    if(touchPad.IsClicked(TrackPads[idx]))//trackPadState[idx].Tapped())
     {
         // serialDebug.print("track pad ");
         // serialDebug.print(idx);
         // serialDebug.println(" tap");
 
+        // TODO all notes off -> touchpad????
         if(currentMode == LearnMode)
         {
           midiLooper.ToggleMidiLearn(idx);
@@ -214,6 +207,10 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& led
         else if(currentMode == RecordingMode)
         {
           midiLooper.ToggleRecording(idx);
+        }
+        else if(currentMode == EraseLayerMode)
+        {
+          midiLooper.m_Track[idx].onUndo(midiLooper.m_MidiOut);
         }
         else if(currentMode == PlayMode)
         {
@@ -231,22 +228,22 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& led
           }
         }
     }
-    else if(trackPadState[idx].LongPressed())
-    {
-        // serialDebug.print("track pad ");
-        // serialDebug.print(idx);
-        // serialDebug.println(" long");
+    // else if(trackPadState[idx].LongPressed())
+    // {
+    //     // serialDebug.print("track pad ");
+    //     // serialDebug.print(idx);
+    //     // serialDebug.println(" long");
 
-      // long press WHEN in recording mode of that track => erase layer
-        if(midiLooper.m_Track[idx].m_Recording)//record mode
-        {
-          midiLooper.m_Track[idx].onUndo(midiLooper.m_MidiOut);
-        }
-        else if(!midiLooper.m_Track[idx].m_MidiLearn)//play mode
-        {
-          midiLooper.m_Track[idx].AllNotesOff(midiLooper.m_MidiOut);
-        }
-    }
+    //   // long press WHEN in recording mode of that track => erase layer
+    //     if(midiLooper.m_Track[idx].m_Recording)//record mode
+    //     {
+    //       midiLooper.m_Track[idx].onUndo(midiLooper.m_MidiOut);
+    //     }
+    //     else if(!midiLooper.m_Track[idx].m_MidiLearn)//play mode
+    //     {
+    //       midiLooper.m_Track[idx].AllNotesOff(midiLooper.m_MidiOut);
+    //     }
+    // }
   }
 
   // indicate current mode with leds (row 0)
@@ -262,8 +259,13 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& led
   }
   else if(currentMode == RecordingMode)
   {
+    ledMatrix.Set(modeRow,2);
     ledMatrix.Set(modeRow,3);
+  }
+  else if(currentMode == EraseLayerMode)
+  {
     ledMatrix.Set(modeRow,4);
+    ledMatrix.Set(modeRow,5);
   }
   else if(currentMode == PlayMode)
   {
@@ -326,7 +328,8 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& led
         else
         {
           ledMatrix.Clear(TrackLedX[idx], TrackLedY[idx]);
-        }       }
+        }      
+      }
       else
       {
         // play leds on/off ~play/mute
@@ -417,8 +420,15 @@ void PrintStorage(DevBoard& db, MidiLooperStorage& storage, uint8_t slot)
 
 void loop()
 {
-  //TODO save button, 
-  //TODO new layer only when no note pressed
+  // TODO mode button for erase layer
+  //  => no need for button state/long press/tapped! 
+  //    => more responsive
+  // NOT TODO touchin pad prev/curr state => clicked,... cfr touchpad
+  // TODO save/load ~touch in buttons => TODO how many slots??
+  // TODO new layer only when no note pressed
+  // TODO allnotesoff ~track 
+  // TODO print storage upon touchin pad
+  // TODO touchin pad => toggle start/stop cfr midi keyboard
 
   // put your main code here, to run repeatedly:
   devBoard.serialDebug.println("starting up!");
