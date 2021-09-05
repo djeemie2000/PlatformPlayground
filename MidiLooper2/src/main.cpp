@@ -11,6 +11,8 @@
 #include "MidiLooperStorage.h"
 #include "MidiLooperClock.h"
 
+//#include "ArduinoNvs.h"
+
 //SPIClass SPI2(HSPI);
 
 //#define FAKECLOCK 1
@@ -19,6 +21,9 @@ DevBoard devBoard;
 
 void PrintStorage(DevBoard& db, MidiLooperStorage& storage, uint8_t slot)//TODO hardwareserial , move to storage header
 {
+    storage.PrintStats(db.serialDebug);
+
+
   // iterate tracks:
   // midi channel
   // play/mute
@@ -128,6 +133,11 @@ void MidiLooperApp::Save(uint8_t slot)
   midiLooper.Save(midiLooperStorage, slot);
 }
 
+void MidiLooperApp::Load(uint8_t slot)
+{
+  midiLooper.Load(midiLooperStorage, slot);
+}
+
 void setup() {
   // put your setup code here, to run once:
   devBoard.Begin();
@@ -136,22 +146,8 @@ void setup() {
   midiLooperApp.Begin(&devBoard.serialMidi); //calls serialMidi.begin(31250);
 
   delay(1000);
-  devBoard.serialDebug.println("MidiLooper2 v0.2");
+  devBoard.serialDebug.println("MidiLooper2 v0.4");
 
-  // //TODO default midi channels on tracks: 
-  // // 8x3 tracks each column has the same default midi address
-  // midiLooper.m_Track[0].m_MidiChannel = 0x01;
-  // midiLooper.m_Track[1].m_MidiChannel = 0x02;
-  // midiLooper.m_Track[2].m_MidiChannel = 0x03;
-  // midiLooper.m_Track[3].m_MidiChannel = 0x04;
-  // midiLooper.m_Track[4].m_MidiChannel = 0x09;
-  // midiLooper.m_Track[5].m_MidiChannel = 0x09;
-  // midiLooper.m_Track[6].m_MidiChannel = 0x05;
-  // midiLooper.m_Track[7].m_MidiChannel = 0x06;
-  // for(int idx = 8; idx<MidiLooper::NumTracks; ++idx)
-  // {
-  //   midiLooper.m_Track[idx].m_MidiChannel = midiLooper.m_Track[idx%8].m_MidiChannel;
-  // }
 }
 
 void MidiLooperApp::readMidiIn(HardwareSerial &serialMidi, int maxNumBytesRead)
@@ -204,7 +200,7 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& led
     //TODO check if track is clicked, => do not check other track stuff
     Save(currentSlot);
   }
-  if(touchIn.IsClicked(1))
+  else if(touchIn.IsClicked(1))
   {
     //TODO check if track is clicked, => do not check other track stuff
     Load(currentSlot);
@@ -212,6 +208,11 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& led
   else if(touchIn.IsClicked(2))
   {
     ::PrintStorage(devBoard, midiLooperStorage, currentSlot);
+  }
+  else if(touchIn.IsClicked(3))
+  {
+    //TODO check if track is clicked, => do not check other track stuff
+    midiLooper.printState(devBoard.serialDebug);
   }
 
   // determine mode
@@ -426,7 +427,6 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& led
   ledMatrix.WriteAll();
 }
 
-
 void loop()
 {
   // mode button for erase layer
@@ -442,6 +442,47 @@ void loop()
 
   // put your main code here, to run repeatedly:
   devBoard.serialDebug.println("starting up!");
+
+  midiLooperApp.midiLooperStorage.PrintStats(devBoard.serialDebug);
+
+    // uint8_t writeValue = 0x01;
+    // bool init = NVS.begin("storage", &devBoard.serialDebug);
+    // devBoard.serialDebug.print("Init storage" );
+    // devBoard.serialDebug.println(init);
+    
+
+    // bool erall = NVS.eraseAll();
+    // devBoard.serialDebug.print("Erase storage" );
+    // devBoard.serialDebug.println(erall);
+    
+  // while(true)
+  // {
+  //   devBoard.serialDebug.println("Test storage");
+
+  //   PrintStats();
+
+  //   uint8_t readValue = 0x00;
+  //   bool rok = NVS.getInt("Key", readValue);
+  //   devBoard.serialDebug.print("read  ");
+  //   devBoard.serialDebug.print(rok);
+  //   devBoard.serialDebug.print(" : ");
+  //   devBoard.serialDebug.println(readValue, HEX);
+    
+
+  //   delay(1000);
+
+  //   bool wok = NVS.setInt("Key", writeValue);
+  //   devBoard.serialDebug.print("write ");
+  //   devBoard.serialDebug.print(wok);
+  //   devBoard.serialDebug.print(" : ");
+  //   devBoard.serialDebug.println(writeValue, HEX);
+  //   ++writeValue;
+
+  //   //PrintStorage(devBoard,midiLooperApp.midiLooperStorage, 0);
+  //   PrintStats();
+
+  //   delay(5000);
+  // }
   
   // startup checks
   devBoard.update();

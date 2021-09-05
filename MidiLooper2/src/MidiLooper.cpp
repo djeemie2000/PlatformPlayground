@@ -5,14 +5,6 @@ MidiLooper::MidiLooper() : m_MidiOut(), m_Ticker(), m_Track(), m_IsRunning(true)
 void MidiLooper::begin(HardwareSerial *midiSerial)
 {
     m_MidiOut.begin(midiSerial);
-    for (int idx = 0; idx < NumTracks; ++idx)
-    {
-        m_Track[idx].m_MidiLearn = false;
-        m_Track[idx].m_MidiChannel = idx;
-    }
-    m_Track[0].m_MidiChannel = 0x09;
-    m_Track[1].m_MidiChannel = 0x0A;
-    //TODO default channel for m_Metronome
 }
 
 void MidiLooper::onTick(int clock)
@@ -134,6 +126,14 @@ void MidiLooper::Save(MidiLooperStorage& storage, uint8_t slot)
   }
 }
 
+void MidiLooper::Load(MidiLooperStorage& storage, uint8_t slot)
+{
+      // iterate tracks:
+  for(int track = 0; track<MidiLooper::NumTracks; ++track)
+  {
+    m_Track[track].Load(storage, slot, track);
+  }
+}
 
 void MidiLooper::printState(HardwareSerial &serial)
 {

@@ -20,7 +20,7 @@ MidiLooperStorage::MidiLooperStorage()
     m_Lut[13] = 'D';
     m_Lut[14] = 'E';
     m_Lut[15] = 'F';
-    memset(m_Key, 7, 0);
+    memset(m_Key, 0, 7);
 }
 
 void MidiLooperStorage::Begin()
@@ -85,4 +85,14 @@ bool MidiLooperStorage::LoadNumEvents(uint8_t slot, uint8_t track, int& numEvent
     bool ok = NVS.getBlobSize(m_Key, size);
     numEvents = ok ? size/sizeof(MidiLooperEvent) : 0;
     return ok;
+}
+
+void MidiLooperStorage::PrintStats(HardwareSerial& serialDebug)
+{
+    NVS.printStats(serialDebug);
+}
+
+void MidiLooperStorage::EraseAll()
+{
+    NVS.eraseAll();
 }

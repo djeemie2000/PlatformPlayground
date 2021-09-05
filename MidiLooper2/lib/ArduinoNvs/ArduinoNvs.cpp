@@ -27,17 +27,27 @@ ArduinoNvs::ArduinoNvs()
 {
 }
 
-bool ArduinoNvs::begin(String namespaceNvs)
+bool ArduinoNvs::begin(String namespaceNvs, HardwareSerial* serial)
 {
+ if(serial)
+  {
+    serial->println("W: NVS. Init flash mem");
+  }
   esp_err_t err = nvs_flash_init();
   if (err != ESP_OK)
   {
-    DEBUG_PRINTLN("W: NVS. Cannot init flash mem");
+    if(serial)
+    {
+      serial->println("W: NVS. Cannot init flash mem");
+    }
     if (err != ESP_ERR_NVS_NO_FREE_PAGES)
       return false;
 
     // erase and reinit
-    DEBUG_PRINTLN("NVS. Try reinit the partition");
+    if(serial)
+    {
+      serial->println("NVS. Try reinit the partition");
+    }
     const esp_partition_t *nvs_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_NVS, NULL);
     if (nvs_partition == NULL)
       return false;
@@ -45,7 +55,10 @@ bool ArduinoNvs::begin(String namespaceNvs)
     esp_err_t err = nvs_flash_init();
     if (err)
       return false;
-    DEBUG_PRINTLN("NVS. Partition re-formatted");
+    if(serial)
+    {
+      serial->println("NVS. Partition re-formatted");
+    }
   }
 
   err = nvs_open(namespaceNvs.c_str(), NVS_READWRITE, &_nvs_handle);
@@ -59,6 +72,59 @@ void ArduinoNvs::close()
 {
   nvs_close(_nvs_handle);
 }
+
+int ArduinoNvs::getStats(size_t& numEntries, size_t& numUsedEntries, size_t& numUnusedEntries, size_t& nsCount, String ns)
+{
+  //TODO store namespace as member or used fixed namespace !!!
+  nvs_stats_t nvs_stats;
+  esp_err_t err = nvs_get_stats(NULL, &nvs_stats);
+  if(err == ESP_OK)
+  {
+    numEntries = nvs_stats.total_entries;
+    numUsedEntries = nvs_stats.used_entries;
+    numUnusedEntries = nvs_stats.free_entries;
+    nsCount = nvs_stats.namespace_count;
+//    return true;
+  }
+  return err;
+}
+
+void ArduinoNvs::printStats(HardwareSerial& serialDebug)
+{
+    size_t numEntries = 0;
+    size_t numUsed = 0;
+    size_t numFree = 0;
+    size_t nsCount = 0;
+    int ok = getStats(numEntries, numUsed, numFree, nsCount);
+    serialDebug.print("stats ");
+    serialDebug.print(ok, HEX);
+    serialDebug.print(" #");
+    serialDebug.print(numEntries);
+    serialDebug.print(" U ");
+    serialDebug.print(numUsed);
+    serialDebug.print(" F ");
+    serialDebug.println(numFree);
+    serialDebug.print(" C ");
+    serialDebug.println(nsCount);   
+}
+
+void ArduinoNvs::printEntries(HardwareSerial& serial)
+{
+  // nvs_iterator_t it = nvs_entry_find(NULL, "storage", NVS_TYPE_ANY);
+  // while (it != NULL) {
+  //       nvs_entry_info_t info;
+  //       nvs_entry_info(it, &info);
+  //       it = nvs_entry_next(it);
+
+  //       serial.print("ns ");
+  //       serial.print(info.namespace);
+  //       serial.print(" key ");
+  //       serial.print(info.key);
+  //               serial.print(" type ");
+  //       serial.println(info.type);
+  // };
+}
+
 
 bool ArduinoNvs::eraseAll(bool forceCommit)
 {

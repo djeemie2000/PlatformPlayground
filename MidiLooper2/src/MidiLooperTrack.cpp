@@ -2,7 +2,7 @@
 #include "MidiLooperStorage.h"
 
 MidiLooperTrack::MidiLooperTrack()
-    : m_MidiChannel(0), m_MidiLearn(true), m_Recording(false), m_Muted(false)
+    : m_MidiChannel(0), m_MidiLearn(false), m_Recording(false), m_Muted(true)
     , m_CurrLayer(0), m_CurrLayerSize(0)
     , m_NumEvents(0)
 {
@@ -177,6 +177,8 @@ void MidiLooperTrack::Save(MidiLooperStorage& storage, uint8_t slot, uint8_t tra
 {
     storage.SaveMidiChannel(slot, track, m_MidiChannel);
     storage.SavePlayMute(slot, track, m_Muted);
+    
+    return;//TODO
     storage.SaveEvents(slot, track, m_Events, m_NumEvents);
 }
 
@@ -185,10 +187,7 @@ void MidiLooperTrack::Load(MidiLooperStorage& storage, uint8_t slot, uint8_t tra
     storage.LoadMidiChannel(slot, track, m_MidiChannel);
     storage.LoadPlayMute(slot, track, m_Muted);
     
-    return;//TODO test save events first
-    //TODO
-    // load events
-
+    return;//TODO
     if(storage.LoadEvents(slot, track, m_Events, EventCapacity, m_NumEvents))
     {
         // first erase all eventindex...

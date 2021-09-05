@@ -52,8 +52,13 @@ class ArduinoNvs {
 public:
   ArduinoNvs();
 
-  bool    begin(String namespaceNvs = "storage");
+  bool    begin(String namespaceNvs = "storage", HardwareSerial* serial = 0);
   void    close();
+
+  int  getStats(size_t& numEntries, size_t& numUsedEntries, size_t& numUnusedEntries, size_t& nsCount,    String ns = "storage");
+  void printStats(HardwareSerial& serial);
+  void printEntries(HardwareSerial& serial);
+
 
   //TODO const char* Key
   bool    eraseAll(bool forceCommit = true);
@@ -85,6 +90,7 @@ public:
   bool    getBlob(const char* key, uint8_t* blob, size_t capacity, size_t& size);  /// User should proivde enought memory to store the loaded blob. If length < than required size to store blob, function fails.
 
   bool        commit();
+
 
 protected:
   nvs_handle  _nvs_handle;    
