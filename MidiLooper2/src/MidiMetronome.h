@@ -4,6 +4,8 @@
 #include "MidiOut.h"
 #include "MidiLooperTicker.h"
 
+class MidiLooperStorage;
+
 class MidiMetronome
 {
 public:
@@ -19,6 +21,9 @@ public:
 
     bool IsLearning() const { return m_MidiLearn;}
     bool IsPlaying() const { return m_Playing; }
+
+    void Save(MidiLooperStorage& storage, uint8_t track);
+    void Load(MidiLooperStorage& storage, uint8_t track);
 
     void printState(HardwareSerial& serial);
 

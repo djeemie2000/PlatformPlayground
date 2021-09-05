@@ -20,53 +20,57 @@
 
 DevBoard devBoard;
 
-void PrintStorage(DevBoard& db, MidiLooperStorage& storage, uint8_t slot)//TODO hardwareserial , move to storage header
+void PrintStorage(HardwareSerial& serial, MidiLooperStorage& storage, uint8_t slot)//TODO hardwareserial , move to storage header
 {
-    storage.PrintStats(db.serialDebug);
 
 
   // iterate tracks:
   // midi channel
   // play/mute
   // events?? events size??
-  db.serialDebug.print("Slot ");
-  db.serialDebug.println(slot, HEX);
+  serial.print("Slot ");
+  serial.println(slot, HEX);
+
+  storage.Open(slot);
+  storage.PrintStats(serial);
+
   for(int track = 0; track<MidiLooper::NumTracks; ++track)
   {
-      db.serialDebug.print("Track 0x");
-      db.serialDebug.print(track, HEX);
-      db.serialDebug.print(" Ch 0x");
+      serial.print("Track ");
+      serial.print(track);
+      serial.print(" Ch 0x");
       uint8_t ch = 0xFF;
-      if(storage.LoadMidiChannel(slot, track, ch))
+      if(storage.LoadMidiChannel(track, ch))
       {
-          db.serialDebug.print(ch, HEX);
+          serial.print(ch, HEX);
       }
       else
       {
-          db.serialDebug.print("??");
+          serial.print("??");
       }
       bool play = false;
-      db.serialDebug.print(" Pl ");
-      if(storage.LoadPlayMute(slot, track, play))
+      serial.print(" Pl ");
+      if(storage.LoadPlayMute(track, play))
       {
-          db.serialDebug.print(play);
+          serial.print(play);
       }
       else
       {
-          db.serialDebug.print("??");
+          serial.print("??");
       }
       int numEvents = 0;
-      db.serialDebug.print(" Ev# ");
-      if(storage.LoadNumEvents(slot, track, numEvents))
+      serial.print(" Ev# ");
+      if(storage.LoadNumEvents(track, numEvents))
       {
-          db.serialDebug.print(numEvents);
+          serial.print(numEvents);
       }
       else
       {
-          db.serialDebug.print("??");
+          serial.print("??");
       }
-      db.serialDebug.println();      
+      serial.println();      
   }
+  storage.Close();
 }
 
 
@@ -104,7 +108,6 @@ void MidiLooperApp::Begin(HardwareSerial* serialMidi)
 {
   currentMode = MidiLooperApp::LearnMode;
   currentSlot = 0x00;
-  midiLooperStorage.Begin();
   midiLooper.begin(&devBoard.serialMidi); //calls serialMidi.begin(31250);
 }
 
@@ -208,7 +211,7 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& led
   }
   else if(touchIn.IsClicked(2))
   {
-    ::PrintStorage(devBoard, midiLooperStorage, currentSlot);
+    ::PrintStorage(devBoard.serialDebug, midiLooperStorage, currentSlot);
   }
   else if(touchIn.IsClicked(3))
   {
@@ -482,8 +485,8 @@ void loop()
   devBoard.serialDebug.println("starting up!");
 
 //  midiLooperApp.midiLooperStorage.PrintStats(devBoard.serialDebug);
-  TestPreferences(devBoard.serialDebug);
-  return;
+  //TestPreferences(devBoard.serialDebug);
+  //return;
   
   // startup checks
   devBoard.update();
@@ -496,18 +499,16 @@ void loop()
     devBoard.serialDebug.println("test led matrix");
     testDigitalOutMatrix(devBoard.ledMatrix, 1);
 
-
     devBoard.serialDebug.println("test touch pins");
-    TestTouchInBank(devBoard.touchIn, devBoard.serialDebug, 16);
+    TestTouchInBank(devBoard.touchIn, devBoard.serialDebug, 1);//16);
 
     devBoard.serialDebug.println("test touchpad");
-    const int numRepeats = 16;
+    const int numRepeats = 1;// 16;
     TestTouchPad(devBoard.touchPad, devBoard.serialDebug, numRepeats);
   
     // test storage
-    devBoard.serialDebug.println("test storage");
-    //midiLooperApp.Save(0x00);
-    //PrintStorage(devBoard, midiLooperApp.midiLooperStorage, 0x00);
+    devBoard.serialDebug.println("print storage");
+    PrintStorage(devBoard.serialDebug, midiLooperApp.midiLooperStorage, 0x00);
   }
 
   // make sure all notes are off on all midi channels

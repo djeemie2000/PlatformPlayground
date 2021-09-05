@@ -1,4 +1,5 @@
 #include "MidiMetronome.h"
+#include "MidiLooperStorage.h"
 
 MidiMetronome::MidiMetronome()
     : m_MidiLearn(false), m_MidiChannel(0x03),
@@ -94,6 +95,18 @@ void MidiMetronome::OnNoteOn(uint8_t channel, uint8_t midiNote, uint8_t velocity
 void MidiMetronome::AllNotesOff(MidiOut &midiOut)
 {
     NoteOff(midiOut);
+}
+
+void MidiMetronome::Save(MidiLooperStorage& storage, uint8_t track)
+{
+    storage.SaveMidiChannel(track, m_MidiChannel);
+    storage.SavePlayMute(track, m_Playing);
+}
+
+void MidiMetronome::Load(MidiLooperStorage& storage, uint8_t track)
+{
+    storage.LoadMidiChannel(track, m_MidiChannel);
+    storage.LoadPlayMute(track, m_Playing);
 }
 
 void MidiMetronome::printState(HardwareSerial& serial)

@@ -1,5 +1,4 @@
 #include "MidiLooperStorage.h"
-#include "ArduinoNvs.h"
 #include "MidiLooperEvent.h"
 
 MidiLooperStorage::MidiLooperStorage()
@@ -23,9 +22,15 @@ MidiLooperStorage::MidiLooperStorage()
     memset(m_Key, 0, 7);
 }
 
-void MidiLooperStorage::Begin()
+void MidiLooperStorage::Open(uint8_t slot)
 {
-    NVS.begin();
+    //TODO use slot
+    m_Preferences.begin("slot0", false);
+}
+
+void MidiLooperStorage::Close()
+{
+    m_Preferences.end();
 }
 
 void MidiLooperStorage::SetKey(uint8_t slot, uint8_t track, const char* id)
@@ -39,60 +44,66 @@ void MidiLooperStorage::SetKey(uint8_t slot, uint8_t track, const char* id)
     m_Key[6]= 0;//terminating zero
 }
 
-bool MidiLooperStorage::SaveMidiChannel(uint8_t slot, uint8_t track, uint8_t midiChannel)
+bool MidiLooperStorage::SaveMidiChannel(uint8_t track, uint8_t midiChannel)
 {
-    SetKey(slot, track, "Ch");
-    return NVS.setInt(m_Key, midiChannel);
+    SetKey(0x00, track, "Ch");
+    size_t result =  m_Preferences.putUChar(m_Key, midiChannel);
+    return 0<result;
 }
     
-bool MidiLooperStorage::LoadMidiChannel(uint8_t slot, uint8_t track, uint8_t& midiChannel)
+bool MidiLooperStorage::LoadMidiChannel(uint8_t track, uint8_t& midiChannel)
 {
-    SetKey(slot, track, "Ch");
-    return NVS.getInt(m_Key, midiChannel);
+    SetKey(0x00, track, "Ch");
+    midiChannel = m_Preferences.getUChar(m_Key, midiChannel);
+    return true;//Assume true
 }
 
-bool MidiLooperStorage::SavePlayMute(uint8_t slot, uint8_t track, bool playMute)
+bool MidiLooperStorage::SavePlayMute(uint8_t track, bool playMute)
 {
-    SetKey(slot, track, "Pl");
-    return NVS.setBool(m_Key, playMute);
+    SetKey(0x00, track, "Pl");
+    size_t result = m_Preferences.putBool(m_Key, playMute);
+    return 0<result;
 }
     
-bool MidiLooperStorage::LoadPlayMute(uint8_t slot, uint8_t track, bool& playMute)
+bool MidiLooperStorage::LoadPlayMute(uint8_t track, bool& playMute)
 {
-    SetKey(slot, track, "Pl");
-    return NVS.getBool(m_Key, playMute);
+    SetKey(0x00, track, "Pl");
+    playMute = m_Preferences.getBool(m_Key, playMute);
+    return true;//Assume true
 }
 
-bool MidiLooperStorage::SaveEvents(uint8_t slot, uint8_t track, MidiLooperEvent* events, int numEvents)
+bool MidiLooperStorage::SaveEvents(uint8_t track, MidiLooperEvent* events, int numEvents)
 {
-    SetKey(slot, track, "Ev");
-    return NVS.setBlob(m_Key, (uint8_t*)events, numEvents*sizeof(MidiLooperEvent));
+    SetKey(0x00, track, "Ev");
+    size_t result = m_Preferences.putBytes(m_Key, events, numEvents*sizeof(MidiLooperEvent));
+    return result>0;
 }
 
-bool MidiLooperStorage::LoadEvents(uint8_t slot, uint8_t track, MidiLooperEvent* events, int capacity, int& numEvents)
+bool MidiLooperStorage::LoadEvents(uint8_t track, MidiLooperEvent* events, int capacity, int& numEvents)
 {
-    SetKey(slot, track, "Ev");
-    size_t size = 0;
-    bool ok = NVS.getBlob(m_Key, (uint8_t*)events, capacity*sizeof(MidiLooperEvent), size);
-    numEvents = ok ? size/sizeof(MidiLooperEvent) : 0;
-    return ok;
+    SetKey(0x00, track, "Ev");
+    size_t result = m_Preferences.getBytes(m_Key, events, capacity*sizeof(MidiLooperEvent));
+    numEvents = result/sizeof(MidiLooperEvent);
+    return result>0;
 }
 
-bool MidiLooperStorage::LoadNumEvents(uint8_t slot, uint8_t track, int& numEvents)
+bool MidiLooperStorage::LoadNumEvents(uint8_t track, int& numEvents)
 {
-    SetKey(slot, track, "Ev");
-    size_t size = 0;
-    bool ok = NVS.getBlobSize(m_Key, size);
-    numEvents = ok ? size/sizeof(MidiLooperEvent) : 0;
-    return ok;
+    SetKey(0x00, track, "Ev");
+    size_t result = m_Preferences.getBytesLength(m_Key);
+    numEvents = result/sizeof(MidiLooperEvent);
+    return result>0;
 }
 
-void MidiLooperStorage::PrintStats(HardwareSerial& serialDebug)
+void MidiLooperStorage::PrintStats(HardwareSerial& serial)
 {
-    NVS.printStats(serialDebug);
+    serial.println("stats:");
+  size_t free = m_Preferences.freeEntries();
+  serial.print("Free entries ");
+  serial.println(free);
 }
 
-void MidiLooperStorage::EraseAll()
-{
-    NVS.eraseAll();
-}
+// void MidiLooperStorage::EraseAll()
+// {
+//     NVS.eraseAll();
+// }

@@ -173,22 +173,18 @@ void MidiLooperTrack::AllNotesOff(MidiOut &midiOut)
     }
 }
 
-void MidiLooperTrack::Save(MidiLooperStorage& storage, uint8_t slot, uint8_t track)
+void MidiLooperTrack::Save(MidiLooperStorage& storage, uint8_t track)
 {
-    storage.SaveMidiChannel(slot, track, m_MidiChannel);
-    storage.SavePlayMute(slot, track, m_Muted);
-    
-    return;//TODO
-    storage.SaveEvents(slot, track, m_Events, m_NumEvents);
+    storage.SaveMidiChannel(track, m_MidiChannel);
+    storage.SavePlayMute(track, m_Muted);
+    storage.SaveEvents(track, m_Events, m_NumEvents);
 }
 
-void MidiLooperTrack::Load(MidiLooperStorage& storage, uint8_t slot, uint8_t track)
+void MidiLooperTrack::Load(MidiLooperStorage& storage, uint8_t track)
 {
-    storage.LoadMidiChannel(slot, track, m_MidiChannel);
-    storage.LoadPlayMute(slot, track, m_Muted);
-    
-    return;//TODO
-    if(storage.LoadEvents(slot, track, m_Events, EventCapacity, m_NumEvents))
+    storage.LoadMidiChannel(track, m_MidiChannel);
+    storage.LoadPlayMute(track, m_Muted);
+    if(storage.LoadEvents(track, m_Events, EventCapacity, m_NumEvents))
     {
         // first erase all eventindex...
         for(int idx = 0;idx<StepCapacity; ++idx)

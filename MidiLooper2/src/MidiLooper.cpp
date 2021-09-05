@@ -1,4 +1,5 @@
 #include "MidiLooper.h"
+#include "MidiLooperStorage.h"
 
 MidiLooper::MidiLooper() : m_MidiOut(), m_Ticker(), m_Track(), m_IsRunning(true) {}
 
@@ -119,20 +120,26 @@ void MidiLooper::ToggleMidiLearn(int idxTrack)
 
 void MidiLooper::Save(MidiLooperStorage& storage, uint8_t slot)
 {
-      // iterate tracks:
-  for(int track = 0; track<MidiLooper::NumTracks; ++track)
-  {
-    m_Track[track].Save(storage, slot, track);
-  }
+    // iterate tracks:
+    storage.Open(slot);
+    m_Metronome.Save(storage, 0xFF);
+    for(int track = 0; track<MidiLooper::NumTracks; ++track)
+    {
+        m_Track[track].Save(storage, track);
+    }
+    storage.Close();
 }
 
 void MidiLooper::Load(MidiLooperStorage& storage, uint8_t slot)
 {
-      // iterate tracks:
-  for(int track = 0; track<MidiLooper::NumTracks; ++track)
-  {
-    m_Track[track].Load(storage, slot, track);
-  }
+    // iterate tracks:
+    storage.Open(slot);
+    m_Metronome.Load(storage, 0xFF);
+    for(int track = 0; track<MidiLooper::NumTracks; ++track)
+    {
+        m_Track[track].Load(storage, track);
+    }
+    storage.Close();
 }
 
 void MidiLooper::printState(HardwareSerial &serial)
