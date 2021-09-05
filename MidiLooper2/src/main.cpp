@@ -11,7 +11,8 @@
 #include "MidiLooperStorage.h"
 #include "MidiLooperClock.h"
 
-//#include "ArduinoNvs.h"
+#include "Preferences.h"
+
 
 //SPIClass SPI2(HSPI);
 
@@ -427,6 +428,43 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& led
   ledMatrix.WriteAll();
 }
 
+void TestPreferences(HardwareSerial& serial)
+{
+  serial.println("Test preferences");
+  delay(5000);
+
+  serial.println("Testing preferences");
+  Preferences preferences;
+
+  preferences.begin("slot0", false);
+
+  size_t free = preferences.freeEntries();
+  serial.print("Free entries ");
+  serial.println(free);
+
+  uint32_t bootCount = 0;
+  bootCount = preferences.getUInt("bootcount", bootCount);
+
+  serial.print("read bootcount ");
+  serial.println(bootCount);
+
+  ++bootCount;
+  size_t ok = preferences.putUInt("bootcount", bootCount);
+
+  serial.print("write bootcount ");
+  serial.print(bootCount);
+  serial.print(" : ");
+  serial.println(ok);
+
+  preferences.end();
+
+  delay(2000);
+  serial.println("restart");
+
+  delay(1000);
+  ESP.restart();
+}
+
 void loop()
 {
   // mode button for erase layer
@@ -443,46 +481,9 @@ void loop()
   // put your main code here, to run repeatedly:
   devBoard.serialDebug.println("starting up!");
 
-  midiLooperApp.midiLooperStorage.PrintStats(devBoard.serialDebug);
-
-    // uint8_t writeValue = 0x01;
-    // bool init = NVS.begin("storage", &devBoard.serialDebug);
-    // devBoard.serialDebug.print("Init storage" );
-    // devBoard.serialDebug.println(init);
-    
-
-    // bool erall = NVS.eraseAll();
-    // devBoard.serialDebug.print("Erase storage" );
-    // devBoard.serialDebug.println(erall);
-    
-  // while(true)
-  // {
-  //   devBoard.serialDebug.println("Test storage");
-
-  //   PrintStats();
-
-  //   uint8_t readValue = 0x00;
-  //   bool rok = NVS.getInt("Key", readValue);
-  //   devBoard.serialDebug.print("read  ");
-  //   devBoard.serialDebug.print(rok);
-  //   devBoard.serialDebug.print(" : ");
-  //   devBoard.serialDebug.println(readValue, HEX);
-    
-
-  //   delay(1000);
-
-  //   bool wok = NVS.setInt("Key", writeValue);
-  //   devBoard.serialDebug.print("write ");
-  //   devBoard.serialDebug.print(wok);
-  //   devBoard.serialDebug.print(" : ");
-  //   devBoard.serialDebug.println(writeValue, HEX);
-  //   ++writeValue;
-
-  //   //PrintStorage(devBoard,midiLooperApp.midiLooperStorage, 0);
-  //   PrintStats();
-
-  //   delay(5000);
-  // }
+//  midiLooperApp.midiLooperStorage.PrintStats(devBoard.serialDebug);
+  TestPreferences(devBoard.serialDebug);
+  return;
   
   // startup checks
   devBoard.update();
@@ -505,8 +506,8 @@ void loop()
   
     // test storage
     devBoard.serialDebug.println("test storage");
-    midiLooperApp.Save(0x00);
-    PrintStorage(devBoard, midiLooperApp.midiLooperStorage, 0x00);
+    //midiLooperApp.Save(0x00);
+    //PrintStorage(devBoard, midiLooperApp.midiLooperStorage, 0x00);
   }
 
   // make sure all notes are off on all midi channels
