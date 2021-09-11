@@ -13,7 +13,9 @@ struct DevBoard
   static const int gateDividerInPin = A2;
   static const int stepDividerInPin1 = A3;
   static const int stepDividerInPin2 = A4;
-
+  static const int stepLengthInPin1 = A5;
+  static const int stepLengthInPin2 = A6;
+  
   static const int outPinABC1 = 4;
   static const int outPinABC2 = 7;
   static const int outPinGate = A0;
@@ -85,6 +87,10 @@ struct DevBoard
     abcDivide1 = (abcDivide1 * numDividers) >> 10;
     uint16_t abcDivide2 = analogRead(stepDividerInPin2);
     abcDivide2 = (abcDivide2 * numDividers) >> 10;
+    uint16_t stepLength1 = analogRead(stepLengthInPin1);
+    stepLength1 = 1 + (stepLength1>>7);//[1,8]
+    uint16_t stepLength2 = analogRead(stepLengthInPin2);
+    stepLength2 = 1 + (stepLength2>>7);//[1,8]
 
 //    uint16_t dividers[] = {1, 2, 3, 4, 6, 8, 12, 16, 24, 32};
 //    uint16_t dividers[] = {1, 2, 2, 4, 4, 8, 8, 16, 16, 32};
@@ -97,6 +103,8 @@ struct DevBoard
     {
         uint16_t dividedABCCounter = m_Counter / dividers[abcDivide1];
         dividedABCCounter = dividedABCCounter >> 1;
+        dividedABCCounter= dividedABCCounter % stepLength1;
+
         digitalWrite(outPinABC1, dividedABCCounter & 1);
         dividedABCCounter = dividedABCCounter >> 1;
         digitalWrite(outPinABC1+1, dividedABCCounter & 1);
@@ -106,6 +114,8 @@ struct DevBoard
     {
         uint16_t dividedABCCounter2 = m_Counter / dividers[abcDivide2];
         dividedABCCounter2 = dividedABCCounter2 >> 1;
+        dividedABCCounter2 = dividedABCCounter2 % stepLength2;
+
         digitalWrite(outPinABC2, dividedABCCounter2 & 1);
         dividedABCCounter2 = dividedABCCounter2 >> 1;
         digitalWrite(outPinABC2+1, dividedABCCounter2 & 1);
