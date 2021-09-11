@@ -1,14 +1,21 @@
 #include <Arduino.h>
 
+// 2nd ABC out + 2nd clock divider pot
+//TODO seq length pot x2
+//TODO cvclock on 2nd gate ~pot or ~seq 2???
+//TODO chaining of 8 + 8 = 16?
+
 struct DevBoard
 {
   static const int clockInPin = 2;
   static const int resetInPin = 3;
 
   static const int gateDividerInPin = A2;
-  static const int stepDividerInPin = A3;
+  static const int stepDividerInPin1 = A3;
+  static const int stepDividerInPin2 = A4;
 
-  static const int outPinABC = 4;
+  static const int outPinABC1 = 4;
+  static const int outPinABC2 = 7;
   static const int outPinGate = A0;
   
   uint16_t m_Counter;
@@ -34,9 +41,12 @@ struct DevBoard
 
 
     pinMode(outPinGate, OUTPUT);    
-    pinMode(outPinABC, OUTPUT);    
-    pinMode(outPinABC+1, OUTPUT);    
-    pinMode(outPinABC+2, OUTPUT);    
+    pinMode(outPinABC1, OUTPUT);    
+    pinMode(outPinABC1+1, OUTPUT);    
+    pinMode(outPinABC1+2, OUTPUT);    
+    pinMode(outPinABC2, OUTPUT);    
+    pinMode(outPinABC2+1, OUTPUT);    
+    pinMode(outPinABC2+2, OUTPUT);    
   }
 
   void Update()
@@ -70,19 +80,33 @@ struct DevBoard
 
     uint16_t gateDivide = analogRead(gateDividerInPin);
     gateDivide = (gateDivide * 6) >> 10;//[0,5]
-    uint16_t abcDivide = analogRead(stepDividerInPin);
-    abcDivide = (abcDivide * 6) >> 10;//[0,5]
+    uint16_t abcDivide1 = analogRead(stepDividerInPin1);
+    abcDivide1 = (abcDivide1 * 6) >> 10;//[0,5]
+    uint16_t abcDivide2 = analogRead(stepDividerInPin2);
+    abcDivide2 = (abcDivide2 * 6) >> 10;//[0,5]
 
-    uint16_t dividedGateCounter = m_Counter >> gateDivide;//TODO divide
-    digitalWrite(outPinGate, 1-(dividedGateCounter & 1));
-
-    uint16_t dividedABCCounter = m_Counter >> abcDivide;//TODO divide
-    dividedABCCounter = dividedABCCounter >> 1;
-    digitalWrite(outPinABC, dividedABCCounter & 1);
-    dividedABCCounter = dividedABCCounter >> 1;
-    digitalWrite(outPinABC+1, dividedABCCounter & 1);
-    dividedABCCounter = dividedABCCounter >> 1;
-    digitalWrite(outPinABC+2, dividedABCCounter & 1);
+    {
+        uint16_t dividedGateCounter = m_Counter >> gateDivide;
+        digitalWrite(outPinGate, 1-(dividedGateCounter & 1));
+    }
+    {
+        uint16_t dividedABCCounter = m_Counter >> abcDivide1;
+        dividedABCCounter = dividedABCCounter >> 1;
+        digitalWrite(outPinABC1, dividedABCCounter & 1);
+        dividedABCCounter = dividedABCCounter >> 1;
+        digitalWrite(outPinABC1+1, dividedABCCounter & 1);
+        dividedABCCounter = dividedABCCounter >> 1;
+        digitalWrite(outPinABC1+2, dividedABCCounter & 1);
+    }
+    {
+        uint16_t dividedABCCounter2 = m_Counter >> abcDivide2;
+        dividedABCCounter2 = dividedABCCounter2 >> 1;
+        digitalWrite(outPinABC2, dividedABCCounter2 & 1);
+        dividedABCCounter2 = dividedABCCounter2 >> 1;
+        digitalWrite(outPinABC2+1, dividedABCCounter2 & 1);
+        dividedABCCounter2 = dividedABCCounter2 >> 1;
+        digitalWrite(outPinABC2+2, dividedABCCounter2 & 1);
+    }
   }
 
   void PrintDebug(uint16_t period)
