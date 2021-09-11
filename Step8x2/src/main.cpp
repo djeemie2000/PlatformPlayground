@@ -78,19 +78,24 @@ struct DevBoard
       }
     }
 
+    const uint16_t numDividers = 10; 
     uint16_t gateDivide = analogRead(gateDividerInPin);
-    gateDivide = (gateDivide * 6) >> 10;//[0,5]
+    gateDivide = (gateDivide * numDividers) >> 10;
     uint16_t abcDivide1 = analogRead(stepDividerInPin1);
-    abcDivide1 = (abcDivide1 * 6) >> 10;//[0,5]
+    abcDivide1 = (abcDivide1 * numDividers) >> 10;
     uint16_t abcDivide2 = analogRead(stepDividerInPin2);
-    abcDivide2 = (abcDivide2 * 6) >> 10;//[0,5]
+    abcDivide2 = (abcDivide2 * numDividers) >> 10;
+
+//    uint16_t dividers[] = {1, 2, 3, 4, 6, 8, 12, 16, 24, 32};
+//    uint16_t dividers[] = {1, 2, 2, 4, 4, 8, 8, 16, 16, 32};
+    uint16_t dividers[] = {1, 2, 4, 8, 16, 32, 3, 6, 12, 24};
 
     {
-        uint16_t dividedGateCounter = m_Counter >> gateDivide;
+        uint16_t dividedGateCounter = m_Counter / dividers[gateDivide];
         digitalWrite(outPinGate, 1-(dividedGateCounter & 1));
     }
     {
-        uint16_t dividedABCCounter = m_Counter >> abcDivide1;
+        uint16_t dividedABCCounter = m_Counter / dividers[abcDivide1];
         dividedABCCounter = dividedABCCounter >> 1;
         digitalWrite(outPinABC1, dividedABCCounter & 1);
         dividedABCCounter = dividedABCCounter >> 1;
@@ -99,7 +104,7 @@ struct DevBoard
         digitalWrite(outPinABC1+2, dividedABCCounter & 1);
     }
     {
-        uint16_t dividedABCCounter2 = m_Counter >> abcDivide2;
+        uint16_t dividedABCCounter2 = m_Counter / dividers[abcDivide2];
         dividedABCCounter2 = dividedABCCounter2 >> 1;
         digitalWrite(outPinABC2, dividedABCCounter2 & 1);
         dividedABCCounter2 = dividedABCCounter2 >> 1;
