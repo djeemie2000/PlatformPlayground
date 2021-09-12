@@ -1,4 +1,8 @@
 #include <Arduino.h>
+#include <SPI.h>
+
+#include "analoginbank.h"
+#include "shiftoutbank.h"
 
 // 2nd ABC out + 2nd clock divider pot
 //TODO seq length pot x2
@@ -16,9 +20,7 @@ struct DevBoard
   static const int stepLengthInPin1 = A5;
   static const int stepLengthInPin2 = A6;
   
-  static const int outPinABC1 = 4;
-  static const int outPinABC2 = 7;
-  static const int outPinGate = A0;
+  static const int outPinGate = 7;
   
   uint16_t m_Counter;
   uint8_t m_ClockHistory;
@@ -27,7 +29,13 @@ struct DevBoard
   uint16_t m_DebugCounter;
   uint32_t m_DebugMillis;
 
-  DevBoard() : m_Counter(0)
+  AnalogInBank analogInBank;
+  ShiftOutBank shiftOutBank;
+
+  DevBoard() 
+  : m_Counter(0)
+  , analogInBank(A2, A3, A4, A5, A6)
+  , shiftOutBank(10)
   {}
 
   void Begin()
@@ -41,14 +49,10 @@ struct DevBoard
     pinMode(clockInPin, INPUT_PULLUP);
     pinMode(resetInPin, INPUT_PULLUP);
 
-
     pinMode(outPinGate, OUTPUT);    
-    pinMode(outPinABC1, OUTPUT);    
-    pinMode(outPinABC1+1, OUTPUT);    
-    pinMode(outPinABC1+2, OUTPUT);    
-    pinMode(outPinABC2, OUTPUT);    
-    pinMode(outPinABC2+1, OUTPUT);    
-    pinMode(outPinABC2+2, OUTPUT);    
+
+    analogInBank.begin();
+    shiftOutBank.begin();
   }
 
   void Update()
@@ -80,16 +84,18 @@ struct DevBoard
       }
     }
 
+    analogInBank.updateOne();
+
     const uint16_t numDividers = 10; 
-    uint16_t gateDivide = analogRead(gateDividerInPin);
+    uint16_t gateDivide = analogInBank.get(0);// analogRead(gateDividerInPin);
     gateDivide = (gateDivide * numDividers) >> 10;
-    uint16_t abcDivide1 = analogRead(stepDividerInPin1);
+    uint16_t abcDivide1 = analogInBank.get(1);// analogRead(stepDividerInPin1);
     abcDivide1 = (abcDivide1 * numDividers) >> 10;
-    uint16_t abcDivide2 = analogRead(stepDividerInPin2);
+    uint16_t abcDivide2 = analogInBank.get(2);//analogRead(stepDividerInPin2);
     abcDivide2 = (abcDivide2 * numDividers) >> 10;
-    uint16_t stepLength1 = analogRead(stepLengthInPin1);
+    uint16_t stepLength1 = analogInBank.get(3);//analogRead(stepLengthInPin1);
     stepLength1 = 1 + (stepLength1>>7);//[1,8]
-    uint16_t stepLength2 = analogRead(stepLengthInPin2);
+    uint16_t stepLength2 = analogInBank.get(4);//analogRead(stepLengthInPin2);
     stepLength2 = 1 + (stepLength2>>7);//[1,8]
 
 //    uint16_t dividers[] = {1, 2, 3, 4, 6, 8, 12, 16, 24, 32};
@@ -105,23 +111,24 @@ struct DevBoard
         dividedABCCounter = dividedABCCounter >> 1;
         dividedABCCounter= dividedABCCounter % stepLength1;
 
-        digitalWrite(outPinABC1, dividedABCCounter & 1);
+        shiftOutBank.set(0, dividedABCCounter & 1);
         dividedABCCounter = dividedABCCounter >> 1;
-        digitalWrite(outPinABC1+1, dividedABCCounter & 1);
+        shiftOutBank.set(1, dividedABCCounter & 1);
         dividedABCCounter = dividedABCCounter >> 1;
-        digitalWrite(outPinABC1+2, dividedABCCounter & 1);
+        shiftOutBank.set(2, dividedABCCounter & 1);
     }
     {
         uint16_t dividedABCCounter2 = m_Counter / dividers[abcDivide2];
         dividedABCCounter2 = dividedABCCounter2 >> 1;
         dividedABCCounter2 = dividedABCCounter2 % stepLength2;
 
-        digitalWrite(outPinABC2, dividedABCCounter2 & 1);
+        shiftOutBank.set(4, dividedABCCounter2 & 1);
         dividedABCCounter2 = dividedABCCounter2 >> 1;
-        digitalWrite(outPinABC2+1, dividedABCCounter2 & 1);
+        shiftOutBank.set(5, dividedABCCounter2 & 1);
         dividedABCCounter2 = dividedABCCounter2 >> 1;
-        digitalWrite(outPinABC2+2, dividedABCCounter2 & 1);
+        shiftOutBank.set(6, dividedABCCounter2 & 1);
     }
+    shiftOutBank.update();
   }
 
   void PrintDebug(uint16_t period)
