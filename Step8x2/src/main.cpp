@@ -3,6 +3,7 @@
 
 #include "analoginbank.h"
 #include "shiftoutbank.h"
+#include "analogoutbank.h"
 
 // 2nd ABC out + 2nd clock divider pot
 //TODO seq length pot x2
@@ -14,11 +15,16 @@ struct DevBoard
   static const int clockInPin = 2;
   static const int resetInPin = 3;
 
+  // analog in bank for controls -> read 1 at a time 
   static const int gateDividerInPin = A2;
   static const int stepDividerInPin1 = A3;
   static const int stepDividerInPin2 = A4;
   static const int stepLengthInPin1 = A5;
   static const int stepLengthInPin2 = A6;
+  // analog in bank for CV : read all
+  static const int stepCvInPin1 = A0;
+  static const int stepCvInPin2 = A0;
+  static const int gateCvInPin = A7;
   
   static const int outPinGate = 7;
   
@@ -29,13 +35,17 @@ struct DevBoard
   uint16_t m_DebugCounter;
   uint32_t m_DebugMillis;
 
-  AnalogInBank analogInBank;
+  AnalogInBank analogInBankControls;
+  AnalogInBank analogInBankCVs;
   ShiftOutBank shiftOutBank;
+  AnalogOutBank analogOutBankCVs;
 
   DevBoard() 
   : m_Counter(0)
-  , analogInBank(A2, A3, A4, A5, A6)
-  , shiftOutBank(10)
+  , analogInBankControls(A2, A3, A4, A5, A6)
+  , analogInBankCVs(A0, A1, A7)
+  , shiftOutBank(9)// analogOutBank uses CS pin 9 for first DAC!
+  , analogOutBankCVs()
   {}
 
   void Begin()
@@ -51,8 +61,10 @@ struct DevBoard
 
     pinMode(outPinGate, OUTPUT);    
 
-    analogInBank.begin();
+    analogInBankControls.begin();
+    analogInBankCVs.begin();
     shiftOutBank.begin();
+    analogOutBankCVs.begin(2);//uses CS pin 10 for first DAC!
   }
 
   void Update()
@@ -84,28 +96,29 @@ struct DevBoard
       }
     }
 
-    analogInBank.updateOne();
+    analogInBankControls.updateOne();
 
     const uint16_t numDividers = 10; 
-    uint16_t gateDivide = analogInBank.get(0);// analogRead(gateDividerInPin);
+    uint16_t gateDivide = analogInBankControls.get(0);
     gateDivide = (gateDivide * numDividers) >> 10;
-    uint16_t abcDivide1 = analogInBank.get(1);// analogRead(stepDividerInPin1);
+    uint16_t abcDivide1 = analogInBankControls.get(1);
     abcDivide1 = (abcDivide1 * numDividers) >> 10;
-    uint16_t abcDivide2 = analogInBank.get(2);//analogRead(stepDividerInPin2);
+    uint16_t abcDivide2 = analogInBankControls.get(2);
     abcDivide2 = (abcDivide2 * numDividers) >> 10;
-    uint16_t stepLength1 = analogInBank.get(3);//analogRead(stepLengthInPin1);
+    uint16_t stepLength1 = analogInBankControls.get(3);
     stepLength1 = 1 + (stepLength1>>7);//[1,8]
-    uint16_t stepLength2 = analogInBank.get(4);//analogRead(stepLengthInPin2);
+    uint16_t stepLength2 = analogInBankControls.get(4);
     stepLength2 = 1 + (stepLength2>>7);//[1,8]
 
 //    uint16_t dividers[] = {1, 2, 3, 4, 6, 8, 12, 16, 24, 32};
 //    uint16_t dividers[] = {1, 2, 2, 4, 4, 8, 8, 16, 16, 32};
     uint16_t dividers[] = {1, 2, 4, 8, 16, 32, 3, 6, 12, 24};
 
-    {
-        uint16_t dividedGateCounter = m_Counter / dividers[gateDivide];
-        digitalWrite(outPinGate, 1-(dividedGateCounter & 1));
-    }
+    // 1) shift out select ABC
+    // 2) read CVs
+    // 3) analogOut CVs
+    // 4) Gate out
+
     {
         uint16_t dividedABCCounter = m_Counter / dividers[abcDivide1];
         dividedABCCounter = dividedABCCounter >> 1;
@@ -129,6 +142,21 @@ struct DevBoard
         shiftOutBank.set(6, dividedABCCounter2 & 1);
     }
     shiftOutBank.update();
+
+    // 2)
+    analogInBankCVs.update();
+
+    // 3) analogOut CV's : 10bit to 12bit resolution!
+    analogOutBankCVs.set(0, analogInBankCVs.get(0)*4);
+    analogOutBankCVs.set(1, analogInBankCVs.get(1)*4);
+    analogOutBankCVs.update();
+
+    // 4) gate out
+    {
+        uint16_t dividedGateCounter = m_Counter / dividers[gateDivide];
+        digitalWrite(outPinGate, 1-(dividedGateCounter & 1));
+    }
+
   }
 
   void PrintDebug(uint16_t period)
