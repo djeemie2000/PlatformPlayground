@@ -196,17 +196,21 @@ struct Step8x2App
 //    uint16_t dividers[] = {1, 2, 2, 4, 4, 8, 8, 16, 16, 32};
     uint16_t dividers[] = {1, 2, 4, 8, 16, 32, 3, 6, 12, 24};
 
-    state.gateDivider = analogInBankControls.get(0);
-    state.gateDivider = (state.gateDivider * numDividers) >> 10;
+    uint16_t gateDividerIdx = analogInBankControls.get(0);
+    gateDividerIdx = (gateDividerIdx * numDividers) >> 10;
+    state.gateDivider = dividers[gateDividerIdx];
 
-    state.stepDividerA = analogInBankControls.get(1);
-    state.stepDividerA = (state.stepDividerA * numDividers) >> 10;
-    
-    state.stepDividerB = analogInBankControls.get(2);
-    state.stepDividerB = (state.stepDividerB * numDividers) >> 10;
+    uint16_t stepDividerAIdx = analogInBankControls.get(1);
+    stepDividerAIdx = (stepDividerAIdx * numDividers) >> 10;
+    state.stepDividerA = dividers[stepDividerAIdx];
+
+    uint16_t stepDividerBIdx = analogInBankControls.get(2);
+    stepDividerBIdx = (stepDividerBIdx * numDividers) >> 10;
+    state.stepDividerB = dividers[stepDividerBIdx];
 
     state.stepLengthA = analogInBankControls.get(3);
     state.stepLengthA = 1 + (state.stepLengthA>>7);//[1,8]
+
     state.stepLengthB = analogInBankControls.get(4);
     state.stepLengthB = 1 + (state.stepLengthB>>7);//[1,8]
 
@@ -216,7 +220,7 @@ struct Step8x2App
     // 3) analogOut CVs
     // 4) Gate out
     {
-        uint16_t stepA = (m_Counter >> 1) / dividers[state.stepDividerA];
+        uint16_t stepA = (m_Counter >> 1) / state.stepDividerA;
 //        stepA = stepA >> 1;
         stepA = stepA % state.stepLengthA;
         state.stepA = stepA;
@@ -228,7 +232,7 @@ struct Step8x2App
         shiftOutBank.set(2, stepA & 1);
     }
     {
-        uint16_t stepB = (m_Counter >> 1) / dividers[state.stepDividerB];
+        uint16_t stepB = (m_Counter >> 1) / state.stepDividerB;
 //        stepB = stepB >> 1;
         stepB = stepB % state.stepLengthB;
         state.stepB = stepB;
@@ -251,7 +255,7 @@ struct Step8x2App
     analogOutBankCVs.update();
 
     // 4) gate out
-    uint16_t dividedGateCounter = m_Counter / dividers[state.gateDivider];
+    uint16_t dividedGateCounter = m_Counter / state.gateDivider;
     digitalWrite(gateOutPin, 1-(dividedGateCounter & 1));
     
   }
