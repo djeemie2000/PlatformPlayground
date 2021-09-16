@@ -18,42 +18,42 @@ struct Step8x2State
 {
   static const int NumSteps = 8;
   
-  int stepCV1[NumSteps];
-  int stepCV2[NumSteps];
+  int stepCVA[NumSteps];
+  int stepCVB[NumSteps];
   int gateDurationCV;
 
-  int step1;
-  int step2;
+  int stepA;
+  int stepB;
 
   uint16_t gateDivider;
   
-  uint16_t stepDivider1;
-  uint16_t stepLength1;
-  bool quantize1;
+  uint16_t stepDividerA;
+  uint16_t stepLengthA;
+  bool quantizeA;
 
-  uint16_t stepDivider2;
-  uint16_t stepLength2;
-  bool quantize2;
+  uint16_t stepDividerB;
+  uint16_t stepLengthB;
+  bool quantizeB;
 
   bool chaining;
 
   Step8x2State()
    : gateDurationCV(512)
-   , step1(0)
-   , step2(0)
+   , stepA(0)
+   , stepB(0)
    , gateDivider(1)
-   , stepDivider1(1)
-   , stepLength1(NumSteps)
-   , quantize1(false)
-   , stepDivider2(1)
-   , stepLength2(NumSteps)
-   , quantize2(false)
+   , stepDividerA(1)
+   , stepLengthA(NumSteps)
+   , quantizeA(false)
+   , stepDividerB(1)
+   , stepLengthB(NumSteps)
+   , quantizeB(false)
    , chaining(false)
   {
     for(int idx = 0; idx<NumSteps;++idx)
     {
-      stepCV1[idx] = 0;
-      stepCV2[idx] = 0;
+      stepCVA[idx] = 0;
+      stepCVB[idx] = 0;
     }
   }
 
@@ -62,22 +62,22 @@ struct Step8x2State
 void PrintState(Step8x2State& state)
 {
   Serial.print("A / ");
-  Serial.print(state.stepDivider1);
+  Serial.print(state.stepDividerA);
   Serial.print(" L ");
-  Serial.print(state.stepLength1);
+  Serial.print(state.stepLengthA);
   Serial.print(" Q ");
-  Serial.print(state.quantize1);
+  Serial.print(state.quantizeA);
   Serial.print(" S ");
-  Serial.println(state.step1);
+  Serial.println(state.stepA);
 
   Serial.print("B / ");
-  Serial.print(state.stepDivider2);
+  Serial.print(state.stepDividerB);
   Serial.print(" L ");
-  Serial.print(state.stepLength2);
+  Serial.print(state.stepLengthB);
   Serial.print(" Q ");
-  Serial.print(state.quantize2);
+  Serial.print(state.quantizeB);
   Serial.print(" S ");
-  Serial.println(state.step2);
+  Serial.println(state.stepB);
 
   Serial.print("G / ");
   Serial.print(state.gateDivider);
@@ -199,16 +199,16 @@ struct Step8x2App
     state.gateDivider = analogInBankControls.get(0);
     state.gateDivider = (state.gateDivider * numDividers) >> 10;
 
-    state.stepDivider1 = analogInBankControls.get(1);
-    state.stepDivider1 = (state.stepDivider1 * numDividers) >> 10;
+    state.stepDividerA = analogInBankControls.get(1);
+    state.stepDividerA = (state.stepDividerA * numDividers) >> 10;
     
-    state.stepDivider2 = analogInBankControls.get(2);
-    state.stepDivider2 = (state.stepDivider2 * numDividers) >> 10;
+    state.stepDividerB = analogInBankControls.get(2);
+    state.stepDividerB = (state.stepDividerB * numDividers) >> 10;
 
-    state.stepLength1 = analogInBankControls.get(3);
-    state.stepLength1 = 1 + (state.stepLength1>>7);//[1,8]
-    state.stepLength2 = analogInBankControls.get(4);
-    state.stepLength2 = 1 + (state.stepLength2>>7);//[1,8]
+    state.stepLengthA = analogInBankControls.get(3);
+    state.stepLengthA = 1 + (state.stepLengthA>>7);//[1,8]
+    state.stepLengthB = analogInBankControls.get(4);
+    state.stepLengthB = 1 + (state.stepLengthB>>7);//[1,8]
 
 
     // 1) shift out select ABC
@@ -216,28 +216,28 @@ struct Step8x2App
     // 3) analogOut CVs
     // 4) Gate out
     {
-        uint16_t step1 = (m_Counter >> 1) / dividers[state.stepDivider1];
-//        step1 = step1 >> 1;
-        step1 = step1 % state.stepLength1;
-        state.step1 = step1;
+        uint16_t stepA = (m_Counter >> 1) / dividers[state.stepDividerA];
+//        stepA = stepA >> 1;
+        stepA = stepA % state.stepLengthA;
+        state.stepA = stepA;
 
-        shiftOutBank.set(0, step1 & 1);
-        step1 = step1 >> 1;
-        shiftOutBank.set(1, step1 & 1);
-        step1 = step1 >> 1;
-        shiftOutBank.set(2, step1 & 1);
+        shiftOutBank.set(0, stepA & 1);
+        stepA = stepA >> 1;
+        shiftOutBank.set(1, stepA & 1);
+        stepA = stepA >> 1;
+        shiftOutBank.set(2, stepA & 1);
     }
     {
-        uint16_t step2 = (m_Counter >> 1) / dividers[state.stepDivider2];
-//        step2 = step2 >> 1;
-        step2 = step2 % state.stepLength2;
-        state.step2 = step2;
+        uint16_t stepB = (m_Counter >> 1) / dividers[state.stepDividerB];
+//        stepB = stepB >> 1;
+        stepB = stepB % state.stepLengthB;
+        state.stepB = stepB;
 
-        shiftOutBank.set(4, step2 & 1);
-        step2 = step2 >> 1;
-        shiftOutBank.set(5, step2 & 1);
-        step2 = step2 >> 1;
-        shiftOutBank.set(6, step2 & 1);
+        shiftOutBank.set(4, stepB & 1);
+        stepB = stepB >> 1;
+        shiftOutBank.set(5, stepB & 1);
+        stepB = stepB >> 1;
+        shiftOutBank.set(6, stepB & 1);
     }
     shiftOutBank.update();
 
