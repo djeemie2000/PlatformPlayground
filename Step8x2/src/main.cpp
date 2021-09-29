@@ -115,7 +115,8 @@ struct Step8x2App
   static const int gateCvInPin = A7;//TODO A2
   
   
-  uint16_t m_Counter;
+  uint16_t m_StepCounter;
+  uint8_t m_GateCounter;
   uint8_t m_ClockHistory;
   uint8_t m_ResetHistory;
 
@@ -131,7 +132,8 @@ struct Step8x2App
   Step8x2State state;
 
   Step8x2App() 
-  : m_Counter(0)
+  : m_StepCounter(0)
+  , m_GateCounter(0)
   , analogInBankControls(A2, A3, A4, A5, A6)
   , analogInBankCVs(A0, A1, A7)
   , shiftOutBank(9)// analogOutBank uses CS pin 9 for first DAC!
@@ -143,7 +145,8 @@ struct Step8x2App
   {
     m_DebugCounter = 0;
 
-    m_Counter= 0;
+    m_StepCounter= 0;
+    m_GateCounter = 0;
     m_ClockHistory = 0;
     m_ResetHistory = 0;
 
@@ -170,22 +173,25 @@ struct Step8x2App
     if((m_ResetHistory & 0x03) == 1)
     {
       //reset rising
-      m_Counter = 0;
+      m_StepCounter = 0;
+      m_GateCounter = 0;
     }
     else if((m_ClockHistory & 0x03) == 0x01)
     {
       //rising
-      if(m_Counter & 0x01)
+      if(m_GateCounter & 0x01)
       {
-        ++m_Counter;
+        ++m_GateCounter;
       }
+      //TODO if hold, block step counter but advance gate counter
+      ++m_StepCounter;
     }
     else if((m_ClockHistory & 0x03) == 0x02)
     {
       //falling
-      if(!(m_Counter & 0x01))
+      if(!(m_GateCounter & 0x01))
       {
-        ++m_Counter;
+        ++m_GateCounter;
       }
     }
 
@@ -220,7 +226,7 @@ struct Step8x2App
     // 3) analogOut CVs
     // 4) Gate out
     {
-        uint16_t stepA = (m_Counter >> 1) / state.stepDividerA;
+        uint16_t stepA = m_StepCounter / state.stepDividerA;
 //        stepA = stepA >> 1;
         stepA = stepA % state.stepLengthA;
         state.stepA = stepA;
@@ -232,7 +238,7 @@ struct Step8x2App
         shiftOutBank.set(2, stepA & 1);
     }
     {
-        uint16_t stepB = (m_Counter >> 1) / state.stepDividerB;
+        uint16_t stepB = m_StepCounter / state.stepDividerB;
 //        stepB = stepB >> 1;
         stepB = stepB % state.stepLengthB;
         state.stepB = stepB;
@@ -255,7 +261,7 @@ struct Step8x2App
     analogOutBankCVs.update();
 
     // 4) gate out
-    uint16_t dividedGateCounter = m_Counter / state.gateDivider;
+    uint8_t dividedGateCounter = m_GateCounter / state.gateDivider;
     digitalWrite(gateOutPin, 1-(dividedGateCounter & 1));
     
   }
@@ -266,7 +272,9 @@ struct Step8x2App
     {
       uint32_t newMillis = millis();
 
-      Serial.print(m_Counter, BIN);
+      Serial.print(m_StepCounter);
+      Serial.print(" ");
+      Serial.print(m_GateCounter);
       Serial.print(" ");
     //  Serial.print(m_ClockHistory, BIN);
     //  Serial.print(" ");
