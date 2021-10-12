@@ -2,26 +2,17 @@
 #include <SPI.h>
 
 #include "analoginbank.h"
-#include "shiftoutbank.h"
-#include "analogoutbank.h"
+#include "digitaloutbank.h"
 
 //TODO chaining of 8 + 8 = 16?
-//TODO quantize CV out
-//TODO cvclock on 2nd gate ~ CV input
-//    take clock divider into account!!!
-// button/pot controls state + step CV -> state struct
-//    => possible to store/recall settings + step CV (?) 
+// button/pot controls state -> state struct
 //    => debug print state
-//TODO hold input => no step advance
+// (??) TODO (??) hold input => no step advance
 
 struct Step8x2State
 {
   static const int NumSteps = 8;
   
-  int stepCVA[NumSteps];
-  int stepCVB[NumSteps];
-  int gateDurationCV;
-
   int stepA;
   int stepB;
 
@@ -29,32 +20,23 @@ struct Step8x2State
   
   uint16_t stepDividerA;
   uint16_t stepLengthA;
-  bool quantizeA;
-
+  
   uint16_t stepDividerB;
   uint16_t stepLengthB;
-  bool quantizeB;
-
+  
   bool chaining;
 
   Step8x2State()
-   : gateDurationCV(512)
-   , stepA(0)
+   : stepA(0)
    , stepB(0)
    , gateDivider(1)
    , stepDividerA(1)
    , stepLengthA(NumSteps)
-   , quantizeA(false)
    , stepDividerB(1)
    , stepLengthB(NumSteps)
-   , quantizeB(false)
    , chaining(false)
   {
-    for(int idx = 0; idx<NumSteps;++idx)
-    {
-      stepCVA[idx] = 0;
-      stepCVB[idx] = 0;
-    }
+    
   }
 
 };
@@ -65,8 +47,6 @@ void PrintState(Step8x2State& state)
   Serial.print(state.stepDividerA);
   Serial.print(" L ");
   Serial.print(state.stepLengthA);
-  Serial.print(" Q ");
-  Serial.print(state.quantizeA);
   Serial.print(" S ");
   Serial.println(state.stepA);
 
@@ -74,15 +54,11 @@ void PrintState(Step8x2State& state)
   Serial.print(state.stepDividerB);
   Serial.print(" L ");
   Serial.print(state.stepLengthB);
-  Serial.print(" Q ");
-  Serial.print(state.quantizeB);
   Serial.print(" S ");
   Serial.println(state.stepB);
 
   Serial.print("G / ");
   Serial.print(state.gateDivider);
-  Serial.print(" L ");
-  Serial.println(state.gateDurationCV);
 
   Serial.print("Ch : ");
   Serial.println(state.chaining);
@@ -94,27 +70,18 @@ struct Step8x2App
 {
   static const int clockInPin = 2;
   static const int resetInPin = 3;
-  static const int holdInPin = 4;
 
-  static const int chainingInPin = 5;
-  static const int quantizeInPin1 = 6;
-  static const int quantizeInPin2 = 7;
-
-  static const int gateOutPin = 8;
+  static const int gateOutPin = 4;
+  static const int triggerOutPin = 11;
   
   // analog in bank for controls -> read 1 at a time 
-  static const int gateDividerInPin = A2;//TODO A3 etc...
-  static const int stepDividerInPin1 = A3;
-  static const int stepDividerInPin2 = A4;
-  static const int stepLengthInPin1 = A5;
-  static const int stepLengthInPin2 = A6;
+  static const int gateDividerInPin = A3;
+  static const int stepDividerInPin1 = A4;
+  static const int stepDividerInPin2 = A5;
+  static const int stepLengthInPin1 = A6;
+  static const int stepLengthInPin2 = A7;
 
-  // analog in bank for CV : read all
-  static const int stepCvInPin1 = A0;
-  static const int stepCvInPin2 = A1;
-  static const int gateCvInPin = A7;//TODO A2
-  
-  
+
   uint16_t m_StepCounter;
   uint8_t m_GateCounter;
   uint8_t m_ClockHistory;
@@ -124,20 +91,16 @@ struct Step8x2App
   uint32_t m_DebugMillis;
 
   //TODO DigitalInBank controls -> button debouncer???
+  DigitalOutBank digitalOutSelect; // ABC CV row 1, ABC CV row 2, A/B output 1, A/B output 2 
+  //DigitalOutBank digitalOutGate;// gate out, trigger out, 
   AnalogInBank analogInBankControls;
-  AnalogInBank analogInBankCVs;
-  ShiftOutBank shiftOutBank;
-  AnalogOutBank analogOutBankCVs;
-
+ 
   Step8x2State state;
 
   Step8x2App() 
   : m_StepCounter(0)
   , m_GateCounter(0)
-  , analogInBankControls(A2, A3, A4, A5, A6)
-  , analogInBankCVs(A0, A1, A7)
-  , shiftOutBank(9)// analogOutBank uses CS pin 9 for first DAC!
-  , analogOutBankCVs()
+  , analogInBankControls(gateDividerInPin, stepDividerInPin1, stepDividerInPin2, stepLengthInPin1, stepLengthInPin2)
   , state()
   {}
 
@@ -152,14 +115,12 @@ struct Step8x2App
 
     pinMode(clockInPin, INPUT_PULLUP);
     pinMode(resetInPin, INPUT_PULLUP);
-    pinMode(holdInPin, INPUT_PULLUP);
 
-    pinMode(gateOutPin, OUTPUT);    
+    pinMode(gateOutPin, OUTPUT);
+    pinMode(triggerOutPin, OUTPUT);
 
     analogInBankControls.begin();
-    analogInBankCVs.begin();
-    shiftOutBank.begin();
-    analogOutBankCVs.begin(2);//uses CS pin 10 for first DAC!
+    digitalOutSelect.begin(5,6,7, 8,9,10, A1,A2);
   }
 
   void Update()
@@ -168,7 +129,6 @@ struct Step8x2App
 
     m_ClockHistory = (m_ClockHistory<<1) | digitalRead(clockInPin);
     m_ResetHistory = (m_ResetHistory<<1) | digitalRead(resetInPin);
-    //int hold = digitalRead(holdInPin);//PULLUP !!!! 
     
     if((m_ResetHistory & 0x03) == 1)
     {
@@ -183,8 +143,6 @@ struct Step8x2App
       {
         ++m_GateCounter;
       }
-      //TODO if hold, block step counter but advance gate counter ???
-      //TODO if hold, make sure that both counters still remain 'in sync' !!!!
       ++m_StepCounter;
     }
     else if((m_ClockHistory & 0x03) == 0x02)
@@ -216,55 +174,44 @@ struct Step8x2App
     state.stepDividerB = dividers[stepDividerBIdx];
 
     state.stepLengthA = analogInBankControls.get(3);
+    // if pot at max => chaining
+    state.chaining = (1016<state.stepLengthA);
     state.stepLengthA = 1 + (state.stepLengthA>>7);//[1,8]
-
+      
     state.stepLengthB = analogInBankControls.get(4);
     state.stepLengthB = 1 + (state.stepLengthB>>7);//[1,8]
 
 
     // 1) shift out select ABC
-    // 2) read CVs
-    // 3) analogOut CVs
     // 4) Gate out
     {
         uint16_t stepA = m_StepCounter / state.stepDividerA;
-//        stepA = stepA >> 1;
         stepA = stepA % state.stepLengthA;
         state.stepA = stepA;
 
-        shiftOutBank.set(0, stepA & 1);
+        digitalOutSelect.set(0, stepA & 1);
         stepA = stepA >> 1;
-        shiftOutBank.set(1, stepA & 1);
+        digitalOutSelect.set(1, stepA & 1);
         stepA = stepA >> 1;
-        shiftOutBank.set(2, stepA & 1);
+        digitalOutSelect.set(2, stepA & 1);
     }
     {
         uint16_t stepB = m_StepCounter / state.stepDividerB;
-//        stepB = stepB >> 1;
         stepB = stepB % state.stepLengthB;
         state.stepB = stepB;
 
-        shiftOutBank.set(4, stepB & 1);
+        digitalOutSelect.set(3, stepB & 1);
         stepB = stepB >> 1;
-        shiftOutBank.set(5, stepB & 1);
+        digitalOutSelect.set(4, stepB & 1);
         stepB = stepB >> 1;
-        shiftOutBank.set(6, stepB & 1);
+        digitalOutSelect.set(5, stepB & 1);
     }
-    shiftOutBank.update();
-
-    // 2)
-    analogInBankCVs.update();
-
-    // 3) analogOut CV's : 10bit to 12bit resolution!
-    // TODO quantize or not, always crop!!! ?????
-    analogOutBankCVs.set(0, analogInBankCVs.get(0)*4);
-    analogOutBankCVs.set(1, analogInBankCVs.get(1)*4);
-    analogOutBankCVs.update();
+    digitalOutSelect.update(0);
 
     // 4) gate out
     uint8_t dividedGateCounter = m_GateCounter / state.gateDivider;
     digitalWrite(gateOutPin, 1-(dividedGateCounter & 1));
-    
+    //TODO trigger: fixed length TODO TriggerOut class    
   }
 
   void PrintDebug(uint16_t period)
@@ -298,7 +245,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
 
-  Serial.println("Step8x2 v0.1");
+  Serial.println("Step8x2 v0.3");
 
   app.Begin();
 }
