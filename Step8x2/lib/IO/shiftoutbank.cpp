@@ -8,6 +8,8 @@ ShiftOutBank::ShiftOutBank(int csPin)
 
 void ShiftOutBank::begin()
 {
+    m_Values = 0;
+    m_ValuesIn = 0;
     pinMode(m_CsPin, OUTPUT);
     // assumes;
     SPI.begin();
@@ -30,10 +32,19 @@ void ShiftOutBank::set(int idx, int value)
     }
 }
 
+int ShiftOutBank::get(int idx)
+{
+    if (0 <= idx && idx < Capacity)
+    {
+        return bitRead(m_ValuesIn, idx);
+    }
+    return -1;
+}
+
 void ShiftOutBank::update()
 {
     digitalWrite(m_CsPin, LOW);
-    SPI.transfer(m_Values);
+    m_ValuesIn = SPI.transfer(m_Values);
     digitalWrite(m_CsPin, HIGH);
 }
 
@@ -46,9 +57,11 @@ void testDigitalOutBank(ShiftOutBank &bank, int repeats)
             bank.set(idx, 1);
             bank.update();
             delay(200);
+            
             bank.set(idx, 0);
             bank.update();
             delay(200);
+            
             bank.set(idx, 1);
             bank.update();
         }

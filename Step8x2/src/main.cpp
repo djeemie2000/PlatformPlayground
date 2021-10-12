@@ -9,7 +9,7 @@
 //TODO quantize CV out
 //TODO cvclock on 2nd gate ~ CV input
 //    take clock divider into account!!!
-//TODO button/pot controls state + step CV -> state struct
+// button/pot controls state + step CV -> state struct
 //    => possible to store/recall settings + step CV (?) 
 //    => debug print state
 //TODO hold input => no step advance
@@ -183,7 +183,8 @@ struct Step8x2App
       {
         ++m_GateCounter;
       }
-      //TODO if hold, block step counter but advance gate counter
+      //TODO if hold, block step counter but advance gate counter ???
+      //TODO if hold, make sure that both counters still remain 'in sync' !!!!
       ++m_StepCounter;
     }
     else if((m_ClockHistory & 0x03) == 0x02)
