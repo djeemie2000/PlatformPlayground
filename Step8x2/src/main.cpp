@@ -8,6 +8,7 @@
 // button/pot controls state -> state struct
 //    => debug print state
 // (??) TODO (??) hold input => no step advance
+// (??) TODO chaining out led??
 
 struct Step8x2State
 {
@@ -20,9 +21,11 @@ struct Step8x2State
   
   uint16_t stepDividerA;
   uint16_t stepLengthA;
+  bool enableA;
   
   uint16_t stepDividerB;
   uint16_t stepLengthB;
+  bool enableB;
   
   bool chaining;
 
@@ -32,8 +35,10 @@ struct Step8x2State
    , gateDivider(1)
    , stepDividerA(1)
    , stepLengthA(NumSteps)
+   , enableA(true)
    , stepDividerB(1)
    , stepLengthB(NumSteps)
+   , enableB(true)
    , chaining(false)
   {
     
@@ -48,21 +53,24 @@ void PrintState(Step8x2State& state)
   Serial.print(" L ");
   Serial.print(state.stepLengthA);
   Serial.print(" S ");
-  Serial.println(state.stepA);
+  Serial.print(state.stepA);
+  Serial.print(" E ");
+  Serial.println(state.enableA);
 
   Serial.print("B / ");
   Serial.print(state.stepDividerB);
   Serial.print(" L ");
   Serial.print(state.stepLengthB);
   Serial.print(" S ");
-  Serial.println(state.stepB);
+  Serial.print(state.stepB);
+  Serial.print(" E ");
+  Serial.println(state.enableB);
 
   Serial.print("G / ");
-  Serial.print(state.gateDivider);
+  Serial.println(state.gateDivider);
 
-  Serial.print("Ch : ");
+  Serial.print("A->B : ");
   Serial.println(state.chaining);
-
 }
 
 
@@ -82,7 +90,8 @@ struct Step8x2App
   static const int stepLengthInPin2 = A7;
 
 
-  uint16_t m_StepCounter;
+  uint16_t m_StepCounterA;
+  uint16_t m_StepCounterB;
   uint8_t m_GateCounter;
   uint8_t m_ClockHistory;
   uint8_t m_ResetHistory;
@@ -98,7 +107,8 @@ struct Step8x2App
   Step8x2State state;
 
   Step8x2App() 
-  : m_StepCounter(0)
+  : m_StepCounterA(0)
+  , m_StepCounterB(0)
   , m_GateCounter(0)
   , analogInBankControls(gateDividerInPin, stepDividerInPin1, stepDividerInPin2, stepLengthInPin1, stepLengthInPin2)
   , state()
@@ -108,7 +118,8 @@ struct Step8x2App
   {
     m_DebugCounter = 0;
 
-    m_StepCounter= 0;
+    m_StepCounterA = 0;
+    m_StepCounterB = 0;
     m_GateCounter = 0;
     m_ClockHistory = 0;
     m_ResetHistory = 0;
@@ -133,7 +144,8 @@ struct Step8x2App
     if((m_ResetHistory & 0x03) == 1)
     {
       //reset rising
-      m_StepCounter = 0;
+      m_StepCounterA = 0;
+      m_StepCounterB = 0;
       m_GateCounter = 0;
     }
     else if((m_ClockHistory & 0x03) == 0x01)
@@ -143,7 +155,14 @@ struct Step8x2App
       {
         ++m_GateCounter;
       }
-      ++m_StepCounter;
+      if(state.enableA)
+      {
+        ++m_StepCounterA;
+      }
+      if(state.enableB)
+      {
+        ++m_StepCounterB;
+      }
     }
     else if((m_ClockHistory & 0x03) == 0x02)
     {
@@ -184,9 +203,9 @@ struct Step8x2App
 
     // 1) shift out select ABC
     // 4) Gate out
+    if(state.enableA)
     {
-        uint16_t stepA = m_StepCounter / state.stepDividerA;
-        stepA = stepA % state.stepLengthA;
+        uint16_t stepA = ( m_StepCounterA / state.stepDividerA) % state.stepLengthA;
         state.stepA = stepA;
 
         digitalOutSelect.set(0, stepA & 1);
@@ -195,9 +214,9 @@ struct Step8x2App
         stepA = stepA >> 1;
         digitalOutSelect.set(2, stepA & 1);
     }
+    if(state.enableB)
     {
-        uint16_t stepB = m_StepCounter / state.stepDividerB;
-        stepB = stepB % state.stepLengthB;
+        uint16_t stepB = (m_StepCounterB / state.stepDividerB) % state.stepLengthB;
         state.stepB = stepB;
 
         digitalOutSelect.set(3, stepB & 1);
@@ -220,7 +239,9 @@ struct Step8x2App
     {
       uint32_t newMillis = millis();
 
-      Serial.print(m_StepCounter);
+      Serial.print(m_StepCounterA);
+      Serial.print(" ");
+      Serial.print(m_StepCounterB);
       Serial.print(" ");
       Serial.print(m_GateCounter);
       Serial.print(" ");
