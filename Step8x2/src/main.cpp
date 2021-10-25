@@ -3,6 +3,7 @@
 
 #include "analoginbank.h"
 #include "digitaloutbank.h"
+#include "CVClockState.h"
 
 //TODO chaining of 8 + 8 = 16?
 // button/pot controls state -> state struct
@@ -18,6 +19,7 @@ struct Step8x2State
   uint16_t stepB;
 
   uint16_t gateDivider;
+  uint16_t gateDuration;
   
   uint16_t stepDividerA;
   uint16_t stepLengthA;
@@ -33,6 +35,7 @@ struct Step8x2State
    : stepA(0)
    , stepB(0)
    , gateDivider(1)
+   , gateDuration(256)
    , stepDividerA(1)
    , stepLengthA(NumSteps)
    , enableA(1)
@@ -106,6 +109,7 @@ struct Step8x2App
   static const int stepDividerInPin2 = A5;
   static const int stepLengthInPin1 = A6;
   static const int stepLengthInPin2 = A7;
+  static const int gateDurationPin = A0;
 
 
   uint16_t m_StepCounterA;
@@ -121,6 +125,8 @@ struct Step8x2App
   DigitalOutBank digitalOutSelect; // ABC CV row 1, ABC CV row 2, A/B output 1, A/B output 2 
   //DigitalOutBank digitalOutGate;// gate out, trigger out, 
   AnalogInBank analogInBankControls;
+
+  CVClockState cvClockState;
  
   Step8x2State state;
 
@@ -128,7 +134,7 @@ struct Step8x2App
   : m_StepCounterA(0)
   , m_StepCounterB(0)
   , m_GateCounter(0)
-  , analogInBankControls(gateDividerInPin, stepDividerInPin1, stepDividerInPin2, stepLengthInPin1, stepLengthInPin2)
+  , analogInBankControls(gateDividerInPin, stepDividerInPin1, stepDividerInPin2, stepLengthInPin1, stepLengthInPin2, gateDurationPin)
   , state()
   {}
 
@@ -166,6 +172,8 @@ struct Step8x2App
       m_StepCounterA = 0;
       m_StepCounterB = 0;
       m_GateCounter = 0;
+      state.stepA = 0;
+      state.stepB = 0;
     }
     else if((m_ClockHistory & 0x03) == 0x01)
     {
@@ -217,6 +225,17 @@ struct Step8x2App
       
     state.stepLengthB = analogInBankControls.get(4);
     state.stepLengthB = 1 + (state.stepLengthB>>7);//[1,8]
+
+    //TODO 
+    // state.gateDuration = analogInBankControls.get(5);
+    // if(state.gateDuration<16)
+    // {
+    //   state.gateDuration = 0;
+    // }
+    // else if(1008<state.gateDuration)
+    // {
+    //   state.gateDuration = 1024;
+    // }
 
     // if pot at max => chaining
     state.chaining = (1016<analogInBankControls.get(3));
@@ -312,7 +331,9 @@ struct Step8x2App
     // 4) gate out
     uint8_t dividedGateCounter = m_GateCounter / state.gateDivider;
     digitalWrite(gateOutPin, 1-(dividedGateCounter & 1));
-    //TODO trigger: fixed length TODO TriggerOut class    
+
+    int cvGate = cvClockState.Tick( 1-(dividedGateCounter & 1), state.gateDuration);
+    digitalWrite(triggerOutPin, cvGate);
   }
 
   void PrintDebug(uint16_t period)
