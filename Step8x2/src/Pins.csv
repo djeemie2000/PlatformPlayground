@@ -21,7 +21,7 @@ PD5,D5,,5V,Step1 B Out,Step1 Select B Out,Step Chaining In,A1 Out,
 ,D13,SCK,5V,MCP4822 x1,MCP4822 x1,"MCP4822 x1, shiftregister x1",?,
 3V3,3V3,,n/a,nc,nc,nc,nc,3V3 out
 AREF,REF,,5V,nc,nc,nc,nc,
-,A0,,5V,Gate Out,Gate Out,Gate ClockDivider Ain,?,
+,A0,,5V,Gate Out,Gate Out,Gate ClockDivider Ain,Gate Pulse Length Ain?,
 ,A1,,5V,,Gate ClockDivider Ain,Step1 ClockDivider Ain,Output1 AB Out,
 ,A2,,5V,Gate ClockDivider In,Step1 ClockDivider Ain,Step2 ClockDivider Ain,Output2 AB Out,
 ,A3,,5V,Step1 ClockDivider In,Step2 ClockDivider Ain,Step1 Length Ain,Gate ClockDivider Ain,

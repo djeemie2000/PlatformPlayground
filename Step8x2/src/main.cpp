@@ -14,8 +14,8 @@ struct Step8x2State
 {
   static const int NumSteps = 8;
   
-  int stepA;
-  int stepB;
+  uint16_t stepA;
+  uint16_t stepB;
 
   uint16_t gateDivider;
   
@@ -44,6 +44,24 @@ struct Step8x2State
     
   }
 
+  void AdvanceA()
+  {
+    ++stepA;
+    if(stepLengthA<=stepA)
+    {
+      stepA = 0;
+    }
+  }
+
+  void AdvanceB()
+  {
+    ++stepB;
+    if(stepLengthB<=stepB)
+    {
+      stepB = 0;
+    }
+
+  }
 };
 
 void PrintState(Step8x2State& state)
@@ -80,7 +98,7 @@ struct Step8x2App
   static const int resetInPin = 3;
 
   static const int gateOutPin = 4;
-  static const int triggerOutPin = 11;
+  static const int triggerOutPin = 11;//CVClock gate out
   
   // analog in bank for controls -> read 1 at a time 
   static const int gateDividerInPin = A3;
@@ -141,6 +159,7 @@ struct Step8x2App
     m_ClockHistory = (m_ClockHistory<<1) | digitalRead(clockInPin);
     m_ResetHistory = (m_ResetHistory<<1) | digitalRead(resetInPin);
     
+    bool advance = false;
     if((m_ResetHistory & 0x03) == 1)
     {
       //reset rising
@@ -163,6 +182,7 @@ struct Step8x2App
       {
         ++m_StepCounterB;
       }
+      advance = true;
     }
     else if((m_ClockHistory & 0x03) == 0x02)
     {
@@ -203,74 +223,81 @@ struct Step8x2App
 
     // 1) shift out select ABC
     // 4) Gate out
-    if(state.enableA)
+    if(advance)
     {
-        uint16_t stepA = ( m_StepCounterA / state.stepDividerA) % state.stepLengthA;
-        bool endOfSequence = state.stepA != 0 && stepA == 0;
-        if(endOfSequence)
+      bool advanceA = (m_StepCounterA % state.stepDividerA) == 0;
+      bool advanceB = (m_StepCounterB % state.stepDividerB) == 0;
+
+      if(state.chaining)
+      {
+        if(state.enableA && advanceA)
         {
-          if(state.enableA == -1)
-          {
-            state.enableA = 1;
-            //state.enableA = 0;
-          }
-          else if(state.chaining)
-          {
-            state.enableA = 0;
-            state.enableB = -1;
-          }
-          else
-          {
-            state.enableA = 1;
-            state.enableB = 1;
-          }          
+            bool endOfSequence = state.stepA +1 >= state.stepLengthA;
+            if(endOfSequence)
+            {
+                state.enableA = 0;
+                state.enableB = 1;
+            }
         }
-
-        if(state.enableA)
+        else if(state.enableB && advanceB)
         {
-          state.stepA = stepA;
-
-          digitalOutSelect.set(0, stepA & 1);
-          stepA = stepA >> 1;
-          digitalOutSelect.set(1, stepA & 1);
-          stepA = stepA >> 1;
-          digitalOutSelect.set(2, stepA & 1);
+           bool endOfSequence = state.stepB +1 >= state.stepLengthB;
+            if(endOfSequence)
+            {
+              state.enableA = 1;
+              state.enableB = 0;
+            }
         }
-    }
-    if(state.enableB)
-    {
-        uint16_t stepB = (m_StepCounterB / state.stepDividerB) % state.stepLengthB;
-
-        bool endOfSequence = state.stepB != 0 && stepB == 0;
-        if(endOfSequence)
+      }
+      else
+      {
+        //not chaining
+        if(state.enableA && advanceA)
         {
-          if(state.enableB == -1)
-          {
-            state.enableB = 1;
-            //state.enableA = 0;
-          }
-          else if(state.chaining)
-          {
-            state.enableB = 0;
-            state.enableA = -1;
-          }
-          else
-          {
-            state.enableB = 1;
-            state.enableA = 1;
-          }          
+            bool endOfSequence = state.stepA +1 >= state.stepLengthA;
+            if(endOfSequence)
+            {
+                state.enableA = 1;
+                state.enableB = 1;
+            }
         }
-
-        if(state.enableB)
+        if(state.enableB && advanceB)
         {
-          state.stepB = stepB;
-
-          digitalOutSelect.set(3, stepB & 1);
-          stepB = stepB >> 1;
-          digitalOutSelect.set(4, stepB & 1);
-          stepB = stepB >> 1;
-          digitalOutSelect.set(5, stepB & 1);
+           bool endOfSequence = state.stepB +1 >= state.stepLengthB;
+            if(endOfSequence)
+            {
+              state.enableA = 1;
+              state.enableB = 1;
+            }
         }
+      }
+
+      if(state.enableA && advanceA)
+      {
+        state.AdvanceA();//state.stepA = stepA;
+
+        uint16_t stepA = state.stepA;
+        digitalOutSelect.set(0, stepA & 1);
+        stepA = stepA >> 1;
+        digitalOutSelect.set(1, stepA & 1);
+        stepA = stepA >> 1;
+        digitalOutSelect.set(2, stepA & 1);
+      }
+
+      if(state.enableB && advanceB)
+      {
+        state.AdvanceB();//state.stepB = stepB;
+
+        uint16_t stepB = state.stepB;
+        digitalOutSelect.set(3, stepB & 1);
+        stepB = stepB >> 1;
+        digitalOutSelect.set(4, stepB & 1);
+        stepB = stepB >> 1;
+        digitalOutSelect.set(5, stepB & 1);
+      }    
+      
+
+      
     }
 
     // 0 <-> A, 1 <-> B
