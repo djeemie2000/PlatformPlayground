@@ -3,7 +3,7 @@
 
 #include "multiplexeranaloginbank.h"
 #include "digitaloutbank.h"
-//#include "CVClockState.h"
+#include "shiftoutbank.h"
 #include "gatecounter.h"
 #include "stepcounter.h"
 
@@ -113,15 +113,17 @@ struct Step8x2App
   StepCounter m_StepCounter[NumCVs];
 
   //DigitalOutBank digitalOutSelect; // ABC CV row 1, ABC CV row 2, A/B output 1, A/B output 2 
-  DigitalOutBank digitalOutGate; 
+  DigitalOutBank digitalOutGates; 
   MultiplexerAnaloginIn analogInBankControls;
+  ShiftOutBank digitalOutSteps;
 
 
   Step8x2App() 
   : m_Cntr(0)
   , m_GateCounter()
-  , digitalOutGate()
+  , digitalOutGates()
   , analogInBankControls()
+  , digitalOutSteps()//CS pin D10
   {}
 
   void Begin()
@@ -137,7 +139,8 @@ struct Step8x2App
     pinMode(resetInPin, INPUT_PULLUP);
 
     analogInBankControls.begin(A3, A4, A5, A6, A7);
-    digitalOutGate.begin(4,5,6,7);
+    digitalOutGates.begin(4,5,6,7);
+    digitalOutSteps.begin(10);//CS pin D10
   }
 
   uint16_t ControlToDivider(int cv)
@@ -248,17 +251,14 @@ struct Step8x2App
     }
 
     // set gate outs + update
-    digitalOutGate.set(0, m_GateCounter[0].Gate());
-    digitalOutGate.set(1, m_GateCounter[1].Gate());
-    digitalOutGate.set(2, m_GateCounter[2].Gate());
-    digitalOutGate.set(3, m_GateCounter[3].Gate());
+    digitalOutGates.set(0, m_GateCounter[0].Gate());
+    digitalOutGates.set(1, m_GateCounter[1].Gate());
+    digitalOutGates.set(2, m_GateCounter[2].Gate());
+    digitalOutGates.set(3, m_GateCounter[3].Gate());
 
-    digitalOutGate.update(0);
-    // state.stepLengthA = analogInBankControls.get(3);
-    // state.stepLengthA = 1 + (state.stepLengthA>>7);//[1,8]
-      
-    // state.stepLengthB = analogInBankControls.get(4);
-    // state.stepLengthB = 1 + (state.stepLengthB>>7);//[1,8]
+    digitalOutGates.update(0);
+
+    //TODO shiftout StepCounter ABC select
 
     // if pot at max => chaining
     // state.chaining = (1016<analogInBankControls.get(3));
@@ -403,6 +403,9 @@ void setup() {
 void loop() 
 {
   // put your main code here, to run repeatedly:
+ 
+  //testDigitalOutBank(app.digitalOutSteps, -1);
+
   app.Update();
 
   app.PrintDebug(1000);

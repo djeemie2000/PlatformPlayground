@@ -1,15 +1,19 @@
 #include "shiftoutbank.h"
 #include <SPI.h>
 
-ShiftOutBank::ShiftOutBank(int csPin)
- : m_CsPin(csPin)
+ShiftOutBank::ShiftOutBank()
+ : m_CsPin(-1)
 {
 }
 
-void ShiftOutBank::begin()
+void ShiftOutBank::begin(int csPin)
 {
-    m_Values = 0;
-    m_ValuesIn = 0;
+    m_CsPin = csPin;
+    for(int idxBank = 0; idxBank<Banks; ++idxBank)
+    {
+        m_Values[idxBank] = 0x00;
+        m_ValuesIn[idxBank] = 0x00;
+    }
     pinMode(m_CsPin, OUTPUT);
     // assumes;
     SPI.begin();
@@ -17,26 +21,26 @@ void ShiftOutBank::begin()
     digitalWrite(m_CsPin, HIGH);
 }
 
-void ShiftOutBank::set(int idx, int value)
+void ShiftOutBank::set(int idxBank, int idx, int value)
 {
-    if (0 <= idx && idx < Capacity)
+    if (0 <= idx && idx < Size && 0 <= idxBank && idxBank < Banks)
     {
         if(value)
         {
-            bitSet(m_Values,idx); 
+            bitSet(m_Values[idxBank], idx); 
         }
         else
         {
-            bitClear(m_Values,idx); 
+            bitClear(m_Values[idxBank], idx); 
         }
     }
 }
 
-int ShiftOutBank::get(int idx)
+int ShiftOutBank::get(int idxBank, int idx)
 {
-    if (0 <= idx && idx < Capacity)
+    if (0 <= idx && idx < Size && 0 <= idxBank && idxBank < Banks)
     {
-        return bitRead(m_ValuesIn, idx);
+        return bitRead(m_ValuesIn[idxBank], idx);
     }
     return -1;
 }
@@ -44,7 +48,10 @@ int ShiftOutBank::get(int idx)
 void ShiftOutBank::update()
 {
     digitalWrite(m_CsPin, LOW);
-    m_ValuesIn = SPI.transfer(m_Values);
+    for(int idxBank = 0; idxBank<Banks; ++idxBank)
+    {
+        m_ValuesIn[idxBank] = SPI.transfer(m_Values[idxBank]);
+    }
     digitalWrite(m_CsPin, HIGH);
 }
 
@@ -52,18 +59,21 @@ void testDigitalOutBank(ShiftOutBank &bank, int repeats)
 {
     for (int repeat = 0; repeat < repeats || repeats < 0; ++repeat)
     {
-        for (int idx = 0; idx < ShiftOutBank::Capacity; ++idx)
+        for(int idxBank = 0; idxBank<ShiftOutBank::Banks; ++idxBank)
         {
-            bank.set(idx, 1);
-            bank.update();
-            delay(200);
-            
-            bank.set(idx, 0);
-            bank.update();
-            delay(200);
-            
-            bank.set(idx, 1);
-            bank.update();
+            for (int idx = 0; idx < ShiftOutBank::Size; ++idx)
+            {
+                bank.set(idxBank, idx, 1);
+                bank.update();
+                delay(200);
+                
+                bank.set(idxBank, idx, 0);
+                bank.update();
+                delay(200);
+                
+                bank.set(idxBank, idx, 1);
+                bank.update();
+            }
         }
     }
 }

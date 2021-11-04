@@ -4,19 +4,21 @@
 class ShiftOutBank
 {
 public:
-    static const int Capacity = 16;
+    static const int Banks = 3; 
+    static const int Size = 8;
+    //static const int Capacity = Banks * Size;
 
-    ShiftOutBank(int csPin);
+    ShiftOutBank();
 
-    void begin();
-    void set(int idx, int value);
-    int get(int idx);
+    void begin(int csPin);
+    void set(int idxBank, int idx, int value);
+    int get(int idxBank, int idx);
     void update();
 
 private:
     int m_CsPin;
-    uint16_t m_Values;
-    uint16_t m_ValuesIn;
+    uint8_t m_Values[Banks];
+    uint8_t m_ValuesIn[Banks];
 };
 
 void testDigitalOutBank(ShiftOutBank &bank, int repeats = -1);
