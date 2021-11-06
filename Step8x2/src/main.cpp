@@ -205,15 +205,17 @@ struct Step8x2App
     m_StepCounter[1].SetLength(ControlToLength(analogInBankControls.Get(0, 3)));
     m_StepCounter[2].SetDivider(ControlToDivider(analogInBankControls.Get(0, 4)));
     m_StepCounter[2].SetLength(ControlToLength(analogInBankControls.Get(0, 5)));
+    
     m_GateCounter[0].SetDivider(ControlToDivider(analogInBankControls.Get(0, 6)));
     m_GateCounter[1].SetDivider(ControlToDivider(analogInBankControls.Get(0, 7)));
 
     m_StepCounter[3].SetDivider(ControlToDivider(analogInBankControls.Get(1, 0)));
     m_StepCounter[3].SetLength(ControlToLength(analogInBankControls.Get(1, 1)));
     m_StepCounter[4].SetDivider(ControlToDivider(analogInBankControls.Get(1, 2)));
-    m_StepCounter[4].SetLength(ControlToLength(analogInBankControls.Get(1, 1)));
+    m_StepCounter[4].SetLength(ControlToLength(analogInBankControls.Get(1, 3)));
     m_StepCounter[5].SetDivider(ControlToDivider(analogInBankControls.Get(1, 4)));
     m_StepCounter[5].SetLength(ControlToLength(analogInBankControls.Get(1, 5)));
+
     m_GateCounter[2].SetDivider(ControlToDivider(analogInBankControls.Get(1, 6)));
     m_GateCounter[3].SetDivider(ControlToDivider(analogInBankControls.Get(1, 7)));    
 
@@ -256,9 +258,42 @@ struct Step8x2App
     digitalOutGates.set(2, m_GateCounter[2].Gate());
     digitalOutGates.set(3, m_GateCounter[3].Gate());
 
-    digitalOutGates.update(0);
+    //Set step select on shift out
+    //TODO select for outputs
+    uint8_t step0 = m_StepCounter[0].Step();
+    digitalOutSteps.set(0, 0, step0 & 0x01);
+    digitalOutSteps.set(0, 1, (step0 >> 1) & 0x01);
+    digitalOutSteps.set(0, 2, (step0 >> 2) & 0x01);
 
-    //TODO shiftout StepCounter ABC select
+    uint8_t step1 = m_StepCounter[1].Step();
+    digitalOutSteps.set(0, 4, step1 & 0x01);
+    digitalOutSteps.set(0, 5, (step1 >> 1) & 0x01);
+    digitalOutSteps.set(0, 6, (step1 >> 2) & 0x01);
+
+    uint8_t step2 = m_StepCounter[2].Step();
+    digitalOutSteps.set(1, 0, step2 & 0x01);
+    digitalOutSteps.set(1, 1, (step2 >> 1) & 0x01);
+    digitalOutSteps.set(1, 2, (step2 >> 2) & 0x01);
+
+    uint8_t step3 = m_StepCounter[3].Step();
+    digitalOutSteps.set(1, 4, step3 & 0x01);
+    digitalOutSteps.set(1, 5, (step3 >> 1) & 0x01);
+    digitalOutSteps.set(1, 6, (step3 >> 2) & 0x01);
+
+    uint8_t step4 = m_StepCounter[4].Step();
+    digitalOutSteps.set(2, 0, step4 & 0x01);
+    digitalOutSteps.set(2, 1, (step4 >> 1) & 0x01);
+    digitalOutSteps.set(2, 2, (step4 >> 2) & 0x01);
+
+    uint8_t step5 = m_StepCounter[5].Step();
+    digitalOutSteps.set(2, 4, step5 & 0x01);
+    digitalOutSteps.set(2, 5, (step5 >> 1) & 0x01);
+    digitalOutSteps.set(2, 6, (step5 >> 2) & 0x01);
+
+    //update
+    digitalOutGates.update(0);
+    digitalOutSteps.update();
+
 
     // if pot at max => chaining
     // state.chaining = (1016<analogInBankControls.get(3));
