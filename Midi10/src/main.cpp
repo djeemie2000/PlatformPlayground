@@ -31,7 +31,7 @@ void setup()
   Serial.println("Midi10 v0.4...");
 
   midi10UI.begin();
-  clockSyncHandler.Begin(0, 1, 2, 3); //gate 0 1 led 2 3
+  clockSyncHandler.Begin(2, 3, 0, 1, 4, 5); //gate 2 3 led 0 1 gate 4 5
 }
 
 void testUi()

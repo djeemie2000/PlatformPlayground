@@ -150,7 +150,7 @@ struct Midi10UI
         }
         gateDigitalOut.set(8 + modeNbr, LedOutBank::Off);
         gateDigitalOut.update(1);
-        delay(200);
+        delay(500);
     }
 
     // void printToggleLearn(char mode, char grouping)
