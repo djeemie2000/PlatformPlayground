@@ -6,57 +6,117 @@ static const int PitchInPin = A0;
 static const int WaveInPin = A1;
 
 
-void FastPin7On()
+// void FastPin7On()
+// {
+//   PORTD |= (1<<7);
+// }
+
+// void FastPin7Off()
+// {
+//   PORTD &= ~(1<<7);
+// }
+
+template<int N>
+void FastPinOnPortD()
 {
-  PORTD = PORTD | (1<<7);
+  PORTD |= (1<<N);
 }
 
-void FastPin7Off()
+template<int N>
+void FastPinOffPortD()
 {
-  PORTD = PORTD & ((1<<7) -1);
+  PORTD &= ~(1<<N);
 }
 
-int oscOut;
+template<int N>
+class Osc
+{
+public:
+  uint16_t phaseCntr;
+  uint16_t phasePeriod;
+
+  int oscOut;
+
+  Osc()
+   : phaseCntr(0)
+   , phasePeriod(2048)
+   , oscOut(0)
+  {    
+  }
+
+  void begin()
+  {
+      pinMode(N, OUTPUT);
+  }
+
+  void tick(uint16_t period)
+  {
+    phasePeriod = period;
+
+    ++phaseCntr;
+    if(phasePeriod<=phaseCntr)
+    {
+      phaseCntr =0;
+      oscOut= 1- oscOut;
+      if(oscOut)
+      {
+        FastPinOnPortD<N>();
+      }
+      else
+      {
+        FastPinOffPortD<N>();
+      }      
+    }
+  }
+};
+
+//int oscOut;
+
 int debugCntr;
+Osc<7> osc1;
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   Serial.println("SquareOsc v0.1");
 
-  pinMode(OscOutPin, OUTPUT);
+//  pinMode(OscOutPin, OUTPUT);
 
   debugCntr = 0;
-  oscOut = 1;
+  //oscOut = 1;
+
+  osc1.begin();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  uint16_t pitchPeriod = analogRead(PitchInPin);
-  pitchPeriod = pitchPeriod << 2;// *32 => [0, 32000]
-  if(pitchPeriod<5)
+  int pitchPeriod = analogRead(PitchInPin) >> 2;
+  //pitchPeriod = pitchPeriod >> 2;//  [0, 64[
+  if(pitchPeriod<2)
   {
-    pitchPeriod = 5;
+    pitchPeriod = 2;
   }
 
-  uint8_t wave = analogRead(WaveInPin) >> 2;// 1024 to 256
+  osc1.tick(pitchPeriod);
 
-  int bitOut = bitRead(wave, oscOut);
+  // uint8_t wave = analogRead(WaveInPin) >> 2;// 1024 to 256
 
-  ++oscOut;
-  if(8<= oscOut)
-  {
-    oscOut = 0;
-  }
+  // int bitOut = bitRead(wave, oscOut);
 
-  if(bitOut)
-  {
-    FastPin7On();
-  }
-  else
-  {
-    FastPin7Off();
-  }
+  // ++oscOut;
+  // if(8<= oscOut)
+  // {
+  //   oscOut = 0;
+  // }
+
+  // if(bitOut)
+  // {
+  //   FastPinOnPortD<7>();
+  // }
+  // else
+  // {
+  //   FastPinOffPortD<7>();
+  // }
   // if(oscOut)
   // {
   //   FastPin7On();
@@ -68,14 +128,14 @@ void loop() {
   //   oscOut = 1;
   // }
   
-  delayMicroseconds(pitchPeriod);//????????????
+//  delayMicroseconds(1);//????????????
 
   ++debugCntr;
-  if(debugCntr>5000)
+  if(debugCntr>2000)
   {
-    Serial.print(pitchPeriod);
+    Serial.print(osc1.phasePeriod);
     Serial.print(' ');
-    Serial.println(wave, HEX);
+    Serial.println(osc1.phaseCntr);
     debugCntr = 0;
   }
 }
