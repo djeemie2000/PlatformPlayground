@@ -3,7 +3,7 @@
 
 static const int OscOutPin = 7;
 static const int PitchInPin = A0;
-static const int WaveInPin = A1;
+static const int PitchInPin2 = A1;
 
 
 // void FastPin7On()
@@ -28,8 +28,35 @@ void FastPinOffPortD()
   PORTD &= ~(1<<N);
 }
 
-template<int N>
-class Osc
+struct Parameters
+{
+public :
+  uint16_t pitchPeriod1;
+  uint16_t pitchPeriod2;
+  uint16_t gatePeriod;
+  uint16_t gateOnPeriod;
+
+  uint16_t gateCntr;
+
+  Parameters()
+   : pitchPeriod1(64)
+   , pitchPeriod2(64)
+   , gatePeriod(4096)
+   , gateOnPeriod(512)
+   , gateCntr(0)
+  {}
+
+  void tick()
+  {
+    ++gateCntr;
+    if(gatePeriod<=gateCntr)
+    {
+      gateCntr = 0;
+    }
+  }
+};
+
+struct Osc
 {
 public:
   uint16_t phaseCntr;
@@ -44,11 +71,6 @@ public:
   {    
   }
 
-  void begin()
-  {
-      pinMode(N, OUTPUT);
-  }
-
   void tick(uint16_t period)
   {
     phasePeriod = period;
@@ -57,15 +79,7 @@ public:
     if(phasePeriod<=phaseCntr)
     {
       phaseCntr =0;
-      oscOut= 1- oscOut;
-      if(oscOut)
-      {
-        FastPinOnPortD<N>();
-      }
-      else
-      {
-        FastPinOffPortD<N>();
-      }      
+      oscOut= 1- oscOut;   
     }
   }
 };
@@ -73,69 +87,74 @@ public:
 //int oscOut;
 
 int debugCntr;
-Osc<7> osc1;
+unsigned long prevMillis;
+Parameters parameters;
+Osc osc1;
+Osc osc2;
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   Serial.println("SquareOsc v0.1");
 
-//  pinMode(OscOutPin, OUTPUT);
+  pinMode(OscOutPin, OUTPUT);
 
   debugCntr = 0;
-  //oscOut = 1;
+  prevMillis = 0;
 
-  osc1.begin();
+//  osc1.begin();
+}
+
+void tick()
+{
+  parameters.tick();
+  osc1.tick(parameters.pitchPeriod1);
+  osc2.tick(parameters.pitchPeriod2);
+
+  //if(osc1.phaseCntr == 0 || osc2.phaseCntr == 0)
+  if(parameters.gateCntr >= parameters.gateOnPeriod)
+  {
+      FastPinOffPortD<7>();
+  }
+  else
+  {    
+    // xorOut 
+    if(osc1.oscOut != osc2.oscOut)
+    {
+      FastPinOnPortD<7>();
+    }
+    else
+    {
+      FastPinOffPortD<7>();
+    }   
+  }
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  int pitchPeriod = analogRead(PitchInPin) >> 2;
-  //pitchPeriod = pitchPeriod >> 2;//  [0, 64[
-  if(pitchPeriod<2)
-  {
-    pitchPeriod = 2;
-  }
+  parameters.pitchPeriod1 = 2 + (analogRead(PitchInPin) >> 2);
+  tick();
 
-  osc1.tick(pitchPeriod);
+  parameters.pitchPeriod2 = 2 + (analogRead(PitchInPin2) >> 2);
+  tick();
 
-  // uint8_t wave = analogRead(WaveInPin) >> 2;// 1024 to 256
-
-  // int bitOut = bitRead(wave, oscOut);
-
-  // ++oscOut;
-  // if(8<= oscOut)
-  // {
-  //   oscOut = 0;
-  // }
-
-  // if(bitOut)
-  // {
-  //   FastPinOnPortD<7>();
-  // }
-  // else
-  // {
-  //   FastPinOffPortD<7>();
-  // }
-  // if(oscOut)
-  // {
-  //   FastPin7On();
-  //   oscOut = 0;
-  // }
-  // else
-  // {
-  //   FastPin7Off();
-  //   oscOut = 1;
-  // }
   
-//  delayMicroseconds(1);//????????????
-
   ++debugCntr;
-  if(debugCntr>2000)
+  if(parameters.gateCntr == 0)// debugCntr>2000)
   {
+    unsigned long currMillis=millis();
+    unsigned long elapsed=currMillis-prevMillis;
+    prevMillis = currMillis;
+
+    Serial.print(elapsed);
+    Serial.print(':');
+    Serial.print(parameters.gateOnPeriod);
+    Serial.print(' ');
+    Serial.print(parameters.gatePeriod);
+    Serial.print(' ');
     Serial.print(osc1.phasePeriod);
     Serial.print(' ');
-    Serial.println(osc1.phaseCntr);
+    Serial.println(osc2.phasePeriod);
     debugCntr = 0;
   }
 }
