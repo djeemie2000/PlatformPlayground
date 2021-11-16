@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 #include "gater.h"
-#include "random.h"
+#include "randomgen.h"
 #include "squareosc.h"
 #include "noiseosc.h"
 
@@ -19,7 +19,18 @@ void FastPinOffPortD()
   PORTD &= ~(1<<N);
 }
 
-
+template<int N>
+void FastPinSetPortD(int value)
+{
+  if(value)
+  {
+    FastPinOnPortD<N>();
+  }
+  else
+  {
+    FastPinOffPortD<N>();
+  }
+}
 
 struct Parameters
 {
@@ -96,12 +107,26 @@ void tick()
         FastPinOffPortD<7>();      
       }      
     }
-    else if(parameters.mode>0)
+    else if(parameters.mode==2)
     {
       // mix square + coloured noise
-      if(noiseOsc.oscOut && squareOsc.oscOut)
+      if(squareOsc.oscOut)
       {
-        FastPinOnPortD<7>();
+        // square 1
+        FastPinSetPortD<7>(noiseOsc.oscOut);
+      }
+      else
+      {
+        // square 0
+        FastPinSetPortD<7>(1-noiseOsc.oscOut);      
+      }
+    }
+    else if(parameters.mode==1)
+    {
+      // mix square + coloured noise upon square on
+      if(squareOsc.oscOut)
+      {
+        FastPinSetPortD<7>(noiseOsc.oscOut);
       }
       else
       {
