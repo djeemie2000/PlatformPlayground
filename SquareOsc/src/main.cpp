@@ -98,14 +98,7 @@ void tick()
     if(parameters.mode==3)
     {
       // pure coloured noise
-      if(noiseOsc.oscOut)
-      {
-        FastPinOnPortD<7>();
-      }
-      else
-      {
-        FastPinOffPortD<7>();      
-      }      
+      FastPinSetPortD<7>(noiseOsc.oscOut);
     }
     else if(parameters.mode==2)
     {
@@ -136,14 +129,7 @@ void tick()
     else
     {
       // pure square
-      if(squareOsc.oscOut)
-      {
-        FastPinOnPortD<7>();
-      }
-      else
-      {
-        FastPinOffPortD<7>();      
-      }
+      FastPinSetPortD<7>(squareOsc.oscOut);
     }
  }
 }
