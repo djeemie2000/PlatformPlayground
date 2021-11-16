@@ -23,8 +23,10 @@ struct NoiseOsc
     {
       // coloured noise
       uint16_t mask = 0x00FF>>noiseColor;//[0,7]
-      oscOut =  (randomValue & mask) ? 1 : 0;
-      oscOutHistory = oscOutHistory << 1 | oscOut;
+//      oscOut =  (randomValue & mask) ? 1 : 0;
+//      oscOutHistory = oscOutHistory << 1 | oscOut;
+      oscOutHistory = oscOutHistory << 1 | (randomValue & 1);
+      oscOut = (oscOutHistory & mask) ? 1 : 0;
     }
   }
 };
