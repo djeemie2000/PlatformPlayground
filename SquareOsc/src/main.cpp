@@ -84,10 +84,10 @@ void tick()
   else
   {    
     // gate is on
-    if(parameters.mode>=8)
+    if(parameters.mode==3)
     {
-      // pure uncolored noise
-      if(noiseOsc.oscOut) //(randomGen.value & 1))
+      // pure coloured noise
+      if(noiseOsc.oscOut)
       {
         FastPinOnPortD<7>();
       }
@@ -99,8 +99,6 @@ void tick()
     else if(parameters.mode>0)
     {
       // mix square + coloured noise
-      //uint16_t mask = 0xFF>>parameters.noiseColor;//[0,7]
-      //if( (randomGen.value & mask) && squareOsc.oscOut)
       if(noiseOsc.oscOut && squareOsc.oscOut)
       {
         FastPinOnPortD<7>();
@@ -135,16 +133,24 @@ void printDebug()
     prevMillis = currMillis;
 
     Serial.print(elapsed);
-    Serial.print(':');
+    Serial.print(' ');
+    Serial.print('M');
     Serial.print(parameters.mode);
     Serial.print(' ');
+    Serial.print('T');
     Serial.print(parameters.gateOnPeriod);
     Serial.print(' ');
+    Serial.print('G');
     Serial.print(parameters.gatePeriod);
     Serial.print(' ');
+    Serial.print('D');
     Serial.print(parameters.pitchDecay);
     Serial.print(' ');
-    Serial.println(parameters.pitchPeriod);
+    Serial.print('P');
+    Serial.print(parameters.pitchPeriod);
+    Serial.print(' ');
+    Serial.print('C');
+    Serial.println(parameters.noiseColor);
     debugCntr = 0;
   }
 }
@@ -163,8 +169,10 @@ void loop() {
   parameters.gateOnPeriod = analogRead(A2) << 1;
   tick();
 
-  uint16_t mode = analogRead(A3);
-  parameters.mode = mode>1000 ? 8 : mode >> 7;//[0,7]
-  parameters.noiseColor = parameters.mode;
+  uint16_t noiseColor = analogRead(A3);
+  parameters.noiseColor = 1 + (noiseColor >> 7);//[1,8]
+  tick();
+
+  parameters.mode = analogRead(A4)>>8;//[0,3]
   tick();
 }
