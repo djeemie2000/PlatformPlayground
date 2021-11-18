@@ -31,15 +31,17 @@ void setup() {
   randomGen.begin();
 }
 
+// TODO template<int OutPin>
 void tick(const Parameters& params)
 {
+  randomGen.next();
+
   gater.tick(params.gatePeriod, params.gateOnPeriod);
   bool reset = (gater.gateCntr == 0);
-
-  randomGen.next();
   noiseOsc.tick(randomGen.value, params.noiseColor);
   squareOsc.tick(reset, params.pitchPeriod, params.pitchDecay); // + (params.pitchEnv>>9));// pitchenv >> 8 => [0, 128[
 
+    // combine 
   if(0 == gater.gate)
   {
     // output off outside gate on period
@@ -58,26 +60,34 @@ void tick(const Parameters& params)
       // mix square + coloured noise
       if(squareOsc.oscOut)
       {
-        // square 1
+        // square 1 and noise 1 => 1
+        // square 1 and noise 0 => 0
         FastPinSetPortD<7>(noiseOsc.oscOut);
       }
       else
       {
-        // square 0
+        // square 0 and noise 1 => 0
+        // square 0 and noise 0 => 1
         FastPinSetPortD<7>(1-noiseOsc.oscOut);      
       }
+      // ??? this is an xor : 1 if equal, 0 if not equal
     }
     else if(params.mode==1)
     {
       // mix square + coloured noise upon square on
       if(squareOsc.oscOut)
       {
+        // square 1 and noise 1 => 1
+        // square 1 and noise 0 => 0
         FastPinSetPortD<7>(noiseOsc.oscOut);
       }
       else
       {
+        // square 0 and noise 1 => 0
+        // square 0 and noise 0 => 0
         FastPinOffPortD<7>();      
       }
+      // this is an AND
     }
     else
     {

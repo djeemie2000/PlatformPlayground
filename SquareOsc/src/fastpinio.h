@@ -25,3 +25,10 @@ void FastPinSetPortD(int value)
     FastPinOffPortD<N>();
   }
 }
+
+template<int N>
+int FastPinGetPortD()
+{
+  return (PORTD >> N) & 0x01;
+}
+

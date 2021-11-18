@@ -13,11 +13,13 @@ struct NoiseOsc
 
   void tick(uint16_t randomValue, uint16_t noiseColor)
   {
+    //TODO mask 0x01 is uncolored noise (?)
     if(noiseColor>=8)
     {
       // pure uncolored noise
-      oscOut =  (randomValue & 1);
-      oscOutHistory = oscOutHistory << 1 | oscOut;
+      uint16_t mask = 0x01;
+      oscOutHistory = oscOutHistory << 1 | (randomValue & 1);
+      oscOut =  (oscOutHistory & mask) ? 1 : 0;
     }
     else
     {
