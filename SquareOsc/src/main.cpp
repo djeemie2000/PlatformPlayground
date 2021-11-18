@@ -24,6 +24,7 @@ void setup() {
   Serial.println("SquareOsc v0.1");
 
   pinMode(OscOutPin, OUTPUT);
+  pinMode(2, INPUT);
 
   debugCntr = 0;
   prevMillis = 0;
@@ -34,9 +35,10 @@ void setup() {
 // TODO template<int OutPin>
 void tick(const Parameters& params)
 {
+  int extGate = FastPinGetPortD<2>();// PD2 pin 2
   randomGen.next();
 
-  gater.tick(params.gatePeriod, params.gateOnPeriod);
+  gater.tick(extGate, params.gateOnPeriod);
   bool reset = (gater.gateCntr == 0);
   noiseOsc.tick(randomGen.value, params.noiseColor);
   squareOsc.tick(reset, params.pitchPeriod, params.pitchDecay); // + (params.pitchEnv>>9));// pitchenv >> 8 => [0, 128[

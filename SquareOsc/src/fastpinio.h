@@ -29,6 +29,6 @@ void FastPinSetPortD(int value)
 template<int N>
 int FastPinGetPortD()
 {
-  return (PORTD >> N) & 0x01;
+  return (PIND & (1<<N));
 }
 
