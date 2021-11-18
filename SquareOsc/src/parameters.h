@@ -11,7 +11,7 @@ struct Parameters
   uint16_t pitchPeriod;
   uint16_t pitchDecay;
   uint16_t noiseColor;
-  uint16_t gateOnPeriod;
+  uint32_t gateOnPeriod;
 
   Parameters()
    : gatePeriod(2048)
@@ -19,7 +19,7 @@ struct Parameters
    , pitchPeriod(64)
    , pitchDecay(0)
    , noiseColor(0)
-   , gateOnPeriod(1024)
+   , gateOnPeriod(8192)
   {}
 
 };

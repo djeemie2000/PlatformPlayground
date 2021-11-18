@@ -3,7 +3,7 @@
 
 struct Gater
 {
-  uint16_t gateCntr;
+  uint32_t gateCntr;
   int prevExtGate;
   int gate;
 
@@ -13,7 +13,7 @@ struct Gater
   , gate(0)
   {}
 
-  void tick(int extGate, uint16_t gateOnPeriod)
+  void tick(int extGate, uint32_t gateOnPeriod)
   {
     // off -> on : only upon rising extGate (if gateOnOeriod >0)
     // on -> off : only once, only when gate is already on, upon gateCntr > gateOnPeriod or extGate off
@@ -29,7 +29,7 @@ struct Gater
     else
     {
       // no reset
-      if(gateCntr<16000)//prevent overflow,alternative : use uint32_t ?
+      //if(gateCntr<16000)//prevent overflow,alternative : use uint32_t ?
       {
         ++gateCntr;
       }

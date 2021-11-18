@@ -5,7 +5,7 @@ struct SquareOsc
 {
 public:
   uint16_t phaseCntr;
-  uint16_t pitchEnv;
+  uint32_t pitchEnv;
 
   int oscOut;
 
@@ -16,7 +16,7 @@ public:
   {    
   }
 
-  void tick(bool reset, uint16_t pitchPeriod, uint16_t pitchDecay)
+  void tick(bool reset, uint32_t pitchPeriod, uint16_t pitchDecay)
   {
     //phasePeriod = period;
 
@@ -25,8 +25,8 @@ public:
         pitchEnv = 0;
     }
 
-    static const uint16_t MaxPitchPeriod = 256;
-    uint16_t period = pitchPeriod + (pitchEnv >> 9);
+    static const uint16_t MaxPitchPeriod = 2048;
+    uint16_t period = pitchPeriod + (pitchEnv >> 8);
     if(period>MaxPitchPeriod)
     {
         period = MaxPitchPeriod;
@@ -42,12 +42,7 @@ public:
 
     if(!reset)
     {
-        // check against overflow of pitchEnv
-        static const uint16_t MaxPitchEnv = 16000;
-        if(pitchEnv<MaxPitchEnv-pitchDecay)
-        {
-            pitchEnv += pitchDecay;
-        }
+        pitchEnv += pitchDecay;
     }
   }
 };

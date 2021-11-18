@@ -10,7 +10,7 @@
 static const int OscOutPin = 7;
 
 
-int debugCntr;
+uint16_t debugCntr;
 unsigned long prevMillis;
 Parameters parameters;
 Gater gater;
@@ -33,9 +33,8 @@ void setup() {
 }
 
 // TODO template<int OutPin>
-void tick(const Parameters& params)
+void tick(int extGate, const Parameters& params)
 {
-  int extGate = FastPinGetPortD<2>();// PD2 pin 2
   randomGen.next();
 
   gater.tick(extGate, params.gateOnPeriod);
@@ -101,13 +100,13 @@ void tick(const Parameters& params)
 
 void printDebug(const Parameters& params)
 {
-    ++debugCntr;
-  if(gater.gateCntr == 0)// debugCntr>2000)
-  {
+// 
     unsigned long currMillis=millis();
     unsigned long elapsed=currMillis-prevMillis;
     prevMillis = currMillis;
 
+    Serial.print(debugCntr);
+    Serial.print(' ');
     Serial.print(elapsed);
     Serial.print(' ');
     Serial.print('M');
@@ -128,27 +127,41 @@ void printDebug(const Parameters& params)
     Serial.print('C');
     Serial.println(params.noiseColor);
     debugCntr = 0;
-  }
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  printDebug(parameters);
+  int prevExtGate = 0;
+  while(true)
+  {
+    ++debugCntr;
 
-  // => max pitch period = 2 + 1023 >> 2 = 2 + 255 = 257
-  parameters.pitchPeriod = 2 + (analogRead(A0) >> 2);
-  tick(parameters);
+    int extGate = FastPinGetPortD<2>();// PD2 pin 2
+    bool triggered = extGate && !prevExtGate;
+    bool released = !extGate && prevExtGate;
+    prevExtGate = extGate;
 
-  parameters.pitchDecay = analogRead(A1)>>4;
-  tick(parameters);
+    if(released)
+    {
+      printDebug(parameters);// print once when ext gate goes to off
+    }
 
-  parameters.gateOnPeriod = analogRead(A2) << 1;
-  tick(parameters);
+    if(triggered)
+    {
+      //Serial.println('T');
 
-  uint16_t noiseColor = analogRead(A3);
-  parameters.noiseColor = 1 + (noiseColor >> 7);//[1,8]
-  tick(parameters);
+      // read/grab all parameters, the tick using these parameters  
+      parameters.pitchPeriod = 2 + analogRead(A0);// max pitchPeriod = 2048 ??
+      parameters.pitchDecay = analogRead(A1);
+      parameters.pitchDecay = (parameters.pitchDecay>>3);//range[0, 128]
+      parameters.gateOnPeriod = ((uint32_t)analogRead(A2)) << 6; // range [0, 1<<16]
+      parameters.noiseColor = 1 + (analogRead(A3) >> 7);//[1,8]
+      parameters.mode = analogRead(A4)>>8;//[0,3]
+    }
 
-  parameters.mode = analogRead(A4)>>8;//[0,3]
-  tick(parameters);
+    tick(extGate, parameters);
+
+  }
+
+
 }
