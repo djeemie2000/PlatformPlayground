@@ -6,6 +6,7 @@
 #include "randomgen.h"
 #include "squareosc.h"
 #include "noiseosc.h"
+#include "triggerin.h"
 
 static const int OscOutPin = 7;
 
@@ -148,53 +149,73 @@ void GrabParameters(Parameters& params)
 
 void loop() {
   // put your main code here, to run repeatedly:
-  int prevExtGate = -1;
+
+  TriggerInPortD<2> trigger0;// PD2 pin 2
+  TriggerInPortD<3> trigger1;
+  TriggerInPortD<4> trigger2;
+
+//  int prevExtGate = -1;
   int activeOsc = 0;
   while(true)
   {
     ++debugCntr;
 
-    int extGate = -1;
-    if(FastPinGetPortD<2>())
-    {
-      extGate = 0;// PD2 pin 2
-    }
-    else if(FastPinGetPortD<3>())
-    {
-      extGate = 1;
-    }
-    else if(FastPinGetPortD<4>())
-    {
-      extGate = 2;
-    }
-    bool triggered = (extGate != prevExtGate) && (0<=extGate);
-    bool released =  (extGate != prevExtGate) && (extGate<0);
-    prevExtGate = extGate;
+    trigger0.tick();
+    trigger1.tick();
+    trigger2.tick();
 
-    if(released)
+    // only change actoveOsc upon triggered
+    bool retrigger = false;
+    if(trigger0.triggered)
+    {
+      activeOsc = 0;
+      retrigger = true;
+    }
+    else if(trigger1.triggered)
+    {
+      activeOsc = 1;
+      retrigger = true;
+    }
+    else if(trigger2.triggered)
+    {
+      activeOsc = 2;
+      retrigger = true;
+    }
+
+    int activeGate = 0;
+    int activeReleased = 0;
+    if(activeOsc == 0)
+    {
+      activeGate = trigger0.currGate;
+      activeReleased = trigger0.released;
+    }
+    else if(activeOsc == 1)
+    {
+      activeGate = trigger1.currGate;
+      activeReleased = trigger1.released;
+    }
+    else if(activeOsc == 2)
+    {
+      activeGate = trigger2.currGate;
+      activeReleased = trigger2.released;
+    }
+
+    if(activeReleased)
     {
       // keep activeOsc
       printDebug(activeOsc, parameters[activeOsc]);// print once when ext gate goes to off
     }
 
-    if(triggered)
+    if(retrigger)
     {
-      // only change actoveOsc upon triggered
-      activeOsc = extGate;
-
       //Serial.println('T');
 
       // read/grab all parameters, then tick using these parameters  
       GrabParameters(parameters[activeOsc]);
-      // parameters[activeOsc].pitchPeriod = 2 + analogRead(A0);// max pitchPeriod = 2048 ??
-      // parameters[activeOsc].pitchDecay = analogRead(A1);
-      // parameters[activeOsc].pitchDecay = (parameters[activeOsc].pitchDecay>>3);//range[0, 128]
-      // parameters[activeOsc].gateOnPeriod = ((uint32_t)analogRead(A2)) << 6; // range [0, 1<<16]
-      // parameters[activeOsc].noiseColor = 1 + (analogRead(A3) >> 7);//[1,8]
-      // parameters[activeOsc].mode = analogRead(A4)>>8;//[0,3]
     }
 
-    tick(triggered, 0<=extGate?1:0, parameters[activeOsc]);
+
+    tick(retrigger, activeGate, parameters[activeOsc]);
   }
 
 
