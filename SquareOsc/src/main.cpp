@@ -30,7 +30,11 @@ void setup() {
   pinMode(2, INPUT);
   pinMode(3, INPUT);
   pinMode(4, INPUT);
-
+  // locked input pins:
+  pinMode(5, INPUT_PULLUP);
+  pinMode(6, INPUT_PULLUP);
+  pinMode(8, INPUT_PULLUP);
+  
   debugCntr = 0;
   prevMillis = 0;
 
@@ -154,6 +158,11 @@ void loop() {
   TriggerInPortD<3> trigger1;
   TriggerInPortD<4> trigger2;
 
+  TriggerInPortD<5> locked0;
+  TriggerInPortD<6> locked1;
+  TriggerInPortD<8> locked2;
+
+
 //  int prevExtGate = -1;
   int activeOsc = 0;
   while(true)
@@ -163,6 +172,10 @@ void loop() {
     trigger0.tick();
     trigger1.tick();
     trigger2.tick();
+
+    locked0.tick();
+    locked1.tick();
+    locked2.tick();
 
     // only change actoveOsc upon triggered
     bool retrigger = false;
@@ -184,20 +197,24 @@ void loop() {
 
     int activeGate = 0;
     int activeReleased = 0;
+    int activeLocked = 0;
     if(activeOsc == 0)
     {
       activeGate = trigger0.currGate;
       activeReleased = trigger0.released;
+      activeLocked = locked0.currGate;
     }
     else if(activeOsc == 1)
     {
       activeGate = trigger1.currGate;
       activeReleased = trigger1.released;
+      activeLocked = locked1.currGate;
     }
     else if(activeOsc == 2)
     {
       activeGate = trigger2.currGate;
       activeReleased = trigger2.released;
+      activeLocked = locked2.currGate;
     }
 
     if(activeReleased)
@@ -206,7 +223,7 @@ void loop() {
       printDebug(activeOsc, parameters[activeOsc]);// print once when ext gate goes to off
     }
 
-    if(retrigger)
+    if(retrigger && !activeLocked)
     {
       //Serial.println('T');
 
