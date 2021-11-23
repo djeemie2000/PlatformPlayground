@@ -13,12 +13,12 @@ struct Gater
   , gate(0)
   {}
 
-  void tick(int extGate, uint32_t gateOnPeriod)
+  void tick(bool retrigger, int extGate, uint32_t gateOnPeriod)
   {
     // off -> on : only upon rising extGate (if gateOnOeriod >0)
     // on -> off : only once, only when gate is already on, upon gateCntr > gateOnPeriod or extGate off
 
-    if(!prevExtGate && extGate)
+    if((!prevExtGate && extGate) || retrigger)
     {
       //Serial.println('R');
 
