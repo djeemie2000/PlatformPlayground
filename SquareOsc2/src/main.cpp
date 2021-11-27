@@ -19,6 +19,8 @@ DigitalOut oscOut(PB_15);
 AnalogIn durationCV(PA_0);
 AnalogIn pitchDecayCV(PA_1);
 AnalogIn pitchPeriodCV(PA_2);
+AnalogIn noiseColorCV(PA_3);
+AnalogIn modeCV(PA_4);
 
 Phasor<uint32_t, 8, 1> phasor;
 uint32_t phaseDelta;
@@ -41,16 +43,76 @@ void tick()
   bool reset = (gater.gateCntr == 0);
   squareOsc.tick(reset, parameters.pitchPeriod, parameters.pitchDecay);
 
+  noiseOsc.tick(randomGen.value, parameters.noiseColor);
+
   //TODO mix sq with noise depending on parameters
-  oscOut = gater.gate ? squareOsc.oscOut : 0;
+  //oscOut = gater.gate ? squareOsc.oscOut : 0;
+
+  if(0 == gater.gate)
+  {
+    // output off outside gate on period
+      oscOut = 0;
+  }
+  else
+  {    
+    // gate is on
+    if(parameters.mode==3)
+    {
+      // pure coloured noise
+      oscOut = noiseOsc.oscOut;
+    }
+    else if(parameters.mode==2)
+    {
+      // mix square + coloured noise
+      if(squareOsc.oscOut)
+      {
+        // square 1 and noise 1 => 1
+        // square 1 and noise 0 => 0
+        oscOut = noiseOsc.oscOut;
+      }
+      else
+      {
+        // square 0 and noise 1 => 0
+        // square 0 and noise 0 => 1
+         oscOut = (1-noiseOsc.oscOut);      
+      }
+      // ??? this is an xor : 1 if equal, 0 if not equal
+    }
+    else if(parameters.mode==1)
+    {
+      // mix square + coloured noise upon square on
+      if(squareOsc.oscOut)
+      {
+        // square 1 and noise 1 => 1
+        // square 1 and noise 0 => 0
+        oscOut = noiseOsc.oscOut;
+      }
+      else
+      {
+        // square 0 and noise 1 => 0
+        // square 0 and noise 0 => 0
+        oscOut = 0;      
+      }
+      // this is an AND
+    }
+    else
+    {
+      // pure square
+      oscOut = squareOsc.oscOut;
+    }
+  }
 }
 
 void printParameters()
 {
-  pc2.printf("\r\n");
+  pc2.printf("\r\n%d\r\n", parameters.mode);
+
   pc2.printf("GD %d\r\n", parameters.gateOnPeriod);
+
   pc2.printf("PP %d\r\n", parameters.pitchPeriod);
   pc2.printf("PD %d\r\n", parameters.pitchDecay);
+
+  pc2.printf("NC %d\r\n", parameters.noiseColor);  
 }
 
 int main() {
@@ -77,17 +139,19 @@ int main() {
     //put your main code here, to run repeatedly:
     parameters.gateOnPeriod = durationCV.read_u16()>>1;
     led  = gater.gate;
-
     parameters.pitchDecay = pitchDecayCV.read_u16()>>8;//range[0, 256[
     led  = gater.gate;
-
     parameters.pitchPeriod = 2 + (pitchPeriodCV.read_u16()>>5);// max pitchPeriod = 2048 ??
     led  = gater.gate;
+    parameters.noiseColor = 1 + (noiseColorCV.read_u16() >> 13);//[1,8]
+    led  = gater.gate;
+    parameters.mode = modeCV.read_u16()>>14;//[0,3]
+    led  = gater.gate;
     
-    wait(0.1);//???
+    wait(0.05);//???
 
     ++debugCntr;
-    if(10<debugCntr)
+    if(20<debugCntr)
     {
       printParameters();
       debugCntr = 0;
