@@ -6,6 +6,7 @@
 #include "noiseosc.h"
 #include "squareosc.h"
 #include "gater.h"
+#include "smoother.h"
 
 
 Serial pc2(PA_9, PA_10); // tx, rx
@@ -19,6 +20,7 @@ DigitalOut oscOut(PB_15);
 AnalogIn durationCV(PA_0);
 AnalogIn pitchDecayCV(PA_1);
 AnalogIn pitchPeriodCV(PA_2);
+Smoother<uint32_t, 3> pitchPeriodSmoother;
 AnalogIn noiseColorCV(PA_3);
 AnalogIn modeCV(PA_4);
 
@@ -45,9 +47,10 @@ void tick()
 
   noiseOsc.tick(randomGen.value, parameters.noiseColor);
 
-  //TODO mix sq with noise depending on parameters
-  //oscOut = gater.gate ? squareOsc.oscOut : 0;
+  //TODO use LUT's? [0/1][0/1] 
+  //or index = squareOsc.oscOut | (noiseOsc.oscOut<<1) | (mode<<2); oscOut = LUT[index];
 
+  // mix sq with noise depending on parameters
   if(0 == gater.gate)
   {
     // output off outside gate on period
@@ -105,14 +108,14 @@ void tick()
 
 void printParameters()
 {
-  pc2.printf("\r\n%d\r\n", parameters.mode);
+  pc2.printf("\r\nM  %lu\r\n", parameters.mode);
 
-  pc2.printf("GD %d\r\n", parameters.gateOnPeriod);
+  pc2.printf("GD %lu\r\n", parameters.gateOnPeriod);
 
-  pc2.printf("PP %d\r\n", parameters.pitchPeriod);
-  pc2.printf("PD %d\r\n", parameters.pitchDecay);
+  pc2.printf("PP %lu\r\n", parameters.pitchPeriod);
+  pc2.printf("PD %lu\r\n", parameters.pitchDecay);
 
-  pc2.printf("NC %d\r\n", parameters.noiseColor);  
+  pc2.printf("NC %lu\r\n", parameters.noiseColor);  
 }
 
 int main() {
@@ -141,7 +144,7 @@ int main() {
     led  = gater.gate;
     parameters.pitchDecay = pitchDecayCV.read_u16()>>8;//range[0, 256[
     led  = gater.gate;
-    parameters.pitchPeriod = 2 + (pitchPeriodCV.read_u16()>>5);// max pitchPeriod = 2048 ??
+    parameters.pitchPeriod = 2 + pitchPeriodSmoother.smooth( (pitchPeriodCV.read_u16()>>5) );// max pitchPeriod = 2048 ??
     led  = gater.gate;
     parameters.noiseColor = 1 + (noiseColorCV.read_u16() >> 13);//[1,8]
     led  = gater.gate;
