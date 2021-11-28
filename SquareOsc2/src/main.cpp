@@ -102,7 +102,7 @@ int main() {
   //  led  = fullOsc.getGate();
     freeRunningParams.pitchPeriod = 2 + pitchPeriodSmoother.smooth( (pitchPeriodCV.read_u16()>>5) );// max pitchPeriod = 2048 ??
     //led  = fullOsc.getGate();
-    freeRunningParams.noiseColor = 1 + (noiseColorCV.read_u16() >> 13);//[1,8]
+    freeRunningParams.noiseColor = (noiseColorCV.read_u16() >> 13); // [0,6] // = 1 + (noiseColorCV.read_u16() >> 13);//[1,8] 
     //-> problem: never 1 + 7???
     //led  = fullOsc.getGate();
     freeRunningParams.mode = modeCV.read_u16()>>14;//[0,3]
