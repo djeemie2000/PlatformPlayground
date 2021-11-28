@@ -28,10 +28,16 @@ AnalogIn modeCV(PA_4);
 //Phasor<uint32_t, 8, 1> phasor;
 //uint32_t phaseDelta;
 
-// common
+// IOXP1(PB15, PB14, PB13, PB12) -> oscillator outputs
+// IOXP2(PB3, PA15, PA12, PA11) -> oscillator gates
+// IOXP3(PB7, PB6, PB5, PB4) -> oscillator locked
+
+// oscillators common
 Parameters freeRunningParams;
 RandomGenUint16 randomGen;
-FullOsc fullOsc(PB_14, PB_15);
+// oscillators
+FullOsc fullOsc(PB_3, PB_15);
+FullOsc fullOsc2(PA_15, PB_14);
 
 void tick()
 {
@@ -39,6 +45,7 @@ void tick()
   //phasor.tick(phaseDelta);
 
   fullOsc.tick(randomGen.value);
+  fullOsc2.tick(randomGen.value);
 }
 
 void printParameters(const Parameters& params)
@@ -65,19 +72,25 @@ int main() {
   //phaseDelta = 5;// scale = 8 -> 256
   randomGen.begin();
 
-  //???
+  // defaults
   freeRunningParams.pitchPeriod = 12;
   freeRunningParams.pitchDecay = 1;  
 
-  us_timestamp_t period_us = 50;// 20KHz
+  fullOsc.setParameters(freeRunningParams);
+  fullOsc2.setParameters(freeRunningParams);
+
+  us_timestamp_t period_us = 40;// 20KHz
   ticker.attach_us(tick, period_us);
 
   while(1) {
     //put your main code here, to run repeatedly:
 
     // continuously grab 'freerunning' parameters from CV/pots
-    // TODO copy 'freerunning' parameters into FullOsc parameters if 'osc locked' switch is off
-    // TODO if lock is on, keep parameters for that FullOsc
+    // TODO check per FullOsc:
+    // TODO if 'osc locked' switch is off 
+    //    copy 'freerunning' parameters into FullOsc parameters 
+    // TODO if 'osc locked' is on
+    //   keep parameters for that FullOsc
 
     freeRunningParams.gateOnPeriod = durationCV.read_u16()>>1;
     led  = fullOsc.getGate();
@@ -92,6 +105,7 @@ int main() {
     led  = fullOsc.getGate();
 
     fullOsc.setParameters(freeRunningParams);//TODO check lock
+    //fullOsc2
 
     
     wait(0.04);//???
