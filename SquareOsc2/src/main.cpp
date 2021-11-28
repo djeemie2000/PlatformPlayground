@@ -106,6 +106,14 @@ int main() {
     //-> problem: never 1 + 7???
     //led  = fullOsc.getGate();
     freeRunningParams.mode = modeCV.read_u16()>>14;//[0,3]
+    // freeRunningParams.mode = modeCV.read_u16()>>12;//[0,15] -> should be [1,14]
+    // if(freeRunningParams.mode == 0){
+    //   freeRunningParams.mode = 1;
+    // }
+    // else if(freeRunningParams.mode == 15)
+    // {
+    //   freeRunningParams.mode = 14;
+    // }
     //led  = fullOsc.getGate();
 
     // FullOsc will check its lock

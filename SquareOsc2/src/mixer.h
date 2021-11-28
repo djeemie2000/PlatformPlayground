@@ -6,6 +6,13 @@ class Mixer
 public:
         //TODO use LUT's? [0/1][0/1] 
         //or index = squareOsc.oscOut | (noiseOsc.oscOut<<1) | (mode<<2); oscOut = LUT[index];
+    int mix2(int squareOscOut, int noiseOscOut, uint32_t mode)
+    {
+        // assumes oscOut's are 0 or 1
+        int index = squareOscOut + (noiseOscOut<<1);//[0,3]
+        // out = mode bit at index is set?
+        return (mode >> index) & 1;
+    }
 
     int mix(int squareOscOut, int noiseOscOut, uint32_t mode)
     {
