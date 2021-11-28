@@ -83,7 +83,7 @@ int main() {
   fullOsc3.setParameters(freeRunningParams, true);
   fullOsc4.setParameters(freeRunningParams, true);
 
-  us_timestamp_t period_us = 40;// 20KHz
+  us_timestamp_t period_us = 30;// 20KHz
   ticker.attach_us(tick, period_us);
 
   while(1) {
