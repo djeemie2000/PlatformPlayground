@@ -12,10 +12,11 @@
 class FullOsc
 {
 public:
-    FullOsc(PinName gateInPin, PinName oscOutPin)
+    FullOsc(PinName gateInPin, PinName oscOutPin, PinName lockPin)
      : parameters()
      , gateIn(gateInPin, PullUp)
      , oscOut(oscOutPin)
+     , lockIn(lockPin, PullUp)
      , gater()
      , squareOsc()
      , noiseOsc()
@@ -45,10 +46,13 @@ public:
         }
     }
 
-    void setParameters(const Parameters& freeRunningParams)
+    void setParameters(const Parameters& freeRunningParams, bool force = false)
     {
-        //TODO check lock
-        parameters = freeRunningParams;
+        // check lock -> 1 = free, 0 = locked
+        if(lockIn || force)
+        {
+            parameters = freeRunningParams;
+        }
     }
 
     int getGate() const{return gater.gate;}
@@ -56,6 +60,7 @@ private:
     Parameters parameters;
     DigitalIn gateIn;
     DigitalOut oscOut;
+    DigitalIn lockIn;
     Gater gater;
     SquareOsc squareOsc;
     NoiseOsc noiseOsc;

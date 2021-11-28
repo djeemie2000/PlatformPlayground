@@ -28,24 +28,28 @@ AnalogIn modeCV(PA_4);
 //Phasor<uint32_t, 8, 1> phasor;
 //uint32_t phaseDelta;
 
+// IOXP2(PB3, PA15, PA12, PA11) -> oscillator gate inputs
 // IOXP1(PB15, PB14, PB13, PB12) -> oscillator outputs
-// IOXP2(PB3, PA15, PA12, PA11) -> oscillator gates
-// IOXP3(PB7, PB6, PB5, PB4) -> oscillator locked
+// IOXP3(PB7, PB6, PB5, PB4) -> oscillator locked inputs
 
 // oscillators common
 Parameters freeRunningParams;
 RandomGenUint16 randomGen;
 // oscillators
-FullOsc fullOsc(PB_3, PB_15);
-FullOsc fullOsc2(PA_15, PB_14);
+FullOsc fullOsc1(PB_3, PB_15, PB_7);
+FullOsc fullOsc2(PA_15, PB_14, PB_6);
+FullOsc fullOsc3(PA_12, PB_13, PB_5);
+FullOsc fullOsc4(PA_11, PB_12, PB_4);
 
 void tick()
 {
   randomGen.next();
   //phasor.tick(phaseDelta);
 
-  fullOsc.tick(randomGen.value);
+  fullOsc1.tick(randomGen.value);
   fullOsc2.tick(randomGen.value);
+  fullOsc3.tick(randomGen.value);
+  fullOsc4.tick(randomGen.value);
 }
 
 void printParameters(const Parameters& params)
@@ -61,8 +65,6 @@ void printParameters(const Parameters& params)
 }
 
 int main() {
-
-  
   // put your setup code here, to run once:
   pc2.baud(115200);
   pc2.printf("SquareOsc...\r\n");
@@ -76,8 +78,10 @@ int main() {
   freeRunningParams.pitchPeriod = 12;
   freeRunningParams.pitchDecay = 1;  
 
-  fullOsc.setParameters(freeRunningParams);
-  fullOsc2.setParameters(freeRunningParams);
+  fullOsc1.setParameters(freeRunningParams, true);
+  fullOsc2.setParameters(freeRunningParams, true);
+  fullOsc3.setParameters(freeRunningParams, true);
+  fullOsc4.setParameters(freeRunningParams, true);
 
   us_timestamp_t period_us = 40;// 20KHz
   ticker.attach_us(tick, period_us);
@@ -86,28 +90,30 @@ int main() {
     //put your main code here, to run repeatedly:
 
     // continuously grab 'freerunning' parameters from CV/pots
-    // TODO check per FullOsc:
-    // TODO if 'osc locked' switch is off 
+    // check per FullOsc:
+    // if 'osc locked' switch is off 
     //    copy 'freerunning' parameters into FullOsc parameters 
-    // TODO if 'osc locked' is on
+    // if 'osc locked' is on
     //   keep parameters for that FullOsc
 
     freeRunningParams.gateOnPeriod = durationCV.read_u16()>>1;
-    led  = fullOsc.getGate();
+//    led  = fullOsc1.getGate();
     freeRunningParams.pitchDecay = pitchDecayCV.read_u16()>>8;//range[0, 256[
-    led  = fullOsc.getGate();
+  //  led  = fullOsc.getGate();
     freeRunningParams.pitchPeriod = 2 + pitchPeriodSmoother.smooth( (pitchPeriodCV.read_u16()>>5) );// max pitchPeriod = 2048 ??
-    led  = fullOsc.getGate();
+    //led  = fullOsc.getGate();
     freeRunningParams.noiseColor = 1 + (noiseColorCV.read_u16() >> 13);//[1,8]
     //-> problem: never 1 + 7???
-    led  = fullOsc.getGate();
+    //led  = fullOsc.getGate();
     freeRunningParams.mode = modeCV.read_u16()>>14;//[0,3]
-    led  = fullOsc.getGate();
+    //led  = fullOsc.getGate();
 
-    fullOsc.setParameters(freeRunningParams);//TODO check lock
-    //fullOsc2
+    // FullOsc will check its lock
+    fullOsc1.setParameters(freeRunningParams);
+    fullOsc2.setParameters(freeRunningParams);
+    fullOsc3.setParameters(freeRunningParams);
+    fullOsc4.setParameters(freeRunningParams);
 
-    
     wait(0.04);//???
 
     ++debugCntr;
