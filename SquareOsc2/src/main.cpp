@@ -29,17 +29,9 @@ AnalogIn modeCV(PA_4);
 //uint32_t phaseDelta;
 
 // common
+Parameters freeRunningParams;
 RandomGenUint16 randomGen;
-
 FullOsc fullOsc(PB_14, PB_15);
-// Parameters parameters;
-// DigitalIn gateIn(PB_14, PullUp);
-// DigitalOut oscOut(PB_15);
-// Gater gater;
-// SquareOsc squareOsc;
-// NoiseOsc noiseOsc;
-// Mixer mixer;//stateless
-
 
 void tick()
 {
@@ -47,73 +39,6 @@ void tick()
   //phasor.tick(phaseDelta);
 
   fullOsc.tick(randomGen.value);
-  // int extGate = gateIn;
-  // gater.tick(false, extGate, parameters.gateOnPeriod);
-
-  // bool reset = (gater.gateCntr == 0);
-  // squareOsc.tick(reset, parameters.pitchPeriod, parameters.pitchDecay);
-
-  // noiseOsc.tick(randomGen.value, parameters.noiseColor);
-
-  // //TODO use LUT's? [0/1][0/1] 
-  // //or index = squareOsc.oscOut | (noiseOsc.oscOut<<1) | (mode<<2); oscOut = LUT[index];
-
-  // // mix sq with noise depending on parameters
-  // if(0 == gater.gate)
-  // {
-  //   // output off outside gate on period
-  //     oscOut = 0;
-  // }
-  // else
-  // {    
-  //   // gate is on
-  //   oscOut = mixer.mix(squareOsc.oscOut, noiseOsc.oscOut, parameters.mode);
-
-  //   // if(parameters.mode==3)
-  //   // {
-  //   //   // pure coloured noise
-  //   //   oscOut = noiseOsc.oscOut;
-  //   // }
-  //   // else if(parameters.mode==2)
-  //   // {
-  //   //   // mix square + coloured noise
-  //   //   if(squareOsc.oscOut)
-  //   //   {
-  //   //     // square 1 and noise 1 => 1
-  //   //     // square 1 and noise 0 => 0
-  //   //     oscOut = noiseOsc.oscOut;
-  //   //   }
-  //   //   else
-  //   //   {
-  //   //     // square 0 and noise 1 => 0
-  //   //     // square 0 and noise 0 => 1
-  //   //      oscOut = (1-noiseOsc.oscOut);      
-  //   //   }
-  //   //   // ??? this is an xor : 1 if equal, 0 if not equal
-  //   // }
-  //   // else if(parameters.mode==1)
-  //   // {
-  //   //   // mix square + coloured noise upon square on
-  //   //   if(squareOsc.oscOut)
-  //   //   {
-  //   //     // square 1 and noise 1 => 1
-  //   //     // square 1 and noise 0 => 0
-  //   //     oscOut = noiseOsc.oscOut;
-  //   //   }
-  //   //   else
-  //   //   {
-  //   //     // square 0 and noise 1 => 0
-  //   //     // square 0 and noise 0 => 0
-  //   //     oscOut = 0;      
-  //   //   }
-  //   //   // this is an AND
-  //   // }
-  //   // else
-  //   // {
-  //   //   // pure square
-  //   //   oscOut = squareOsc.oscOut;
-  //   // }
-  // }
 }
 
 void printParameters(const Parameters& params)
@@ -141,8 +66,8 @@ int main() {
   randomGen.begin();
 
   //???
-  fullOsc.parameters.pitchPeriod = 12;
-  fullOsc.parameters.pitchDecay = 1;  
+  freeRunningParams.pitchPeriod = 12;
+  freeRunningParams.pitchDecay = 1;  
 
   us_timestamp_t period_us = 50;// 20KHz
   ticker.attach_us(tick, period_us);
@@ -150,21 +75,23 @@ int main() {
   while(1) {
     //put your main code here, to run repeatedly:
 
-    // TODO continuously grab 'freerunning' parameters from CV/pots
+    // continuously grab 'freerunning' parameters from CV/pots
     // TODO copy 'freerunning' parameters into FullOsc parameters if 'osc locked' switch is off
     // TODO if lock is on, keep parameters for that FullOsc
 
-    fullOsc.parameters.gateOnPeriod = durationCV.read_u16()>>1;
-    led  = fullOsc.gater.gate;
-    fullOsc.parameters.pitchDecay = pitchDecayCV.read_u16()>>8;//range[0, 256[
-    led  = fullOsc.gater.gate;
-    fullOsc.parameters.pitchPeriod = 2 + pitchPeriodSmoother.smooth( (pitchPeriodCV.read_u16()>>5) );// max pitchPeriod = 2048 ??
-    led  = fullOsc.gater.gate;
-    fullOsc.parameters.noiseColor = 1 + (noiseColorCV.read_u16() >> 13);//[1,8]
+    freeRunningParams.gateOnPeriod = durationCV.read_u16()>>1;
+    led  = fullOsc.getGate();
+    freeRunningParams.pitchDecay = pitchDecayCV.read_u16()>>8;//range[0, 256[
+    led  = fullOsc.getGate();
+    freeRunningParams.pitchPeriod = 2 + pitchPeriodSmoother.smooth( (pitchPeriodCV.read_u16()>>5) );// max pitchPeriod = 2048 ??
+    led  = fullOsc.getGate();
+    freeRunningParams.noiseColor = 1 + (noiseColorCV.read_u16() >> 13);//[1,8]
     //-> problem: never 1 + 7???
-    led  = fullOsc.gater.gate;
-    fullOsc.parameters.mode = modeCV.read_u16()>>14;//[0,3]
-    led  = fullOsc.gater.gate;
+    led  = fullOsc.getGate();
+    freeRunningParams.mode = modeCV.read_u16()>>14;//[0,3]
+    led  = fullOsc.getGate();
+
+    fullOsc.setParameters(freeRunningParams);//TODO check lock
 
     
     wait(0.04);//???
@@ -172,7 +99,7 @@ int main() {
     ++debugCntr;
     if(25<debugCntr)
     {
-      printParameters(fullOsc.parameters);
+      printParameters(freeRunningParams);
       debugCntr = 0;
     }
   }

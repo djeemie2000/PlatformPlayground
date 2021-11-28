@@ -45,6 +45,14 @@ public:
         }
     }
 
+    void setParameters(const Parameters& freeRunningParams)
+    {
+        //TODO check lock
+        parameters = freeRunningParams;
+    }
+
+    int getGate() const{return gater.gate;}
+private:
     Parameters parameters;
     DigitalIn gateIn;
     DigitalOut oscOut;
