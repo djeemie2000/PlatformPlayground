@@ -1,6 +1,7 @@
 #include "keypad.h"
 
 KeyPad::KeyPad()
+ : m_Debounce(5)
 {
 }
 
@@ -28,6 +29,7 @@ int pinInCol1, int pinInCol2, int pinInCol3, int pinInCol4)
 
     for(int pad= 0;pad<NumPads; ++pad)
     {
+        m_TouchCntr[pad] = 0;
         m_TouchState[pad] = 0;
         m_PrevTouchState[pad] = 0;
     }
@@ -50,11 +52,33 @@ void KeyPad::ReadRow(int row)
     for(int col = 0; col<NumCols; ++col)
     {
         int pad = row * NumCols + col;
+        int tmp = digitalRead(m_PinInCol[col]);
+
+        // debounce on immediate value
+        if(tmp)
+        {
+            if(m_TouchCntr[pad]<m_Debounce)
+            {
+                ++m_TouchCntr[pad];
+            }
+        }
+        else if(0<m_TouchCntr[pad])
+        {
+            --m_TouchCntr[pad];
+        }
+        
+
         // touchstate to prev!
         m_PrevTouchState[pad] =  m_TouchState[pad];
-        // read new touchState
-        int tmp = digitalRead(m_PinInCol[col]);
-        m_TouchState[pad] = tmp?1:0;
+        // set new touchState if needed
+        if(0 == m_TouchCntr[pad])
+        {
+            m_TouchState[pad] = 0;
+        }
+        else if(m_Debounce == m_TouchCntr[pad])
+        {
+            m_TouchState[pad] = 1;
+        }
     }
     digitalWrite(m_PinOutRow[row], LOW);
 }

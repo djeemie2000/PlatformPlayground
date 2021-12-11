@@ -1,12 +1,12 @@
 #include <Arduino.h>
 #include <Wire.h>
-#include "ScanI2C.h"
+//#include "ScanI2C.h"
 #include "TestTouchPad.h"
 #include "TestDigitalOutMatrix.h"
 #include "MidiParser.h"
 #include "MidiLooper.h"
 #include "StopWatch.h"
-#include "DigitalOutBank.h"
+//#include "DigitalOutBank.h"
 #include "DevBoard.h"
 #include "MidiLooperStorage.h"
 #include "MidiLooperClock.h"
@@ -99,7 +99,7 @@ struct MidiLooperApp
 
   void Tick(int bpmUnmapped);
   void readMidiIn(HardwareSerial &serialMidi, int maxNumBytesRead = 3);
-  void updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& ledMatrix, TouchInBank& touchIn);
+  void updateMidiLooper(KeyPad &touchPad, Max7219Matrix& ledMatrix);
 };
 
 MidiLooperApp midiLooperApp;
@@ -174,13 +174,18 @@ void MidiLooperApp::readMidiIn(HardwareSerial &serialMidi, int maxNumBytesRead)
   }
 }
 
-void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& ledMatrix, TouchInBank& touchIn)
+void MidiLooperApp::updateMidiLooper(KeyPad &touchPad, Max7219Matrix& ledMatrix)
 {
   const int LearnModePad = 12;
   const int RecordingModePad = 13;
   const int EraseLayerPad = 14;
 
-  // 8 tracks + metronome
+  const int SavePad = 28;
+  const int LoadPad = 29;
+  const int PrintStoragePad = 30;
+  const int PrintStatePad = 31;
+
+  // 24 tracks + metronome
   const int TrackPads[] = {0,1,2,3, 4,5,6,7, 8,9,10,11,   16,17,18,19, 20,21,22,23, 24,25,26,27};
   const int MetronomePad = 15;
   const int TrackLedY[] = {0,1,2,3, 0,1,2,3, 0,1,2,3,   4,5,6,7, 4,5,6,7, 4,5,6,7 };
@@ -199,33 +204,33 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& led
   // }
   // TODO read numBars from pot and set on ticker
 
-  touchIn.update();
-  if(touchIn.IsClicked(0))
+  //touchIn.update();
+  if(touchPad.IsClicked(SavePad))
   {
     //TODO check if track is clicked, => do not check other track stuff
     Save(currentSlot);
   }
-  else if(touchIn.IsClicked(1))
+  else if(touchPad.IsClicked(LoadPad))
   {
     //TODO check if track is clicked, => do not check other track stuff
     Load(currentSlot);
   }
-  else if(touchIn.IsClicked(2))
+  else if(touchPad.IsClicked(PrintStoragePad))
   {
     ::PrintStorage(devBoard.serialDebug, midiLooperStorage, currentSlot);
   }
-  else if(touchIn.IsClicked(3))
+  else if(touchPad.IsClicked(PrintStatePad))
   {
     //TODO check if track is clicked, => do not check other track stuff
     midiLooper.printState(devBoard.serialDebug);
   }
 
   // determine mode
-  if(touchIn.get(0))
+  if(touchPad.Get(SavePad))
   {
     currentMode = SaveMode;
   }
-  else if(touchIn.get(1))
+  else if(touchPad.Get(LoadPad))
   {
     currentMode = LoadMode;
   }
@@ -495,16 +500,16 @@ void loop()
   {
     devBoard.serialDebug.println("debug startup checks!");
     
-    ScanI2C(devBoard.serialDebug);
+    //ScanI2C(devBoard.serialDebug);
 
     devBoard.serialDebug.println("test led matrix");
     testDigitalOutMatrix(devBoard.ledMatrix, 1);
 
-    devBoard.serialDebug.println("test touch pins");
-    TestTouchInBank(devBoard.touchIn, devBoard.serialDebug, 1);//16);
+    // devBoard.serialDebug.println("test touch pins");
+    // TestTouchInBank(devBoard.touchIn, devBoard.serialDebug, 1);//16);
 
     devBoard.serialDebug.println("test touchpad");
-    const int numRepeats = 1;// 16;
+    const int numRepeats = -1;//1;// 16;
     TestTouchPad(devBoard.touchPad, devBoard.serialDebug, numRepeats);
   
     // test storage
@@ -542,7 +547,7 @@ void loop()
    
     // read midi in but limit # bytes for performance issues
     midiLooperApp.readMidiIn(devBoard.serialMidi, 3);
-    midiLooperApp.updateMidiLooper(devBoard.touchPad, devBoard.ledMatrix, devBoard.touchIn);
+    midiLooperApp.updateMidiLooper(devBoard.touchPad, devBoard.ledMatrix);
 
     ++debugCounter;
     if (debugCounter >= 1000) //TODO stopwatch 1 sec + # runs
@@ -566,35 +571,35 @@ void loop()
 
 
 
-void not_loop() {
-  // put your main code here, to run repeatedly:
+// void not_loop() {
+//   // put your main code here, to run repeatedly:
 
-  ScanI2C(devBoard.serialDebug);
+//   ScanI2C(devBoard.serialDebug);
   
-  const int waitMilliSeconds = 200; 
+//   const int waitMilliSeconds = 200; 
 
-  devBoard.LedOn();  
-  devBoard.serialDebug.println("LED is on");
+//   devBoard.LedOn();  
+//   devBoard.serialDebug.println("LED is on");
 
-  testDigitalOutMatrix(devBoard.ledMatrix, 1);
+//   testDigitalOutMatrix(devBoard.ledMatrix, 1);
 
-  for(int repeat = 0; repeat<waitMilliSeconds; ++repeat)
-  {
-    devBoard.update();
-     delay(1);
-  }
-  PrintTouchPad(devBoard.MPR121A, devBoard.serialDebug);
+//   for(int repeat = 0; repeat<waitMilliSeconds; ++repeat)
+//   {
+//     devBoard.update();
+//      delay(1);
+//   }
+//   PrintTouchPad(devBoard.MPR121A, devBoard.serialDebug);
 
-  devBoard.LedOff();
-  Serial.println("LED is off");
+//   devBoard.LedOff();
+//   Serial.println("LED is off");
 
-  testDigitalOutMatrix(devBoard.ledMatrix, 1);
+//   testDigitalOutMatrix(devBoard.ledMatrix, 1);
 
-  for(int repeat = 0; repeat<waitMilliSeconds; ++repeat)
-  {
-     devBoard.update();
-     delay(1);
-   }
-  PrintTouchPad(devBoard.MPR121A, devBoard.serialDebug);
+//   for(int repeat = 0; repeat<waitMilliSeconds; ++repeat)
+//   {
+//      devBoard.update();
+//      delay(1);
+//    }
+//   PrintTouchPad(devBoard.MPR121A, devBoard.serialDebug);
 
-}
+// }

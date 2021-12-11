@@ -26,6 +26,8 @@ private:
     int m_PinInCol[NumCols];
 
     // TODO int/bool [NumPads]
+    int m_Debounce;
+    int m_TouchCntr[NumPads];
     int m_TouchState[NumPads];// bit = 1 => touched, bit is 0 => not touched
     int m_PrevTouchState[NumPads];
 };

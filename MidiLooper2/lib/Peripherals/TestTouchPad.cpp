@@ -83,8 +83,13 @@ void TestTouchPad(KeyPad &touchPad, HardwareSerial &debugSerial, int count)
     while (cntr < count || count == -1)
     {
         touchPad.Read();
+        delay(100);
+        touchPad.Read();
+        delay(100);
+        touchPad.Read();
+        delay(100);
+        
         PrintTouchPad(touchPad, debugSerial);
         ++cntr;
-        delay(500);
     }
 }
