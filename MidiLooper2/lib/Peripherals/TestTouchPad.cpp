@@ -34,6 +34,24 @@ void PrintTouchPad(MultiTouchPad &touchPad, HardwareSerial &debugSerial)
     debugSerial.println();
 }
 
+void PrintTouchPad(KeyPad &touchPad, HardwareSerial &debugSerial)
+{
+    debugSerial.print("  keyPad ");
+    for (int pad = 0; pad < touchPad.GetNumPads(); ++pad)
+    {
+        if (touchPad.Get(pad))
+        {
+            debugSerial.print("1");
+        }
+        else
+        {
+            debugSerial.print("0");
+        }
+    }
+    debugSerial.println();
+}
+
+
 
 void TestTouchPad(MPR121TouchPad &touchPad, HardwareSerial &debugSerial, int count)
 {
@@ -48,6 +66,18 @@ void TestTouchPad(MPR121TouchPad &touchPad, HardwareSerial &debugSerial, int cou
 }
 
 void TestTouchPad(MultiTouchPad &touchPad, HardwareSerial &debugSerial, int count)
+{
+    int cntr = 0;
+    while (cntr < count || count == -1)
+    {
+        touchPad.Read();
+        PrintTouchPad(touchPad, debugSerial);
+        ++cntr;
+        delay(500);
+    }
+}
+
+void TestTouchPad(KeyPad &touchPad, HardwareSerial &debugSerial, int count)
 {
     int cntr = 0;
     while (cntr < count || count == -1)

@@ -18,8 +18,8 @@ void MidiLooper::onTick(int clock)
     m_Ticker.onTick(clock);
     
     // midi clock sync (not midi standard compliant !!!): 
-    //      the resulting midi clock is 4PPQ instead of 24PPQ
-    // midi clock upon each rising clock
+    //      the resulting midi clock is 8PPQ instead of 24PPQ
+    // midi clock upon each rising or falling clock
     // when counter == 0 preceed midi clock by a midi continue which indicates a reset pulse
     if(m_Ticker.clockIsRising())
     {
@@ -27,6 +27,10 @@ void MidiLooper::onTick(int clock)
         {
             m_MidiOut.MidiContinue();
         }
+        m_MidiOut.MidiClock();
+    }
+    if(m_Ticker.clockIsFalling())
+    {
         m_MidiOut.MidiClock();
     }
 

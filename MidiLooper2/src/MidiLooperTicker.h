@@ -16,6 +16,63 @@ struct TickerState
 
 void CounterToState(uint16_t counter, TickerState& state, uint16_t numBarShift);
 
+struct TickerState2
+{
+    static const int NumTicksPerBeat = 4;
+    static const int NumBeatsPerBar = 4;
+
+    int m_Counter;
+    int m_Tick;
+    int m_Beat;
+    int m_Bar;
+
+    int m_NumBars;
+
+    TickerState2()
+    : m_Counter(0)
+    , m_Tick(0)
+    , m_Beat(0)
+    , m_Bar(0)
+    , m_NumBars(8)
+    {}
+
+    void Tick()
+    {
+        ++m_Counter;
+        // if(MaxCounter()<=m_Counter)
+        // {
+        //     m_Counter = 0;
+        // }
+
+        ++m_Tick;
+        if(NumTicksPerBeat<=m_Tick)
+        {
+            m_Tick = 0;
+            ++m_Beat;
+            if(NumBeatsPerBar<=m_Beat)
+            {
+                m_Beat = 0;
+                ++m_Bar;
+                if(m_NumBars<=m_Bar)
+                {
+                    m_Bar = 0;
+                    m_Counter = 0;
+                }
+            }
+        }
+    }
+
+    void Reset()
+    {
+        m_Counter = 0;
+        m_Tick = 0;
+        m_Beat = 0;
+        m_Bar = 0;
+    }
+
+    int MaxCounter() const{ return m_NumBars * NumBeatsPerBar * NumTicksPerBeat;}
+};
+
 class MidiLooperTicker
 {
 public:

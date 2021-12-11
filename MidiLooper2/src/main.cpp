@@ -197,6 +197,7 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPad, Max7219Matrix& led
   // {
   //   midiLooper.m_Ticker.ToggleNumBars(1, 3);
   // }
+  // TODO read numBars from pot and set on ticker
 
   touchIn.update();
   if(touchIn.IsClicked(0))
