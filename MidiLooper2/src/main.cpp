@@ -1,12 +1,13 @@
 #include <Arduino.h>
 #include <Wire.h>
-//#include "ScanI2C.h"
+
+#include "ScanI2C.h"
 #include "TestTouchPad.h"
 #include "TestDigitalOutMatrix.h"
+
 #include "MidiParser.h"
 #include "MidiLooper.h"
 #include "StopWatch.h"
-//#include "DigitalOutBank.h"
 #include "DevBoard.h"
 #include "MidiLooperStorage.h"
 #include "MidiLooperClock.h"
@@ -99,7 +100,7 @@ struct MidiLooperApp
 
   void Tick(int bpmUnmapped);
   void readMidiIn(HardwareSerial &serialMidi, int maxNumBytesRead = 3);
-  void updateMidiLooper(KeyPad &touchPad, Max7219Matrix& ledMatrix);
+  void updateMidiLooper(MultiTouchPad &touchPadTracks, Max7219Matrix& ledMatrix, TouchInBank& touchPadFunctions);
 };
 
 MidiLooperApp midiLooperApp;
@@ -145,13 +146,13 @@ void MidiLooperApp::Load(uint8_t slot)
 void setup() {
   // put your setup code here, to run once:
   devBoard.Begin();
-  delay(500); // Allow 500ms for the 8229BSF to get ready after turn-on
+  delay(500); // Allow 500ms for the 8229BSF to get ready after turn-on -> TTP touchpad
 
   midiLooperApp.Begin(&devBoard.serialMidi); //calls serialMidi.begin(31250);
 
   delay(1000);
-  devBoard.serialDebug.println("MidiLooper2 v0.4");
-
+  devBoard.serialDebug.println("MidiLooper2 v0.6");
+  delay(1000);
 }
 
 void MidiLooperApp::readMidiIn(HardwareSerial &serialMidi, int maxNumBytesRead)
@@ -174,26 +175,28 @@ void MidiLooperApp::readMidiIn(HardwareSerial &serialMidi, int maxNumBytesRead)
   }
 }
 
-void MidiLooperApp::updateMidiLooper(KeyPad &touchPad, Max7219Matrix& ledMatrix)
+void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPadTracks, Max7219Matrix& ledMatrix, TouchInBank& touchPadFunctions)
 {
-  const int LearnModePad = 12;
-  const int RecordingModePad = 13;
-  const int EraseLayerPad = 14;
-
-  const int SavePad = 28;
-  const int LoadPad = 29;
-  const int PrintStoragePad = 30;
-  const int PrintStatePad = 31;
+  // functions pads
+  const int LearnModePad = 0;
+  const int RecordingModePad = 1;
+  const int EraseLayerPad = 2;
+  const int MetronomePad = 3;
+  const int SavePad = 4;
+  const int LoadPad = 5;
+  const int PrintStoragePad = 6;//UNUSED!
+  const int PrintStatePad = 7;//UNUSED!
 
   // 24 tracks + metronome
   const int TrackPads[] = {0,1,2,3, 4,5,6,7, 8,9,10,11,   16,17,18,19, 20,21,22,23, 24,25,26,27};
-  const int MetronomePad = 15;
   const int TrackLedY[] = {0,1,2,3, 0,1,2,3, 0,1,2,3,   4,5,6,7, 4,5,6,7, 4,5,6,7 };
   const int TrackLedX[] = {5,5,5,5, 6,6,6,6, 7,7,7,7,   5,5,5,5, 6,6,6,6, 7,7,7,7 };
   const int MetronomeLedY = 7;
   const int MetronomeLedX = 4;
   
-  touchPad.Read();//TODO devBoard.update()
+  touchPadTracks.Read();//TODO devBoard.update()
+  touchPadFunctions.update();//TODO devBoard.update()
+
   unsigned long currMillis = millis();
 
 
@@ -205,45 +208,45 @@ void MidiLooperApp::updateMidiLooper(KeyPad &touchPad, Max7219Matrix& ledMatrix)
   // TODO read numBars from pot and set on ticker
 
   //touchIn.update();
-  if(touchPad.IsClicked(SavePad))
+  if(touchPadFunctions.IsClicked(SavePad))
   {
     //TODO check if track is clicked, => do not check other track stuff
     Save(currentSlot);
   }
-  else if(touchPad.IsClicked(LoadPad))
+  else if(touchPadFunctions.IsClicked(LoadPad))
   {
     //TODO check if track is clicked, => do not check other track stuff
     Load(currentSlot);
   }
-  else if(touchPad.IsClicked(PrintStoragePad))
+  else if(touchPadFunctions.IsClicked(PrintStoragePad))
   {
     ::PrintStorage(devBoard.serialDebug, midiLooperStorage, currentSlot);
   }
-  else if(touchPad.IsClicked(PrintStatePad))
+  else if(touchPadFunctions.IsClicked(PrintStatePad))
   {
     //TODO check if track is clicked, => do not check other track stuff
     midiLooper.printState(devBoard.serialDebug);
   }
 
   // determine mode
-  if(touchPad.Get(SavePad))
+  if(touchPadFunctions.get(SavePad))
   {
     currentMode = SaveMode;
   }
-  else if(touchPad.Get(LoadPad))
+  else if(touchPadFunctions.get(LoadPad))
   {
     currentMode = LoadMode;
   }
   //TODO printstorage(~slot)
-  else if (touchPad.Get(LearnModePad))
+  else if (touchPadFunctions.get(LearnModePad))
   {
     currentMode = LearnMode;
   }
-  else if (touchPad.Get(RecordingModePad))
+  else if (touchPadFunctions.get(RecordingModePad))
   {
     currentMode = RecordingMode;
   }
-  else if(touchPad.Get(EraseLayerPad))
+  else if(touchPadFunctions.get(EraseLayerPad))
   {
     currentMode = EraseLayerMode;
   }
@@ -253,7 +256,7 @@ void MidiLooperApp::updateMidiLooper(KeyPad &touchPad, Max7219Matrix& ledMatrix)
   }
 
   // metronome update
-  if (touchPad.IsClicked(MetronomePad))
+  if (touchPadFunctions.IsClicked(MetronomePad))
   {
     //serialDebug.println("metro pad tap");
     // => check which function(s) is pressed
@@ -277,7 +280,7 @@ void MidiLooperApp::updateMidiLooper(KeyPad &touchPad, Max7219Matrix& ledMatrix)
   // tracks update
   for (int idx = 0; idx < MidiLooper::NumTracks; ++idx)
   {
-    if(touchPad.IsClicked(TrackPads[idx]))//trackPadState[idx].Tapped())
+    if(touchPadTracks.IsClicked(TrackPads[idx]))//trackPadState[idx].Tapped())
     {
         // serialDebug.print("track pad ");
         // serialDebug.print(idx);
@@ -500,13 +503,21 @@ void loop()
   {
     devBoard.serialDebug.println("debug startup checks!");
     
-    //ScanI2C(devBoard.serialDebug);
+    ScanI2C(devBoard.serialDebug);
+    delay(1000);
+
+    devBoard.serialDebug.println("test SD card");
+    devBoard.sdStorage.PrintState(devBoard.serialDebug);
+    devBoard.sdStorage.PrintListDir("/", devBoard.serialDebug);//print root dir
 
     devBoard.serialDebug.println("test led matrix");
     testDigitalOutMatrix(devBoard.ledMatrix, 1);
 
+    //TODO test pots
+    devBoard.serialDebug.println("test potentiometers");
+    
     // devBoard.serialDebug.println("test touch pins");
-    // TestTouchInBank(devBoard.touchIn, devBoard.serialDebug, 1);//16);
+    // TestTouchInBank(devBoard.touchIn, devBoard.serialDebug, 32);
 
     devBoard.serialDebug.println("test touchpad");
     const int numRepeats = -1;//1;// 16;
@@ -547,7 +558,7 @@ void loop()
    
     // read midi in but limit # bytes for performance issues
     midiLooperApp.readMidiIn(devBoard.serialMidi, 3);
-    midiLooperApp.updateMidiLooper(devBoard.touchPad, devBoard.ledMatrix);
+    midiLooperApp.updateMidiLooper(devBoard.touchPad, devBoard.ledMatrix, devBoard.touchIn);
 
     ++debugCounter;
     if (debugCounter >= 1000) //TODO stopwatch 1 sec + # runs

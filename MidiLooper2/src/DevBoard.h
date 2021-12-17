@@ -1,22 +1,20 @@
 #pragma once
 #include <Arduino.h>
-//#include "MPR121TouchPad.h"
+#include "MPR121TouchPad.h"
 #include "Max7219Matrix.h"
-// #include "DigitalIn.h"
-// #include "DigitalInBank.h"
-// #include "MultiTouchPad.h"
-// #include "TTP8229TouchPad.h"
+#include "MultiTouchPad.h"
 #include "AnalogIn.h"
-//#include "TouchInBank.h"
-#include "keypad.h"
+#include "TouchInBank.h"
+#include "sdstorage.h"
 
 struct DevBoard
 {
   static const int LedPin = 2;
   static const int csPinLedMatrix = 5;
-  // static const int irqPinTouchPadA = 15;
+  static const int csPinSDCard = 15;
+  static const int irqPinTouchPadA = 34;
+  static const int irqPinTouchPadB = 35;
   static const int debugPin = 4;// TODO debugIn DIn
-
 
   // uart0 : usb + GPIO 1 & 3
   // uart1 : not connected
@@ -25,27 +23,28 @@ struct DevBoard
   bool debugIsActive;
 
   HardwareSerial serialMidi;// uart 2
-  //TODO SDCard? -> SPI!
-//  DigitalInBank IOXP1;
   AnalogIn Pot1;//tempo
-  // TouchInBank touchIn;
-  // MPR121TouchPad MPR121A;
-  // TTP8229TouchPad_I2C TTP8299;
-//  MultiTouchPad touchPad;
-  KeyPad touchPad;
+  AnalogIn Pot2;//length
+  TouchInBank touchIn;
+  MPR121TouchPad MPR121A;
+  MPR121TouchPad MPR121B;
+  MultiTouchPad touchPad;
 
   Max7219Matrix ledMatrix;//(1,PA4);//cs pin
+  
+  SDStorage sdStorage;
 
   DevBoard()
    : serialDebug(0)
    , debugIsActive(false)
    , serialMidi(2)
-   //, IOXP1(34, 35)
-  , Pot1()
-  //, touchIn(T4, T5, T6, T7)
-   //, MPR121A()
-   , touchPad()
+   , Pot1()
+   , Pot2()
+   , touchIn(T4, T5, T6, T7, T8, T9)
+   , MPR121A()
+   , MPR121B()
    , ledMatrix(1, csPinLedMatrix)//cs pin
+   , sdStorage()
    {}
 
    void Begin()
@@ -57,26 +56,23 @@ struct DevBoard
      serialMidi.begin(31250);
 
      //IOXP1.begin();
-     Pot1.begin(15);//tempo pot
-    //touchIn.begin(30, 45);//hysteresis min max
-
+     Pot1.begin(36);//tempo pot
+     Pot2.begin(39);//tempo pot
+     touchIn.begin(30, 45);//hysteresis min max
 
      // setup I2C for MPR121 MPR121A
      // Wire.begin() is called inside MPR121A.begin()
-     //MPR121A.Begin(irqPinTouchPadA); //irq pin
-     //touchPad.Add(&MPR121A);
-    //  MPR121B.Begin(irqPinTouchPadB, MPR121TouchPad::DefaultTouchThreshold, MPR121TouchPad::DefaultReleaseThreshold, 0x5B); //irq pin
-    //  touchPad.Add(&MPR121B);
-     //TTP8299.Begin();
-     //touchPad.Add(&TTP8299);
-     //touchPad.Begin();
-     //TODO autoDetect I2C : MPR121A memBank
-     
-     // GPIOs 34 to 39 are GPIs – input only pins. 
-    touchPad.Begin(32,33,25,26,36,39,34,35);
-
+     MPR121A.Begin(irqPinTouchPadA); //irq pin
+     MPR121B.Begin(irqPinTouchPadB, MPR121TouchPad::DefaultTouchThreshold, MPR121TouchPad::DefaultReleaseThreshold, 0x5B); //irq pin
+     touchPad.Add(&MPR121A);
+     touchPad.Add(&MPR121B);
+     touchPad.Begin();
+     //TODO autoDetect I2C : MPR121A MPR121B
+      
       //SPI CS external
-      ledMatrix.Configure();     
+      ledMatrix.Configure();
+      
+      sdStorage.Open(csPinSDCard);     
    }
 
    void update()
@@ -86,7 +82,7 @@ struct DevBoard
     //IOXP1.update();
     
     Pot1.Read();
-    //  Pot2.Read();
+    Pot2.Read();
     // update led matrix, touchpad here??
     touchPad.Read();
     ledMatrix.WriteAll();
