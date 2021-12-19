@@ -25,8 +25,8 @@ public:
     void ToggleRecording(int idxTrack);
     void ToggleMidiLearn(int idxTrack);
 
-    void Save(MidiLooperStorage& storage, uint8_t slot);
-    void Load(MidiLooperStorage& storage, uint8_t slot);
+    void Save(MidiLooperStorage& storage, uint8_t bank, uint8_t slot);
+    void Load(MidiLooperStorage& storage, uint8_t bank, uint8_t slot);
 
     void printState(HardwareSerial &serial);
  

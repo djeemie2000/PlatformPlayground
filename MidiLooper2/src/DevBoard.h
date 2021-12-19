@@ -71,7 +71,7 @@ struct DevBoard
       
       //SPI CS external
       ledMatrix.Configure();
-      
+
       sdStorage.Open(csPinSDCard);     
    }
 
@@ -85,6 +85,7 @@ struct DevBoard
     Pot2.Read();
     // update led matrix, touchpad here??
     touchPad.Read();
+    touchIn.update();
     ledMatrix.WriteAll();
    }
 

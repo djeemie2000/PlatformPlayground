@@ -12,6 +12,7 @@
 #include "MidiLooperStorage.h"
 #include "MidiLooperClock.h"
 
+#include "testmidilooperstorage.h"
 #include "Preferences.h"
 
 
@@ -21,18 +22,18 @@
 
 DevBoard devBoard;
 
-void PrintStorage(HardwareSerial& serial, MidiLooperStorage& storage, uint8_t slot)//TODO hardwareserial , move to storage header
+void PrintStorage(HardwareSerial& serial, MidiLooperStorage& storage, uint8_t bank, uint8_t slot)//TODO hardwareserial , move to storage header
 {
-
-
   // iterate tracks:
   // midi channel
   // play/mute
   // events?? events size??
-  serial.print("Slot ");
+  serial.print("Bank 0x");
+  serial.print(bank, HEX);
+  serial.print(" slot 0x");
   serial.println(slot, HEX);
 
-  storage.Open(slot);
+  storage.Open(bank, slot);
   storage.PrintStats(serial);
 
   for(int track = 0; track<MidiLooper::NumTracks; ++track)
@@ -59,16 +60,16 @@ void PrintStorage(HardwareSerial& serial, MidiLooperStorage& storage, uint8_t sl
       {
           serial.print("??");
       }
-      int numEvents = 0;
-      serial.print(" Ev# ");
-      if(storage.LoadNumEvents(track, numEvents))
-      {
-          serial.print(numEvents);
-      }
-      else
-      {
-          serial.print("??");
-      }
+      // int numEvents = 0;
+      // serial.print(" Ev# ");
+      // if(storage.LoadNumEvents(track, numEvents))
+      // {
+      //     serial.print(numEvents);
+      // }
+      // else
+      // {
+      //     serial.print("??");
+      // }
       serial.println();      
   }
   storage.Close();
@@ -85,6 +86,7 @@ struct MidiLooperApp
   static const int PlayMode = 7;
   int currentMode;
 
+  uint8_t currentBank;
   uint8_t currentSlot;
 
   MidiLooperClock looperClock;
@@ -95,8 +97,8 @@ struct MidiLooperApp
   void Begin(HardwareSerial* serialMidi);
   void AllNotesOff();
 
-  void Save(uint8_t slot);
-  void Load(uint8_t slot);//TODO
+  void Save(uint8_t bank, uint8_t slot);
+  void Load(uint8_t bank, uint8_t slot);
 
   void Tick(int bpmUnmapped);
   void readMidiIn(HardwareSerial &serialMidi, int maxNumBytesRead = 3);
@@ -108,6 +110,7 @@ MidiLooperApp midiLooperApp;
 void MidiLooperApp::Begin(HardwareSerial* serialMidi)
 {
   currentMode = MidiLooperApp::LearnMode;
+  currentBank = 0x00;
   currentSlot = 0x00;
   midiLooper.begin(&devBoard.serialMidi); //calls serialMidi.begin(31250);
 }
@@ -133,14 +136,14 @@ void MidiLooperApp::AllNotesOff()
   }
 }
 
-void MidiLooperApp::Save(uint8_t slot)
+void MidiLooperApp::Save(uint8_t bank, uint8_t slot)
 {
-  midiLooper.Save(midiLooperStorage, slot);
+  midiLooper.Save(midiLooperStorage, bank, slot);
 }
 
-void MidiLooperApp::Load(uint8_t slot)
+void MidiLooperApp::Load(uint8_t bank, uint8_t slot)
 {
-  midiLooper.Load(midiLooperStorage, slot);
+  midiLooper.Load(midiLooperStorage, bank, slot);
 }
 
 void setup() {
@@ -211,16 +214,16 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPadTracks, Max7219Matri
   if(touchPadFunctions.IsClicked(SavePad))
   {
     //TODO check if track is clicked, => do not check other track stuff
-    Save(currentSlot);
+    Save(currentBank, currentSlot);
   }
   else if(touchPadFunctions.IsClicked(LoadPad))
   {
     //TODO check if track is clicked, => do not check other track stuff
-    Load(currentSlot);
+    Load(currentBank, currentSlot);
   }
   else if(touchPadFunctions.IsClicked(PrintStoragePad))
   {
-    ::PrintStorage(devBoard.serialDebug, midiLooperStorage, currentSlot);
+    ::PrintStorage(devBoard.serialDebug, midiLooperStorage, currentBank, currentSlot);
   }
   else if(touchPadFunctions.IsClicked(PrintStatePad))
   {
@@ -363,7 +366,7 @@ void MidiLooperApp::updateMidiLooper(MultiTouchPad &touchPadTracks, Max7219Matri
   }
 
   // show current slot : row 3
-  const int slotRow = 3;
+  const int slotRow = 3;//current bank?????
   for(int col = 0;col<8; ++col)
   {
     ledMatrix.Clear(slotRow,col);
@@ -510,22 +513,25 @@ void loop()
     devBoard.sdStorage.PrintState(devBoard.serialDebug);
     devBoard.sdStorage.PrintListDir("/", devBoard.serialDebug);//print root dir
 
+    // test midilooper storage
+    TestMidiLooperStorage(midiLooperApp.midiLooperStorage, devBoard.sdStorage, devBoard.serialDebug);    
+
     devBoard.serialDebug.println("test led matrix");
     testDigitalOutMatrix(devBoard.ledMatrix, 1);
 
     //TODO test pots
     devBoard.serialDebug.println("test potentiometers");
     
-    // devBoard.serialDebug.println("test touch pins");
-    // TestTouchInBank(devBoard.touchIn, devBoard.serialDebug, 32);
+    devBoard.serialDebug.println("test touch pins");
+    TestTouchInBank(devBoard.touchIn, devBoard.serialDebug, 16);
 
     devBoard.serialDebug.println("test touchpad");
-    const int numRepeats = -1;//1;// 16;
+    const int numRepeats = 16;
     TestTouchPad(devBoard.touchPad, devBoard.serialDebug, numRepeats);
   
     // test storage
     devBoard.serialDebug.println("print storage");
-    PrintStorage(devBoard.serialDebug, midiLooperApp.midiLooperStorage, 0x00);
+    PrintStorage(devBoard.serialDebug, midiLooperApp.midiLooperStorage, 0x00, 0x00);
   }
 
   // make sure all notes are off on all midi channels

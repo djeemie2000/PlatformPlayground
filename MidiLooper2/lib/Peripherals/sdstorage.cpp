@@ -47,6 +47,41 @@ bool SDStorage::Write(const char* path, uint8_t* values, int size)
     return false;
 }
 
+bool SDStorage::Read(const char* path, uint8_t& value)
+{
+    bool succeeded = false;
+    File file = SD.open(path, FILE_READ);
+    if(file)
+    {
+        if(file.available())
+        {
+            value = file.read();//?? error => -1
+            succeeded = true;
+        }
+        //else error
+        file.close();
+    }
+    return succeeded;
+}
+
+bool SDStorage::Read(const char* path, uint8_t* values, int capacity, int& size)
+{
+    bool succeeded = false;
+    File file = SD.open(path, FILE_READ);
+    if(file)
+    {
+        size = file.readBytes((char*)values, capacity);
+        succeeded = true;
+        file.close();
+    }
+    return succeeded;
+}
+
+bool SDStorage::Remove(const char* path)
+{
+    return SD.remove(path);
+}
+
 void SDStorage::PrintState(HardwareSerial& serial)
 {
 
@@ -90,12 +125,14 @@ void SDStorage::PrintListDir(const char* path, HardwareSerial& serial)
         serial.printf("Listing directory: %s\n", path);
 
         File root = SD.open(path);
-        if(!root){
+        if(!root)
+        {
             serial.println("Failed to open directory");
             return;
         }
 
-        if(!root.isDirectory()){
+        if(!root.isDirectory())
+        {
             serial.println("Not a directory");
             return;
         }
@@ -105,15 +142,15 @@ void SDStorage::PrintListDir(const char* path, HardwareSerial& serial)
         {
             if(file.isDirectory())
             {
-                Serial.print("  DIR : ");
-                Serial.println(file.name());
+                serial.print("  DIR : ");
+                serial.println(file.name());
             } 
             else
             {
-                Serial.print("  FILE: ");
-                Serial.print(file.name());
-                Serial.print("  SIZE: ");
-                Serial.println(file.size());
+                serial.print("  FILE: ");
+                serial.print(file.name());
+                serial.print("  SIZE: ");
+                serial.println(file.size());
             }
             file = root.openNextFile();
         }

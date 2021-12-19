@@ -1,7 +1,6 @@
 #include "MidiLooperStorage.h"
-#include "MidiLooperEvent.h"
-
 #include "sdstorage.h"
+#include "MidiLooperEvent.h"
 
 MidiLooperStorage::MidiLooperStorage()
 {
@@ -21,7 +20,6 @@ MidiLooperStorage::MidiLooperStorage()
     m_Lut[13] = 'D';
     m_Lut[14] = 'E';
     m_Lut[15] = 'F';
-    memset(m_Key, 0, 7);
 
     m_Storage = nullptr;
     memset(m_Path, 0, 17);
@@ -35,30 +33,18 @@ bool MidiLooperStorage::Begin(SDStorage* storage)
     return m_Storage->IsOpen();
 }
 
-bool MidiLooperStorage::Open(uint8_t slot)
+bool MidiLooperStorage::Open(uint8_t bank, uint8_t slot)
 {
     //use bank/slot
-    m_Bank = 0x00;
+    m_Bank = bank;
     m_Slot = slot;
 
-    m_Preferences.begin("slot0", false);
     return true;
 }
 
 void MidiLooperStorage::Close()
 {
-    m_Preferences.end();
-}
-
-void MidiLooperStorage::SetKey(uint8_t slot, uint8_t track, const char* id)
-{
-    m_Key[0] = m_Lut[slot >> 4];
-    m_Key[1] = m_Lut[slot & 0x0F];
-    m_Key[2] = m_Lut[track >> 4];
-    m_Key[3] = m_Lut[track & 0x0F];
-    m_Key[4] = id[0];
-    m_Key[5] = id[1];
-    m_Key[6]= 0;//terminating zero
+    //TODO (?) save current bank/slot
 }
 
 void MidiLooperStorage::SetPath(uint8_t bank, uint8_t slot, uint8_t track, const char* id)
@@ -81,7 +67,6 @@ void MidiLooperStorage::SetPath(uint8_t bank, uint8_t slot, uint8_t track, const
     m_Path[14] = 'i';
     m_Path[15] = 'n';
     m_Path[16]= 0;//terminating zero
-
 }
 
 
@@ -89,118 +74,60 @@ bool MidiLooperStorage::SaveMidiChannel(uint8_t track, uint8_t midiChannel)
 {
     SetPath(m_Bank, m_Slot, track, "Ch");
     return m_Storage->Write(m_Path, midiChannel);
-    // File file = SD.open(m_Path, FILE_WRITE);
-    // if(file)
-    // {
-    //     file.write(midiChannel);
-    //     file.close();
-    //     return true;
-    // }
-    // return false;
-    // SetKey(m_Slot, track, "Ch");
-    // size_t result =  m_Preferences.putUChar(m_Key, midiChannel);
-    // return 0<result;
 }
     
 bool MidiLooperStorage::LoadMidiChannel(uint8_t track, uint8_t& midiChannel)
 {
-    SetKey(m_Slot, track, "Ch");
-    midiChannel = m_Preferences.getUChar(m_Key, midiChannel);
-    return true;//Assume true
+    SetPath(m_Bank, m_Slot, track, "Ch");
+    return m_Storage->Read(m_Path, midiChannel);
 }
 
 bool MidiLooperStorage::SavePlayMute(uint8_t track, bool playMute)
 {
     SetPath(m_Bank, m_Slot, track, "Pl");
-    return m_Storage->Write(m_Path, playMute);
-
-    // File file = SD.open(m_Path, FILE_WRITE);
-    // if(file)
-    // {
-    //     file.write(playMute);
-    //     file.close();
-    //     return true;
-    // }
-    // return false;
-    // SetKey(m_Slot, track, "Pl");
-    // size_t result = m_Preferences.putBool(m_Key, playMute);
-    // return 0<result;
+    uint8_t pm = playMute ? 0x01 : 0x00;
+    return m_Storage->Write(m_Path, pm);
 }
     
 bool MidiLooperStorage::LoadPlayMute(uint8_t track, bool& playMute)
 {
-    SetKey(m_Slot, track, "Pl");
-    playMute = m_Preferences.getBool(m_Key, playMute);
-    return true;//Assume true
+    SetPath(m_Bank, m_Slot, track, "Pl");
+    uint8_t pm = playMute ? 0x01 : 0x00;
+    bool succeeded = m_Storage->Read(m_Path, pm);
+    playMute = (pm!=0x00);
+    return succeeded;
 }
 
 bool MidiLooperStorage::SaveEvents(uint8_t track, MidiLooperEvent* events, int numEvents)
 {
     SetPath(m_Bank, m_Slot, track, "Ev");
     return m_Storage->Write(m_Path, (uint8_t*)events, numEvents*sizeof(MidiLooperEvent));
-
-    // File file = SD.open(m_Path, FILE_WRITE);
-    // if(file)
-    // {
-    //     file.write((uint8_t*)events, numEvents*sizeof(MidiLooperEvent));
-    //     file.close();
-    //     return true;
-    // }
-    // return false;
-
-    // SetKey(m_Slot, track, "Ev");
-    // size_t result = m_Preferences.putBytes(m_Key, events, numEvents*sizeof(MidiLooperEvent));
-    // return result>0;
 }
 
 bool MidiLooperStorage::LoadEvents(uint8_t track, MidiLooperEvent* events, int capacity, int& numEvents)
 {
-    SetKey(m_Slot, track, "Ev");
-    size_t result = m_Preferences.getBytes(m_Key, events, capacity*sizeof(MidiLooperEvent));
+    SetPath(m_Bank, m_Slot, track, "Ev");
+    int result = 0;
+    bool succeeded = m_Storage->Read(m_Path, (uint8_t*)events, capacity*sizeof(MidiLooperEvent), result);
     numEvents = result/sizeof(MidiLooperEvent);
-    return result>0;
+    return succeeded;
 }
 
-bool MidiLooperStorage::LoadNumEvents(uint8_t track, int& numEvents)
+bool MidiLooperStorage::LoadCurrentSlot(uint8_t& bank, uint8_t& slot)
 {
-    SetKey(m_Slot, track, "Ev");
-    size_t result = m_Preferences.getBytesLength(m_Key);
-    numEvents = result/sizeof(MidiLooperEvent);
-    return result>0;
+    return  m_Storage->Read("/bank.bin", bank) 
+        && m_Storage->Read("/slot.bin", slot);
+}
+
+
+bool MidiLooperStorage::SaveCurrentSlot()
+{
+    return  m_Storage->Write("/bank.bin", m_Bank) 
+        && m_Storage->Write("/slot.bin", m_Slot);
 }
 
 void MidiLooperStorage::PrintStats(HardwareSerial& serial)
 {
     serial.println("stats:");
-
-  size_t free = m_Preferences.freeEntries();
-  serial.print("Free entries ");
-  serial.println(free);
-
     m_Storage->PrintState(serial);
-
-  //
-//   uint8_t cardType = SD.cardType();
-//   serial.print("SD Card Type: ");
-//     if(cardType == CARD_MMC){
-//     serial.println("MMC");
-//     } else if(cardType == CARD_SD){
-//     serial.println("SDSC");
-//     } else if(cardType == CARD_SDHC){
-//     serial.println("SDHC");
-//     } else {
-//     serial.println("UNKNOWN");
-//     }
-
-//     uint64_t cardSize = SD.cardSize() / (1024 * 1024);
-//     serial.printf("SD Card Size: %llu MB\n", cardSize);
-
-//     serial.printf("Total space: %llu bytes\n", SD.totalBytes());
-//     serial.printf("Used space: %llu bytes\n", SD.usedBytes());
-
 }
-
-// void MidiLooperStorage::EraseAll()
-// {
-//     NVS.eraseAll();
-// }

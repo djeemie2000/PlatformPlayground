@@ -145,7 +145,7 @@ void TestTouchInBank(TouchInBank &touchPad, HardwareSerial &debugSerial, int cou
         for(int repeat = 0; repeat<100; ++repeat)
         {
             touchPad.update();
-            delay(5);
+            delay(3);
         }
         PrintTouchInBank(touchPad, debugSerial);
         ++cntr;

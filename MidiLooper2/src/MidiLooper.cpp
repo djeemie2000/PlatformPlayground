@@ -122,10 +122,10 @@ void MidiLooper::ToggleMidiLearn(int idxTrack)
     }
 }
 
-void MidiLooper::Save(MidiLooperStorage& storage, uint8_t slot)
+void MidiLooper::Save(MidiLooperStorage& storage, uint8_t bank, uint8_t slot)
 {
     // iterate tracks:
-    storage.Open(slot);
+    storage.Open(bank, slot);
     m_Metronome.Save(storage, 0xFF);
     for(int track = 0; track<MidiLooper::NumTracks; ++track)
     {
@@ -134,10 +134,10 @@ void MidiLooper::Save(MidiLooperStorage& storage, uint8_t slot)
     storage.Close();
 }
 
-void MidiLooper::Load(MidiLooperStorage& storage, uint8_t slot)
+void MidiLooper::Load(MidiLooperStorage& storage, uint8_t bank, uint8_t slot)
 {
     // iterate tracks:
-    storage.Open(slot);
+    storage.Open(bank, slot);
     m_Metronome.Load(storage, 0xFF);
     for(int track = 0; track<MidiLooper::NumTracks; ++track)
     {
