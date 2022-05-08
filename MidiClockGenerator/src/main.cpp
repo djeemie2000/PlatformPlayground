@@ -12,6 +12,7 @@
 
 // step 2 serial.write/outputs in interrupt
 // TODO timerinterrupt library
+//TODO fast write portC
 
 template<class T>
 class ClockOutState
@@ -60,11 +61,15 @@ private:
   T m_Period;
 };
 
+//loop state
 int clockPeriod24PPQ;
+int running;
+
+//oninterrupt state
 int loopCounter;
 int prevRunning;
-
 ClockOutState<int> clockOutStateSixteenthNotes;
+ClockOutState<int> ledOutStateTempoIndicator;
 
 void setup() {
   // put your setup code here, to run once:
@@ -73,22 +78,27 @@ void setup() {
 
   pinMode(A0, INPUT_PULLUP);
   // A1 pot analog read input
-  pinMode(A2, OUTPUT); // &§th note clock output
+  pinMode(A2, OUTPUT); // 16th note clock output
+  pinMode(A3, OUTPUT); // tempo led output
   pinMode(LED_BUILTIN, OUTPUT);
   
   // -> 20 msec x 24 PPQ = 480 msec 
   // approx 2 beats per second 
   // approx 120BPM 
   clockPeriod24PPQ = 20;
-  
+  running = 0;
+
   loopCounter = 0;
   prevRunning = 0;
-
-  // at 24 PPQ, period = 6 => 4 PPG => quarter note / 4  = sixteenth notes clock
+  // at 24 PPQ, period = 6 => 4 PPQ => quarter note / 4  = sixteenth notes clock
   clockOutStateSixteenthNotes.Configure(3,6);
 
-  //flash led??
+  // at beginning of every quarter note, short blink
+  ledOutStateTempoIndicator.Configure(3,24);
+  
+  //TODO upon midi start, singleshot reset pulse  length = one 16th note clock pulse
 
+  //flash led upon start??
   for(int repeat = 0; repeat<4; ++repeat)
   {
     digitalWrite(LED_BUILTIN, 1);
@@ -98,24 +108,8 @@ void setup() {
   }
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-
-  int running = digitalRead(A0);
-  //TODO debounce 
-  if(running)
-  {
-    digitalWrite(LED_BUILTIN, 1);
-  }
-  else
-  {
-    digitalWrite(LED_BUILTIN, 0);
-  }
-
-  // clock period: range 10 msec ~ 240 BPM / 40 msec ~ 60 BPM , default 20 ~ 120BPM
-  int speedPot = analogRead(A1);
-  clockPeriod24PPQ = map(speedPot, 0, 1023, 40, 10);
-
+void oninterrupt()
+{
   if(!prevRunning && running)
   {
     // send first clock as well ??
@@ -124,6 +118,9 @@ void loop() {
     loopCounter = 0; // reset
 
     clockOutStateSixteenthNotes.Reset();
+    ledOutStateTempoIndicator.Reset();
+
+    // midi devices start running upon first midi clock after midi start
   }
   else if(prevRunning && !running)
   {
@@ -136,11 +133,23 @@ void loop() {
   {
     Serial.write(0xF8);//midiclock
     clockOutStateSixteenthNotes.Tick();
+    ledOutStateTempoIndicator.Tick();
   }
 
   int clockValue = running ? clockOutStateSixteenthNotes.Get() : 0;
   digitalWrite(A2, clockValue);
 
+  int tempoLedValue = running ? ledOutStateTempoIndicator.Get() : 0;
+  digitalWrite(A3, tempoLedValue);
+
+  if(running)
+  {
+    digitalWrite(LED_BUILTIN, 1);
+  }
+  else
+  {
+    digitalWrite(LED_BUILTIN, 0);
+  }
 
   prevRunning = running;
 
@@ -150,6 +159,19 @@ void loop() {
   {
     loopCounter = 0;
   }
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+  running = digitalRead(A0);
+  //TODO debounce 
+
+  // clock period: range 10 msec ~ 240 BPM / 40 msec ~ 60 BPM , default 20 ~ 120BPM
+  int speedPot = analogRead(A1);
+  clockPeriod24PPQ = map(speedPot, 0, 1023, 40, 10);
+
+  oninterrupt();
 
   delay(1);//resolution & msec
 }
