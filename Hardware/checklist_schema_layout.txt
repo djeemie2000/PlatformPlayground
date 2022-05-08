@@ -1,0 +1,84 @@
+
+
+eurorack compatible
+    10 pin connector +12V GND -12V (or 16 pin if 5V is needed)
+    1k resistor on each (buffered) output
+    high impedance inputs!
+    3.5 mm mono jacks in/out type PJ398SM
+
+eurorack voltage ranges:
+    audio +/-5V
+    LFO +/-5V
+    envelopes 0-10V (or 0-8V)
+    gate (outs) 0V/5V
+    trigger outs 0V/5V , >= 10 msec (?)
+
+IC: check voltage range
+    CMOS 
+        0V +12V in most cases!
+
+PCB size 
+    5000 mils vertical
+    2HP = ?? mils
+    4HP = ? mils
+    6HP = ? mils
+    8HP = ? mils
+    10HP = ? mils
+
+component placement (standard)
+    leave top and bottom 3 rows/400 mils without components!    
+    jacks
+        bottom
+            mods (optional)
+            ins (optional)
+            outs
+        external pin at bottom
+        spacing = ?
+        left/right = ?
+        top layer! (front of the PCB)
+    pots / switches / user interface
+        top of PCB  
+        top layer! (front of the PCB)
+    power connector
+        shrouded!
+        -12V = bottom
+        bottom layer (back of the PCB)
+    leds (user interface)
+        top layer! (front of the PCB)
+    all components
+        bottom layer! (back of the PCB)
+    provide cover plate (PVB) to cover soler joints on the front of the PCB        
+
+ground plane
+    TODO????
+
+Holes
+    top
+        2.5mm vertical
+        wider ?? horizontal
+    bottom
+        2.5mm
+        wider
+    sides left/right (for cover plate)
+        left x2
+        right x2
+        distance = ?    
+        2.5 mm 
+
+Labeling
+    all resistors
+        value
+    all capacitors
+        value
+    all potentiometers
+        value!
+        function
+    all switches
+        function
+    jumpers?
+        function
+    all sockets
+        function + in/out
+    PCB name label : bottom
+    brand name label : top
+
