@@ -13,9 +13,58 @@
 // step 2 serial.write/outputs in interrupt
 // TODO timerinterrupt library
 
+template<class T>
+class ClockOutState
+{
+public:
+  ClockOutState()
+   : m_State(0)
+   , m_Counter(0)
+   , m_OnTicks(1)
+   , m_Period(2)
+   {}
+
+  void Configure(int onTicks, int period)
+  {
+    m_OnTicks = onTicks;
+    m_Period = period;
+  }
+
+   void Reset()
+   {
+     m_Counter = 0;
+     m_State = (m_Counter<m_OnTicks) ? 1 : 0;
+   }
+
+   void Tick()
+   {
+     m_State = (m_Counter<m_OnTicks) ? 1 : 0;
+
+     ++m_Counter;
+     if(m_Period<=m_Counter)
+     {
+       m_Counter = 0;
+     }
+   }
+
+  int Get() const
+  {
+     return m_State;
+  }
+
+private:
+
+  int m_State;
+  T m_Counter;
+  T m_OnTicks;
+  T m_Period;
+};
+
 int clockPeriod24PPQ;
 int loopCounter;
 int prevRunning;
+
+ClockOutState<int> clockOutStateSixteenthNotes;
 
 void setup() {
   // put your setup code here, to run once:
@@ -23,8 +72,10 @@ void setup() {
   Serial.begin(31250);
 
   pinMode(A0, INPUT_PULLUP);
+  // A1 pot analog read input
+  pinMode(A2, OUTPUT); // &§th note clock output
   pinMode(LED_BUILTIN, OUTPUT);
-
+  
   // -> 20 msec x 24 PPQ = 480 msec 
   // approx 2 beats per second 
   // approx 120BPM 
@@ -32,6 +83,9 @@ void setup() {
   
   loopCounter = 0;
   prevRunning = 0;
+
+  // at 24 PPQ, period = 6 => 4 PPG => quarter note / 4  = sixteenth notes clock
+  clockOutStateSixteenthNotes.Configure(3,6);
 
   //flash led??
 
@@ -64,18 +118,29 @@ void loop() {
 
   if(!prevRunning && running)
   {
+    // send first clock as well ??
     Serial.write(0xFA);//midi start
-    // send clock ??
+    //Serial.write(0xF8);//midiclock
     loopCounter = 0; // reset
+
+    clockOutStateSixteenthNotes.Reset();
   }
   else if(prevRunning && !running)
   {
     Serial.write(0xFC);//midi stop
+    //clock out off
+    digitalWrite(A2, 0);
   }
-  else if(running && loopCounter == 0)
+  
+  if(running && loopCounter == 0)
   {
     Serial.write(0xF8);//midiclock
+    clockOutStateSixteenthNotes.Tick();
   }
+
+  int clockValue = running ? clockOutStateSixteenthNotes.Get() : 0;
+  digitalWrite(A2, clockValue);
+
 
   prevRunning = running;
 
