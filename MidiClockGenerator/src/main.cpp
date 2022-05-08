@@ -1,18 +1,48 @@
 #include <Arduino.h>
 
-//TODO POC 
-// button -> toggle running
-// led buitlin on/off ~ running
-// send serial midi start / clock / stop at some fixed interval e.g. 20 msec 
-// -> 20 msec x 24 PPG = 480 msec approx 2 beats per second approx 120BPM 
+// send serial midi start / clock / stop at some interval e.g. 20 msec 
+// -> 20 msec x 24 PPQ = 480 msec approx 2 beats per second approx 120BPM 
 
-// TODO pot-< clock speed
-// TODO digital outs ~ ClockOutState (counter, period,on Tick() Reset() )
-//TODO fast pinwrite / read !!
+// button -> toggle running
+// pot -> clock speed
+// led buitlin on/off ~ running
+// digital outs 
+//  1/16 clock 
+//  tempo led (TBD?)
+//  reset pulse upon midi start
 
 // step 2 serial.write/outputs in interrupt
 // TODO timerinterrupt library
-//TODO fast write portC
+
+template<int N>
+void fastDigitalWritePortB(int value)
+{
+  if (!value) {
+		PORTB &= ~(1<<N);
+	} else {
+		PORTB |= (1<<N);
+	}
+}
+
+template<int N>
+void fastDigitalWritePortC(int value)
+{
+  if (!value) {
+		PORTC &= ~(1<<N);
+	} else {
+		PORTC |= (1<<N);
+	}
+}
+
+//C0 = analog pin 0
+//C1 = analog pin 1
+//C2 = analog pin 2
+//C3 = analog pin 3
+//C4 = analog pin 4
+//C5 = analog pin 5
+
+// led / pin 13 = PB5
+
 
 template<class T>
 class ClockOutState
@@ -101,9 +131,9 @@ void setup() {
   //flash led upon start??
   for(int repeat = 0; repeat<4; ++repeat)
   {
-    digitalWrite(LED_BUILTIN, 1);
+    fastDigitalWritePortB<5>(1);
     delay(200);
-    digitalWrite(LED_BUILTIN, 0);
+    fastDigitalWritePortB<5>(0);
     delay(200);
   }
 }
@@ -137,19 +167,13 @@ void oninterrupt()
   }
 
   int clockValue = running ? clockOutStateSixteenthNotes.Get() : 0;
-  digitalWrite(A2, clockValue);
+  fastDigitalWritePortC<2>(clockValue);
 
   int tempoLedValue = running ? ledOutStateTempoIndicator.Get() : 0;
-  digitalWrite(A3, tempoLedValue);
+  fastDigitalWritePortC<3>(tempoLedValue);
 
-  if(running)
-  {
-    digitalWrite(LED_BUILTIN, 1);
-  }
-  else
-  {
-    digitalWrite(LED_BUILTIN, 0);
-  }
+  // led on if running, off if not
+  fastDigitalWritePortB<5>(running);
 
   prevRunning = running;
 
@@ -173,5 +197,5 @@ void loop() {
 
   oninterrupt();
 
-  delay(1);//resolution & msec
+  delay(1);//resolution 1 msec
 }
