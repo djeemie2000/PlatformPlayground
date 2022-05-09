@@ -22,10 +22,12 @@
 // step 2 serial.write/outputs in interrupt
 // TODO timerinterrupt library
 
+// timer resolution = 100 uSec or 1 msec / 10
+static const int timerResolution = 10;
 
 // shared state between loop and interrupt
-int clockPeriod24PPQ;
-int running;
+volatile int clockPeriod24PPQ;
+volatile int running;
 
 // interrupt state
 int interruptCounter;
@@ -105,7 +107,7 @@ void setup()
   // -> 20 msec x 24 PPQ = 480 msec 
   // approx 2 beats per second 
   // approx 120BPM 
-  clockPeriod24PPQ = 20;
+  clockPeriod24PPQ = 20 * timerResolution;
   running = 0;
 
   interruptCounter = 0;
@@ -118,10 +120,10 @@ void setup()
   
   //TODO upon midi start, singleshot reset pulse  length = one 16th note clock pulse
 
-  // start timer with period 1 msec
+  // start timer with period 1 msec / timerResolution
   testonoff = 0;
   ITimer1.init();
-  ITimer1.attachInterruptInterval(1, oninterrupt); 
+  ITimer1.attachInterrupt(1000*timerResolution, oninterrupt); 
 
   //flash led upon start??
   for(int repeat = 0; repeat<4; ++repeat)
@@ -143,10 +145,12 @@ void loop()
   int prevClockPeriod24PPQ = clockPeriod24PPQ;
   // clock period: range 10 msec ~ 240 BPM / 60 msec ~ 40 BPM , default 20 ~ 120BPM
   int speedPot = analogRead(A1);
-  int currentClockPeriod24PPQ = map(speedPot, 0, 1023, 60, 10);
+  const int minClockPeriod = 10;
+  const int maxClockPeriod = 60; 
+  int currentClockPeriod24PPQ = map(speedPot, 0, 1023, maxClockPeriod  *timerResolution, minClockPeriod * timerResolution);
   // smooth
   int newClockPeriod24PPQ = (3*prevClockPeriod24PPQ + currentClockPeriod24PPQ) / 4;
-  //Assign to volatile
+  //Assign to volatile variable
   clockPeriod24PPQ = newClockPeriod24PPQ;
 
 //  oninterrupt();
