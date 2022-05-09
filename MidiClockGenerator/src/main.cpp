@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include "fastdigitalwrite.h"
+#include "clockoutstate.h"
 
 // send serial midi start / clock / stop at some interval e.g. 20 msec 
 // -> 20 msec x 24 PPQ = 480 msec approx 2 beats per second approx 120BPM 
@@ -14,98 +16,28 @@
 // step 2 serial.write/outputs in interrupt
 // TODO timerinterrupt library
 
-template<int N>
-void fastDigitalWritePortB(int value)
-{
-  if (!value) {
-		PORTB &= ~(1<<N);
-	} else {
-		PORTB |= (1<<N);
-	}
-}
 
-template<int N>
-void fastDigitalWritePortC(int value)
-{
-  if (!value) {
-		PORTC &= ~(1<<N);
-	} else {
-		PORTC |= (1<<N);
-	}
-}
-
-//C0 = analog pin 0
-//C1 = analog pin 1
-//C2 = analog pin 2
-//C3 = analog pin 3
-//C4 = analog pin 4
-//C5 = analog pin 5
-
-// led / pin 13 = PB5
-
-
-template<class T>
-class ClockOutState
-{
-public:
-  ClockOutState()
-   : m_State(0)
-   , m_Counter(0)
-   , m_OnTicks(1)
-   , m_Period(2)
-   {}
-
-  void Configure(int onTicks, int period)
-  {
-    m_OnTicks = onTicks;
-    m_Period = period;
-  }
-
-   void Reset()
-   {
-     m_Counter = 0;
-     m_State = (m_Counter<m_OnTicks) ? 1 : 0;
-   }
-
-   void Tick()
-   {
-     m_State = (m_Counter<m_OnTicks) ? 1 : 0;
-
-     ++m_Counter;
-     if(m_Period<=m_Counter)
-     {
-       m_Counter = 0;
-     }
-   }
-
-  int Get() const
-  {
-     return m_State;
-  }
-
-private:
-
-  int m_State;
-  T m_Counter;
-  T m_OnTicks;
-  T m_Period;
-};
 
 //loop state
 int clockPeriod24PPQ;
+
+// shared state between loop and interrupt
 int running;
 
-//oninterrupt state
-int loopCounter;
+// interrupt state
+int interruptCounter;
 int prevRunning;
 ClockOutState<int> clockOutStateSixteenthNotes;
 ClockOutState<int> ledOutStateTempoIndicator;
 
-void setup() {
+void setup() 
+{
   // put your setup code here, to run once:
+
   // serial port -> midi -> 31250 baudrate
   Serial.begin(31250);
 
+  // digital in/out pins:
   pinMode(A0, INPUT_PULLUP);
   // A1 pot analog read input
   pinMode(A2, OUTPUT); // 16th note clock output
@@ -118,13 +50,13 @@ void setup() {
   clockPeriod24PPQ = 20;
   running = 0;
 
-  loopCounter = 0;
+  interruptCounter = 0;
   prevRunning = 0;
   // at 24 PPQ, period = 6 => 4 PPQ => quarter note / 4  = sixteenth notes clock
   clockOutStateSixteenthNotes.Configure(3,6);
 
-  // at beginning of every quarter note, short blink
-  ledOutStateTempoIndicator.Configure(3,24);
+  // quarter note led blink
+  ledOutStateTempoIndicator.Configure(12,24);
   
   //TODO upon midi start, singleshot reset pulse  length = one 16th note clock pulse
 
@@ -145,7 +77,7 @@ void oninterrupt()
     // send first clock as well ??
     Serial.write(0xFA);//midi start
     //Serial.write(0xF8);//midiclock
-    loopCounter = 0; // reset
+    interruptCounter = 0; // reset
 
     clockOutStateSixteenthNotes.Reset();
     ledOutStateTempoIndicator.Reset();
@@ -159,7 +91,7 @@ void oninterrupt()
     digitalWrite(A2, 0);
   }
   
-  if(running && loopCounter == 0)
+  if(running && interruptCounter == 0)
   {
     Serial.write(0xF8);//midiclock
     clockOutStateSixteenthNotes.Tick();
@@ -178,22 +110,25 @@ void oninterrupt()
   prevRunning = running;
 
   //20 msec fixed delay
-  ++loopCounter;
-  if(clockPeriod24PPQ<loopCounter)
+  ++interruptCounter;
+  if(clockPeriod24PPQ<interruptCounter)
   {
-    loopCounter = 0;
+    interruptCounter = 0;
   }
 }
 
-void loop() {
+void loop() 
+{
   // put your main code here, to run repeatedly:
 
   running = digitalRead(A0);
   //TODO debounce 
 
-  // clock period: range 10 msec ~ 240 BPM / 40 msec ~ 60 BPM , default 20 ~ 120BPM
+  // clock period: range 10 msec ~ 240 BPM / 60 msec ~ 40 BPM , default 20 ~ 120BPM
   int speedPot = analogRead(A1);
-  clockPeriod24PPQ = map(speedPot, 0, 1023, 40, 10);
+  int currentClockPeriod24PPQ = map(speedPot, 0, 1023, 60, 10);
+  // smooth
+  clockPeriod24PPQ = (7*clockPeriod24PPQ + currentClockPeriod24PPQ) / 8;
 
   oninterrupt();
 
