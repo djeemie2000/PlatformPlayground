@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "fastdigitalwrite.h"
 #include "clockoutstate.h"
+#include "singleshotoutstate.h"
 
 #define USE_TIMER_1     true
 #define USE_TIMER_2     false
@@ -34,7 +35,7 @@ int interruptCounter;
 int prevRunning;
 ClockOutState<int> clockOutStateSixteenthNotes;
 ClockOutState<int> ledOutStateTempoIndicator;
-
+SingleShotOutState<int> resetOutState;
 
 
 void oninterrupt()
@@ -48,6 +49,7 @@ void oninterrupt()
 
     clockOutStateSixteenthNotes.Reset();
     ledOutStateTempoIndicator.Reset();
+    resetOutState.Reset();
 
     // midi devices start running upon first midi clock after midi start
   }
@@ -61,10 +63,14 @@ void oninterrupt()
     Serial.write(0xF8);//midiclock
     clockOutStateSixteenthNotes.Tick();
     ledOutStateTempoIndicator.Tick();
+    resetOutState.Tick();
   }
 
   int clockValue = running ? clockOutStateSixteenthNotes.Get() : 0;
   fastDigitalWritePortC<2>(clockValue);
+
+  int resetValue = running ? resetOutState.Get() : 0;
+  fastDigitalWritePortC<3>(resetValue);
 
   int tempoLedValue = running ? ledOutStateTempoIndicator.Get() : 0;
   fastDigitalWritePortC<4>(tempoLedValue);
@@ -102,7 +108,7 @@ void setup()
   pinMode(A2, OUTPUT); // 16th note clock output
   pinMode(A3, OUTPUT); // reset pulse output
   pinMode(A4, OUTPUT); // tempo led output
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT);// running led output
   
   // -> 20 msec x 24 PPQ = 480 msec 
   // approx 2 beats per second 
@@ -118,7 +124,8 @@ void setup()
   // quarter note led blink
   ledOutStateTempoIndicator.Configure(12,24);
   
-  //TODO upon midi start, singleshot reset pulse  length = one 16th note clock pulse
+  // upon midi start, singleshot reset pulse  length = one 16th note clock pulse
+  resetOutState.Configure(3);
 
   // start timer with period 1 msec / timerResolution
   testonoff = 0;
