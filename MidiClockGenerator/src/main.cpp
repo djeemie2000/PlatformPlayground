@@ -2,6 +2,7 @@
 #include "fastdigitalwrite.h"
 #include "clockoutstate.h"
 #include "singleshotoutstate.h"
+#include "debouncer.h"
 
 #define USE_TIMER_1     true
 #define USE_TIMER_2     false
@@ -26,9 +27,12 @@
 // timer resolution = 100 uSec or 1 msec / 10
 static const int timerResolution = 10;
 
+// loop state
+Debouncer toggleRunningDebouncer;
+
 // shared state between loop and interrupt
 volatile int clockPeriod24PPQ;
-volatile int running;
+volatile int isRunning;
 
 // interrupt state
 int interruptCounter;
@@ -40,7 +44,7 @@ SingleShotOutState<int> resetOutState;
 
 void oninterrupt()
 {
-  if(!prevRunning && running)
+  if(!prevRunning && isRunning)
   {
     // send first clock as well ??
     Serial.write(0xFA);//midi start
@@ -53,12 +57,12 @@ void oninterrupt()
 
     // midi devices start running upon first midi clock after midi start
   }
-  else if(prevRunning && !running)
+  else if(prevRunning && !isRunning)
   {
     Serial.write(0xFC);//midi stop
   }
   
-  if(running && interruptCounter == 0)
+  if(isRunning && interruptCounter == 0)
   {
     Serial.write(0xF8);//midiclock
     clockOutStateSixteenthNotes.Tick();
@@ -66,33 +70,25 @@ void oninterrupt()
     resetOutState.Tick();
   }
 
-  int clockValue = running ? clockOutStateSixteenthNotes.Get() : 0;
+  int clockValue = isRunning ? clockOutStateSixteenthNotes.Get() : 0;
   fastDigitalWritePortC<2>(clockValue);
 
-  int resetValue = running ? resetOutState.Get() : 0;
+  int resetValue = isRunning ? resetOutState.Get() : 0;
   fastDigitalWritePortC<3>(resetValue);
 
-  int tempoLedValue = running ? ledOutStateTempoIndicator.Get() : 0;
+  int tempoLedValue = isRunning ? ledOutStateTempoIndicator.Get() : 0;
   fastDigitalWritePortC<4>(tempoLedValue);
 
   // led on if running, off if not
-  fastDigitalWritePortB<5>(running);
+  fastDigitalWritePortB<5>(isRunning);
 
-  prevRunning = running;
+  prevRunning = isRunning;
 
   ++interruptCounter;
   if(clockPeriod24PPQ<interruptCounter)
   {
     interruptCounter = 0;
   }
-}
-
-int testonoff;
-
-void oninterrupttest()
-{
-  fastDigitalWritePortC<3>(testonoff);
-  testonoff = 1-testonoff;//toggle 0/1
 }
 
 void setup() 
@@ -114,21 +110,20 @@ void setup()
   // approx 2 beats per second 
   // approx 120BPM 
   clockPeriod24PPQ = 20 * timerResolution;
-  running = 0;
+  isRunning = 0;
 
   interruptCounter = 0;
   prevRunning = 0;
   // at 24 PPQ, period = 6 => 4 PPQ => quarter note / 4  = sixteenth notes clock
   clockOutStateSixteenthNotes.Configure(3,6);
-
   // quarter note led blink
-  ledOutStateTempoIndicator.Configure(12,24);
-  
+  ledOutStateTempoIndicator.Configure(12,24);  
   // upon midi start, singleshot reset pulse  length = one 16th note clock pulse
   resetOutState.Configure(3);
 
+  toggleRunningDebouncer.begin(5);
+
   // start timer with period 1 msec / timerResolution
-  testonoff = 0;
   ITimer1.init();
   ITimer1.attachInterrupt(1000*timerResolution, oninterrupt); 
 
@@ -146,8 +141,14 @@ void loop()
 {
   // put your main code here, to run repeatedly:
 
-  running = digitalRead(A0);
-  //TODO debounce 
+  bool prevRunningBtn = toggleRunningDebouncer.Get();
+  toggleRunningDebouncer.debounce(digitalRead(A0));
+  bool newRunningBtn = toggleRunningDebouncer.Get();
+  if(!prevRunningBtn && newRunningBtn)
+  {
+    // button pressed => toggle running on/off
+    isRunning = 1-isRunning;
+  }
 
   int prevClockPeriod24PPQ = clockPeriod24PPQ;
   // clock period: range 10 msec ~ 240 BPM / 60 msec ~ 40 BPM , default 20 ~ 120BPM
