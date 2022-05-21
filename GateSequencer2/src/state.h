@@ -11,6 +11,36 @@ struct Pattern
   uint8_t link;// 1 bit per track
 };
 
+int Get(Pattern* pattern, int track, int step)
+{
+  return bitRead(pattern->steps[step], track);
+  //return (pattern.steps[step] & (1 << track)) ? 1 : 0;
+}
+
+void Set(Pattern* pattern, int track, int step)
+{
+  bitSet(pattern->steps[step], track);
+//  (pattern.steps[step]) |= (1 << track);
+}
+
+void Clear(Pattern* pattern, int track, int step)
+{
+  bitClear(pattern->steps[step], track);
+  //(pattern.steps[step]) &= ~(1 << track);
+}
+
+void Toggle(Pattern* pattern, int track, int step)
+{
+  if(Get(pattern, track, step))
+  {
+    Clear(pattern, track, step);
+  }
+  else
+  {
+    Set(pattern, track, step);
+  }
+}
+
 // loop state
 struct State
 {

@@ -11,6 +11,8 @@
 #include "SerialOut.h"
 #include "Max7219Matrix.h"
 #include "TestDigitalOutMatrix.h"
+#include "TTP8229TouchPad.h"
+#include "TestTouchPad.h"
 
 // global variables
 State loopState;
@@ -27,6 +29,7 @@ struct Peripherals
 {
   SerialOut serialOut;
   Max7219Matrix ledMatrix;
+  TTP8229TouchPad touchPad;
   
   Peripherals()
    :serialOut()
@@ -103,22 +106,59 @@ void setup()
 
   // setup I2C, SPI, peripherals
   peripherals.ledMatrix.Configure();
+  peripherals.touchPad.Begin(TTP8229TouchPad::I2CMode);
 
-  //TODO run tests for UI here (ledMatrix, touchpad)
-  TestDigitalOutMatrix(peripherals.ledMatrix, peripherals.serialOut, 100);
+  // run tests for UI here (ledMatrix, touchpad)
+  //TestTouchPad(peripherals.touchPad, peripherals.serialOut);
+  //TestDigitalOutMatrix(peripherals.ledMatrix, peripherals.serialOut, 50);
 
   // start timer with period 1 msec (this determines the resolution for the gate/clock handling)
   ITimer1.init();
   ITimer1.attachInterrupt(1000, oninterrupt); 
 }
 
+
 void loop() 
 {
-  // put your main code here, to run repeatedly:
+  // put your main code here, to run repeatedly:  
   
   // read input (touchpad)
+  peripherals.touchPad.Read();
+
   // update state according to input
-  
+  if(peripherals.touchPad.Get(12))
+  {
+    // select edit track mode
+    for(int trk = 0 ; trk<8; ++trk)
+    {
+      if(peripherals.touchPad.IsClicked(trk))
+      {
+         loopState.editTrack = trk;
+      }
+    }
+  }
+  else
+  {
+    // (default) toggle mode
+    for(int quad = 0; quad<4; ++quad)
+    {
+      if(peripherals.touchPad.Get(8+quad))
+      {
+        loopState.editQuadrant = quad;
+      }
+    }
+    for(int stp = 0 ; stp<8; ++stp)
+    {
+      if(peripherals.touchPad.IsClicked(stp))
+      {
+        int step =  8*loopState.editQuadrant + stp;
+        peripherals.serialOut.printf("Toggle track %d step %d", loopState.editTrack, step);
+        //toggle on/off ~editTrack, editQuadrant, stp
+        Toggle(sharedState.currentPattern, loopState.editTrack, step);
+      }
+    }
+  } 
+
   // show state in ui (ledmatrix)
   Pattern* pat = sharedState.currentPattern;
   int currentStep = sharedState.currentStep;
@@ -126,12 +166,14 @@ void loop()
   {
     for(int col = 0; col<Pattern::NumSteps; ++col)
     {
-      int value = (pat->steps[col] >> row) & 1;// 1 or 0
-      // indicate current (play) setp by inverting that column
+      int value = Get(pat,row, col);
+      
+      // indicate current (play) step by inverting that column
       if(col == currentStep)
       {
         value = 1-value;
       }
+      // set led
       if(value)
       {
         peripherals.ledMatrix.Set(row, col);        
