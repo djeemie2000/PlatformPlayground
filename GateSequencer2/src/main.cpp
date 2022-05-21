@@ -7,6 +7,10 @@
 #define USE_TIMER_3     false
 
 #include "TimerInterrupt.h"
+#include <Wire.h>
+#include "SerialOut.h"
+#include "Max7219Matrix.h"
+#include "TestDigitalOutMatrix.h"
 
 // global variables
 State loopState;
@@ -17,6 +21,20 @@ InterruptState interruptState;
 static const int ClockInPin = A0;
 static const int ResetInPin = A1;
 static const int GateOutPin = 2;//first gate output, other gate outputs ascending
+
+// peripherals
+struct Peripherals
+{
+  SerialOut serialOut;
+  Max7219Matrix ledMatrix;
+  
+  Peripherals()
+   :serialOut()
+   , ledMatrix(4, PIN_SPI_SS)
+  {}
+};
+
+Peripherals peripherals;
 
 void oninterrupt()
 {
@@ -83,9 +101,11 @@ void setup()
     pinMode(GateOutPin + idx, OUTPUT);
   }
 
-  //TODO setup I2C, SPI, peripherals
+  // setup I2C, SPI, peripherals
+  peripherals.ledMatrix.Configure();
 
   //TODO run tests for UI here (ledMatrix, touchpad)
+  TestDigitalOutMatrix(peripherals.ledMatrix, peripherals.serialOut, 100);
 
   // start timer with period 1 msec (this determines the resolution for the gate/clock handling)
   ITimer1.init();
@@ -98,11 +118,35 @@ void loop()
   
   // read input (touchpad)
   // update state according to input
+  
   // show state in ui (ledmatrix)
+  Pattern* pat = sharedState.currentPattern;
+  int currentStep = sharedState.currentStep;
+  for(int row = 0; row<Pattern::NumTracks; ++row)
+  {
+    for(int col = 0; col<Pattern::NumSteps; ++col)
+    {
+      int value = (pat->steps[col] >> row) & 1;// 1 or 0
+      // indicate current (play) setp by inverting that column
+      if(col == currentStep)
+      {
+        value = 1-value;
+      }
+      if(value)
+      {
+        peripherals.ledMatrix.Set(row, col);        
+      }
+      else
+      {
+        peripherals.ledMatrix.Clear(row, col);        
+      }
+    } 
+  }
+  peripherals.ledMatrix.WriteAll();
 
   // debug/test code:
-  Serial.print(interruptState.clockIn);
-  Serial.print(interruptState.resetIn);
-  Serial.println(sharedState.currentStep);
-  delay(250);
+  // Serial.print(interruptState.clockIn);
+  // Serial.print(interruptState.resetIn);
+  // Serial.println(sharedState.currentStep);
+  // delay(250);
 }
