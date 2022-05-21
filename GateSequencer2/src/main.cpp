@@ -8,11 +8,8 @@
 
 #include "TimerInterrupt.h"
 #include <Wire.h>
-#include "SerialOut.h"
-#include "Max7219Matrix.h"
-#include "TestDigitalOutMatrix.h"
-#include "TTP8229TouchPad.h"
-#include "TestTouchPad.h"
+#include "peripherals.h"
+#include <EEPROM.h>
 
 // global variables
 State loopState;
@@ -24,20 +21,37 @@ static const int ClockInPin = A0;
 static const int ResetInPin = A1;
 static const int GateOutPin = 2;//first gate output, other gate outputs ascending
 
-// peripherals
-struct Peripherals
-{
-  SerialOut serialOut;
-  Max7219Matrix ledMatrix;
-  TTP8229TouchPad touchPad;
-  
-  Peripherals()
-   :serialOut()
-   , ledMatrix(4, PIN_SPI_SS)
-  {}
-};
 
 Peripherals peripherals;
+
+void saveParams()
+{
+  int off = 0;
+   // header
+  EEPROM.update(off++, 'G');
+  EEPROM.update(off++, '8');
+  uint8_t version = 0x01;
+  EEPROM.update(off++, version);
+  // state
+  EEPROM.put(off, loopState);
+  off += sizeof(State);
+  // 
+}
+
+void loadParams()
+{
+  int off = 0;
+  // header
+  if (EEPROM.read(off++) == 'G' && EEPROM.read(off++) == '8')
+  {
+    uint8_t version = EEPROM.read(off++);
+    if (version == 0x01)
+    {
+      // state
+      EEPROM.get(off, loopState);
+    }
+  }
+}
 
 void oninterrupt()
 {
@@ -111,7 +125,13 @@ void setup()
   // run tests for UI here (ledMatrix, touchpad)
   //TestTouchPad(peripherals.touchPad, peripherals.serialOut);
   //TestDigitalOutMatrix(peripherals.ledMatrix, peripherals.serialOut, 50);
+  //peripherals.serialOut.printf("State size %d", sizeof(loopState));
 
+  // load params from EEPROM
+  peripherals.serialOut.print("Loading params...");
+  loadParams();
+  peripherals.serialOut.println(" done");
+    
   // start timer with period 1 msec (this determines the resolution for the gate/clock handling)
   ITimer1.init();
   ITimer1.attachInterrupt(1000, oninterrupt); 
@@ -152,12 +172,19 @@ void loop()
       if(peripherals.touchPad.IsClicked(stp))
       {
         int step =  8*loopState.editQuadrant + stp;
-        peripherals.serialOut.printf("Toggle track %d step %d", loopState.editTrack, step);
+        //peripherals.serialOut.printf("Toggle track %d step %d", loopState.editTrack, step);
         //toggle on/off ~editTrack, editQuadrant, stp
         Toggle(sharedState.currentPattern, loopState.editTrack, step);
       }
     }
   } 
+
+  if(peripherals.touchPad.IsClicked(15))
+  {
+    peripherals.serialOut.print("Saving params...");
+    saveParams();
+    peripherals.serialOut.println(" done");
+  }
 
   // show state in ui (ledmatrix)
   Pattern* pat = sharedState.currentPattern;
