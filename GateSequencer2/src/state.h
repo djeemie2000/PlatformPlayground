@@ -9,6 +9,16 @@ struct Pattern
   uint8_t steps[NumSteps];// 1 bit per track
   uint8_t playMute;// 1 bit per track
   uint8_t link;// 1 bit per track
+
+  Pattern()
+   : playMute(0xFF)
+   , link(0x00)
+  {
+    for(int idx = 0; idx<NumSteps; ++ idx)
+    {
+      steps[idx] = 0x00;
+    }
+  }
 };
 
 int Get(Pattern* pattern, int track, int step)
@@ -63,13 +73,13 @@ struct State
    , editTrack(0)
    , editQuadrant(0)
   {
-    // default pattern for debugging/testing 
-    pattern[0].playMute = 0xFF;//all tracks playing?
-    pattern[0].link = 0x00;//no links
-    for(int step = 0; step<Pattern::NumSteps; ++step)
-    {
-      pattern[0].steps[step] = step<<3;
-    }
+    // // default pattern for debugging/testing 
+    // pattern[0].playMute = 0xFF;//all tracks playing?
+    // pattern[0].link = 0x00;//no links
+    // for(int step = 0; step<Pattern::NumSteps; ++step)
+    // {
+    //   pattern[0].steps[step] = step<<3;
+    // }
   }
 };
 
