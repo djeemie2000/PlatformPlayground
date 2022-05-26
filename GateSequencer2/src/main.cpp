@@ -73,7 +73,8 @@ void oninterrupt()
   // set track outputs (currentStep, currentPattern, clock high/low)
   if(interruptState.clockIn)
   {
-    // gate outputs ~ current step of current pattern and ~playmute!
+    // gate outputs
+    // ~ current step of current pattern and ~playmute!
     uint8_t gateMask = sharedState.currentPattern->steps[sharedState.currentStep];
     uint8_t playMask = sharedState.currentPattern->playMute;
     fastDigitalWritePortD<2>( gateMask & 0x01 & playMask); // gate 0
@@ -87,15 +88,19 @@ void oninterrupt()
   }
   else
   {
-    // gate outputs all to zero
-    fastDigitalWritePortD<2>(0); // gate 0
-    fastDigitalWritePortD<3>(0); // gate 1
-    fastDigitalWritePortD<4>(0); // gate 2
-    fastDigitalWritePortD<5>(0); // gate 3
-    fastDigitalWritePortD<6>(0); // gate 4
-    fastDigitalWritePortD<7>(0); // gate 5
-    fastDigitalWritePortB<0>(0); // gate 6
-    fastDigitalWritePortB<1>(0); // gate 7
+    // only legato gate outputs while clock is off
+    // ~ current step of current pattern and ~playmute!
+    uint8_t gateMask = sharedState.currentPattern->steps[sharedState.currentStep];
+    uint8_t playMask = sharedState.currentPattern->playMute;
+    uint8_t legatoMask = sharedState.currentPattern->legato;
+    fastDigitalWritePortD<2>( gateMask & 0x01 & playMask & legatoMask); // gate 0
+    fastDigitalWritePortD<3>( gateMask & 0x02 & playMask & legatoMask); // gate 1
+    fastDigitalWritePortD<4>( gateMask & 0x04 & playMask & legatoMask); // gate 2
+    fastDigitalWritePortD<5>( gateMask & 0x08 & playMask & legatoMask); // gate 3
+    fastDigitalWritePortD<6>( gateMask & 0x10 & playMask & legatoMask); // gate 4
+    fastDigitalWritePortD<7>( gateMask & 0x20 & playMask & legatoMask); // gate 5
+    fastDigitalWritePortB<0>( gateMask & 0x40 & playMask & legatoMask); // gate 6
+    fastDigitalWritePortB<1>( gateMask & 0x80 & playMask & legatoMask); // gate 7
   }
 }
 
@@ -158,6 +163,12 @@ void loop()
          loopState.editTrack = trk;
       }
     }
+    if(peripherals.touchPad.IsClicked(8))
+    {
+      // toggle legato on/off on edit track
+      ToggleLegato(sharedState.currentPattern, loopState.editTrack);
+    }
+    // perhaps other track related parameters could be set here?
   }
   if(peripherals.touchPad.Get(13))
   {

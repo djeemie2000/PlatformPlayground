@@ -8,11 +8,11 @@ struct Pattern
   static const int NumSteps = 32;
   uint8_t steps[NumSteps];// 1 bit per track
   uint8_t playMute;// 1 bit per track
-  uint8_t link;// 1 bit per track
+  uint8_t legato;// 1 bit per track
 
   Pattern()
    : playMute(0xFF)
-   , link(0x00)
+   , legato(0x00)
   {
     for(int idx = 0; idx<NumSteps; ++ idx)
     {
@@ -66,6 +66,18 @@ void TogglePlayMute(Pattern* pattern, int track)
   else
   {
     bitSet(pattern->playMute, track);
+  }
+}
+
+void ToggleLegato(Pattern* pattern, int track)
+{
+  if(bitRead(pattern->legato, track))
+  {
+    bitClear(pattern->legato, track);
+  }
+  else
+  {
+    bitSet(pattern->legato, track);
   }
 }
 
