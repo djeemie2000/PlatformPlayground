@@ -51,6 +51,24 @@ void Toggle(Pattern* pattern, int track, int step)
   }
 }
 
+int IsPlaying(Pattern* pattern, int track)
+{
+  return bitRead(pattern->playMute, track);
+  //return (pattern.steps[step] & (1 << track)) ? 1 : 0;
+}
+
+void TogglePlayMute(Pattern* pattern, int track)
+{
+  if(bitRead(pattern->playMute, track))
+  {
+    bitClear(pattern->playMute, track);
+  }
+  else
+  {
+    bitSet(pattern->playMute, track);
+  }
+}
+
 // loop state
 struct State
 {

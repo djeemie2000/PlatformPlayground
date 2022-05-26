@@ -73,17 +73,17 @@ void oninterrupt()
   // set track outputs (currentStep, currentPattern, clock high/low)
   if(interruptState.clockIn)
   {
-    // gate outputs ~ current step of current pattern
-    // TODO playmute!
+    // gate outputs ~ current step of current pattern and ~playmute!
     uint8_t gateMask = sharedState.currentPattern->steps[sharedState.currentStep];
-    fastDigitalWritePortD<2>( gateMask & 0x01 ); // gate 0
-    fastDigitalWritePortD<3>( gateMask & 0x02 ); // gate 1
-    fastDigitalWritePortD<4>( gateMask & 0x04 ); // gate 2
-    fastDigitalWritePortD<5>( gateMask & 0x08 ); // gate 3
-    fastDigitalWritePortD<6>( gateMask & 0x10 ); // gate 4
-    fastDigitalWritePortD<7>( gateMask & 0x20 ); // gate 5
-    fastDigitalWritePortB<0>( gateMask & 0x40 ); // gate 6
-    fastDigitalWritePortB<1>( gateMask & 0x80 ); // gate 7
+    uint8_t playMask = sharedState.currentPattern->playMute;
+    fastDigitalWritePortD<2>( gateMask & 0x01 & playMask); // gate 0
+    fastDigitalWritePortD<3>( gateMask & 0x02 & playMask); // gate 1
+    fastDigitalWritePortD<4>( gateMask & 0x04 & playMask); // gate 2
+    fastDigitalWritePortD<5>( gateMask & 0x08 & playMask); // gate 3
+    fastDigitalWritePortD<6>( gateMask & 0x10 & playMask); // gate 4
+    fastDigitalWritePortD<7>( gateMask & 0x20 & playMask); // gate 5
+    fastDigitalWritePortB<0>( gateMask & 0x40 & playMask); // gate 6
+    fastDigitalWritePortB<1>( gateMask & 0x80 & playMask); // gate 7
   }
   else
   {
@@ -146,6 +146,8 @@ void loop()
   peripherals.touchPad.Read();
 
   // update state according to input
+  //TODO toggle play/mute
+  //TODO change slot/currentPattern
   if(peripherals.touchPad.Get(12))
   {
     // select edit track mode
@@ -154,6 +156,17 @@ void loop()
       if(peripherals.touchPad.IsClicked(trk))
       {
          loopState.editTrack = trk;
+      }
+    }
+  }
+  if(peripherals.touchPad.Get(13))
+  {
+    // toggle play/mute on track
+    for(int trk = 0 ; trk<8; ++trk)
+    {
+      if(peripherals.touchPad.IsClicked(trk))
+      {
+         TogglePlayMute(sharedState.currentPattern, trk);
       }
     }
   }
@@ -196,7 +209,7 @@ void loop()
       int value = Get(pat,row, col);
       
       // indicate current (play) step by inverting that column
-      if(col == currentStep)
+      if(col == currentStep && IsPlaying(pat, row))
       {
         value = 1-value;
       }
