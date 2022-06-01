@@ -135,6 +135,7 @@ void setup()
   // load params from EEPROM
   peripherals.serialOut.print("Loading params...");
   loadParams();
+  sharedState.currentPattern = &(loopState.pattern[loopState.slot]);
   peripherals.serialOut.println(" done");
     
   // start timer with period 1 msec (this determines the resolution for the gate/clock handling)
@@ -151,8 +152,8 @@ void loop()
   peripherals.touchPad.Read();
 
   // update state according to input
-  //TODO toggle play/mute
-  //TODO change slot/currentPattern
+  // including toggle play/mute
+  // including change slot/currentPattern
   if(peripherals.touchPad.Get(12))
   {
     // select edit track mode
@@ -170,7 +171,7 @@ void loop()
     }
     // perhaps other track related parameters could be set here?
   }
-  if(peripherals.touchPad.Get(13))
+  else if(peripherals.touchPad.Get(13))
   {
     // toggle play/mute on track
     for(int trk = 0 ; trk<8; ++trk)
@@ -178,6 +179,19 @@ void loop()
       if(peripherals.touchPad.IsClicked(trk))
       {
          TogglePlayMute(sharedState.currentPattern, trk);
+      }
+    }
+  }
+  else if(peripherals.touchPad.Get(14))
+  {
+    // toggle slot 
+    // toggle bank -> not enough memory, perhaps later load bank from memorybank storage?
+    for(int trk = 0 ; trk<8; ++trk)
+    {
+      if(peripherals.touchPad.IsClicked(trk))
+      {
+        loopState.slot = trk;
+        sharedState.currentPattern = &(loopState.pattern[loopState.slot]);
       }
     }
   }
