@@ -20,10 +20,11 @@ void PrintTouchPad(TTP8229TouchPad& touchPad, SerialOut& debugSerial)
 void TestTouchPad(TTP8229TouchPad& touchPad, SerialOut& debugSerial, int count)
 {
     int cntr = 0;
-    while(cntr<count ||count==-1)
+    while(cntr<count || count==-1)
     {
         touchPad.Read();
         PrintTouchPad(touchPad, debugSerial);
+        ++cntr;
         delay(500);
     }
 }

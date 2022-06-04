@@ -128,8 +128,8 @@ void setup()
   peripherals.touchPad.Begin(TTP8229TouchPad::I2CMode);
 
   // run tests for UI here (ledMatrix, touchpad)
-  //TestTouchPad(peripherals.touchPad, peripherals.serialOut);
-  //TestDigitalOutMatrix(peripherals.ledMatrix, peripherals.serialOut, 50);
+  //TestTouchPad(peripherals.touchPad, peripherals.serialOut, 10);
+  TestDigitalOutMatrix(peripherals.ledMatrix, peripherals.serialOut, 50);
   //peripherals.serialOut.printf("State size %d", sizeof(loopState));
 
   // load params from EEPROM
