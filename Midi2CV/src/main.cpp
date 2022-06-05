@@ -4,98 +4,10 @@
 #include "ScanI2C.h"
 #include "mcp4728.h"
 
-const int pwmPin = 5;
-int clockShift;
+// outputs: 2x gate 2x pitch 2x velocity
+const int gatePin0 = 4;
+const int gatePin1 = 5;
 MCP4728Dac Dac1;
-
-// void setupFastPwm()
-// {
-//   Serial.println("Setup fast pwm");
-//   // ... TODO ...
-
-//   //---------------------------------------------- Set PWM frequency for D5 & D6 -------------------------------
-
-//   // TCCR0B = TCCR0B & B11111000 | B00000001; // set timer 0 divisor to 1 for PWM frequency of 62500.00 Hz
-//   TCCR0B = TCCR0B & B11111000 | B00000010; // set timer 0 divisor to 8 for PWM frequency of 7812.50 Hz
-//   // TCCR0B = TCCR0B & B11111000 | B00000011; // set timer 0 divisor to 64 for PWM frequency of 976.56 Hz
-//   // TCCR0B = TCCR0B & B11111000 | B00000100; // set timer 0 divisor to 256 for PWM frequency of 244.14 Hz
-//   // TCCR0B = TCCR0B & B11111000 | B00000101; // set timer 0 divisor to 1024 for PWM frequency of 61.04 Hz
-
-//   clockShift = 8;
-
-//   // Pins D5 and D6 - 7.8 kHz
-//   // TCCR0B = 0b00000010; // x8
-//   // TCCR0A = 0b00000011; // fast pwm
-
-//   //---------------------------------------------- Set PWM frequency for D9 & D10 ------------------------------
-
-//   // TCCR1B = TCCR1B & B11111000 | B00000001; // set timer 1 divisor to 1 for PWM frequency of 31372.55 Hz
-//   // TCCR1B = TCCR1B & B11111000 | B00000010; // set timer 1 divisor to 8 for PWM frequency of 3921.16 Hz
-//   TCCR1B = TCCR1B & B11111000 | B00000011; // set timer 1 divisor to 64 for PWM frequency of 490.20 Hz
-//   // TCCR1B = TCCR1B & B11111000 | B00000100; // set timer 1 divisor to 256 for PWM frequency of 122.55 Hz
-//   // TCCR1B = TCCR1B & B11111000 | B00000101; // set timer 1 divisor to 1024 for PWM frequency of 30.64 Hz
-// }
-
-// void setupNormalPwm()
-// {
-//   Serial.println("Setup normal pwm");
-//   // ... TODO ...
-
-//   //---------------------------------------------- Set PWM frequency for D5 & D6 -------------------------------
-
-//   // TCCR0B = TCCR0B & B11111000 | B00000001; // set timer 0 divisor to 1 for PWM frequency of 62500.00 Hz
-//   // TCCR0B = TCCR0B & B11111000 | B00000010; // set timer 0 divisor to 8 for PWM frequency of 7812.50 Hz
-//   TCCR0B = TCCR0B & B11111000 | B00000011; // set timer 0 divisor to 64 for PWM frequency of 976.56 Hz
-//   // TCCR0B = TCCR0B & B11111000 | B00000100; // set timer 0 divisor to 256 for PWM frequency of 244.14 Hz
-//   // TCCR0B = TCCR0B & B11111000 | B00000101; // set timer 0 divisor to 1024 for PWM frequency of 61.04 Hz
-
-//   clockShift = 0;
-
-//   // Pins D5 and D6 - 7.8 kHz
-//   // TCCR0B = 0b00000010; // x8
-//   // TCCR0A = 0b00000011; // fast pwm
-
-//   //---------------------------------------------- Set PWM frequency for D9 & D10 ------------------------------
-
-//   // TCCR1B = TCCR1B & B11111000 | B00000001; // set timer 1 divisor to 1 for PWM frequency of 31372.55 Hz
-//   // TCCR1B = TCCR1B & B11111000 | B00000010; // set timer 1 divisor to 8 for PWM frequency of 3921.16 Hz
-//   TCCR1B = TCCR1B & B11111000 | B00000011; // set timer 1 divisor to 64 for PWM frequency of 490.20 Hz
-//   // TCCR1B = TCCR1B & B11111000 | B00000100; // set timer 1 divisor to 256 for PWM frequency of 122.55 Hz
-//   // TCCR1B = TCCR1B & B11111000 | B00000101; // set timer 1 divisor to 1024 for PWM frequency of 30.64 Hz
-// }
-
-// void TestPWM()
-// {
-//   // fast = 1-fast;
-//   // if(fast)
-//   // {
-//   //   setupFastPwm();
-//   // }
-//   // else
-//   // {
-//   //   setupNormalPwm();
-//   // }
-
-//   Serial.println("Test pwm");
-//   // 8 bit resultion [0,255]
-//   const int delayPeriod = 800 << clockShift;
-//   analogWrite(pwmPin, 0);
-//   delay(delayPeriod);
-//   analogWrite(pwmPin, 256 / 5);
-//   delay(delayPeriod);
-//   analogWrite(pwmPin, 0);
-//   delay(delayPeriod);
-//   analogWrite(pwmPin, 2 * 256 / 5);
-//   delay(delayPeriod);
-//   analogWrite(pwmPin, 0);
-//   delay(delayPeriod);
-//   analogWrite(pwmPin, 3 * 256 / 5);
-//   delay(delayPeriod);
-//   analogWrite(pwmPin, 0);
-//   delay(delayPeriod);
-//   analogWrite(pwmPin, 4 * 256 / 5);
-//   delay(delayPeriod);
-// }
 
 void setup()
 {
@@ -107,6 +19,8 @@ void setup()
   // PWM out -> RC filter 104 47k -> buffer opamp
   // setupNormalPwm();
 
+  pinMode(gatePin0, OUTPUT);
+  pinMode(gatePin1, OUTPUT);
   Dac1.Begin(MCP4728Dac::MCP4728_I2CADDR_DEFAULT);
   // pitch channels : internal ref + gain x2 => 0-4.096 V
   // velocity channels : VDD (5V) ref + gain x1 => 0-5V
@@ -138,34 +52,78 @@ void TestDac()
   }
 }
 
-void PlayNote(int midiNote, int channel)
+void NoteOn(int midiNote, int velocity, int channel)
 {
   Serial.print("ch ");
   Serial.print(channel);
-  Serial.print(" note ");
-  Serial.println(midiNote);
+  Serial.print(" : note on ");
+  Serial.print(midiNote);
+  Serial.print(" vel ");
+  Serial.println(velocity);
 
-  if (channel == 0 || channel == 2)
+  if (channel == 0 || channel == 1)
   {
     // max note = 4096 / 1000 * 12 = 49
     int midiNoteInternal = midiNote <= 49 ? midiNote : 49;
+    int32_t value1 = midiNoteInternal * 1000l / 12;
+    Dac1.SetValue(channel * 2, value1);
 
-    int32_t value = midiNoteInternal * 1000l / 12;
-    Dac1.SetValue(channel, value);
+    // velocity [0,127] 7 bits -> scale up to 12 bits
+    int value2 = velocity << 5;
+    Dac1.SetValue(channel * 2 + 1, value2);
+
     Dac1.Update();
 
-    Serial.println(value);
+    // gate on
+    if (channel == 0)
+    {
+      digitalWrite(gatePin0, HIGH);
+    }
+    else if (channel == 1)
+    {
+      digitalWrite(gatePin1, HIGH);
+    }
   }
-  else if (channel == 1 || channel == 3)
+}
+
+void NoteOff(int channel)
+{
+  Serial.print("ch ");
+  Serial.print(channel);
+  Serial.println(" : note off ");
+
+  // keep pitch cv out
+  // keep velocity cv out
+  // gate off
+  if (channel == 0)
   {
-    // 4096 = 5V = 60 midi notes
-    int midiNoteInternal = midiNote <= 59 ? midiNote : 4599;
+    digitalWrite(gatePin0, LOW);
+  }
+  else if (channel == 1)
+  {
+    digitalWrite(gatePin1, LOW);
+  }
+}
 
-    int32_t value = midiNoteInternal * 4096l / 60;
-    Dac1.SetValue(channel, value);
-    Dac1.Update();
+void TestPlayScale()
+{
+  int scale[] = {0, 2, 4, 5, 7, 9, 11, 12};
+  int velocity = 0;
+  for (int octave = 0; octave < 4; ++octave)
+  {
+    for (int idx = 0; idx < 8; ++idx)
+    {
+      velocity += 47;
 
-    Serial.println(value);
+      int note = octave * 12 + scale[idx];
+      int vel = velocity & 0x7F; //(note % 8) << 4;
+      NoteOn(note, vel, 0);
+      NoteOn(note, vel, 1);
+      delay(250);
+      NoteOff(0);
+      NoteOff(1);
+      delay(250);
+    }
   }
 }
 
@@ -177,19 +135,5 @@ void loop()
 
   // TestDac();
 
-  {
-    int scale[] = {0, 2, 4, 5, 7, 9, 11, 12};
-    for (int octave = 0; octave < 4; ++octave)
-    {
-      for (int idx = 0; idx < 8; ++idx)
-      {
-        int note = octave * 12 + scale[idx];
-        PlayNote(note, 0);
-        PlayNote((note % 4) * 12, 1);
-        PlayNote(note, 2);
-        PlayNote((note % 3) * 16, 3);
-        delay(500);
-      }
-    }
-  }
+  TestPlayScale();
 }
