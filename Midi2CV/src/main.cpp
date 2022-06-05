@@ -3,11 +3,13 @@
 
 #include "ScanI2C.h"
 #include "mcp4728.h"
+#include "midinoteparser.h"
 
 // outputs: 2x gate 2x pitch 2x velocity
 const int gatePin0 = 4;
 const int gatePin1 = 5;
 MCP4728Dac Dac1;
+MidiNoteParser midiNoteParser;
 
 void setup()
 {
