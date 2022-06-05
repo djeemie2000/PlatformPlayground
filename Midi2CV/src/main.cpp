@@ -138,11 +138,58 @@ void TestDac()
   }
 }
 
+void PlayNote(int midiNote, int channel)
+{
+  Serial.print("ch ");
+  Serial.print(channel);
+  Serial.print(" note ");
+  Serial.println(midiNote);
+
+  if (channel == 0 || channel == 2)
+  {
+    // max note = 4096 / 1000 * 12 = 49
+    int midiNoteInternal = midiNote <= 49 ? midiNote : 49;
+
+    int32_t value = midiNoteInternal * 1000l / 12;
+    Dac1.SetValue(channel, value);
+    Dac1.Update();
+
+    Serial.println(value);
+  }
+  else if (channel == 1 || channel == 3)
+  {
+    // 4096 = 5V = 60 midi notes
+    int midiNoteInternal = midiNote <= 59 ? midiNote : 4599;
+
+    int32_t value = midiNoteInternal * 4096l / 60;
+    Dac1.SetValue(channel, value);
+    Dac1.Update();
+
+    Serial.println(value);
+  }
+}
+
 void loop()
 {
   // put your main code here, to run repeatedly:
 
   ScanI2C(Serial);
 
-  TestDac();
+  // TestDac();
+
+  {
+    int scale[] = {0, 2, 4, 5, 7, 9, 11, 12};
+    for (int octave = 0; octave < 4; ++octave)
+    {
+      for (int idx = 0; idx < 8; ++idx)
+      {
+        int note = octave * 12 + scale[idx];
+        PlayNote(note, 0);
+        PlayNote((note % 4) * 12, 1);
+        PlayNote(note, 2);
+        PlayNote((note % 3) * 16, 3);
+        delay(500);
+      }
+    }
+  }
 }
