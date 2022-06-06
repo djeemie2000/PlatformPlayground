@@ -4,6 +4,7 @@
 #include "ScanI2C.h"
 #include "mcp4728.h"
 #include "midinoteparser.h"
+#include "testmidinoteparser.h"
 
 // outputs: 2x gate 2x pitch 2x velocity
 const int gatePin0 = 4;
@@ -132,6 +133,11 @@ void TestPlayScale()
 void loop()
 {
   // put your main code here, to run repeatedly:
+
+  TestAll();
+  delay(1000);
+
+  return;
 
   ScanI2C(Serial);
 

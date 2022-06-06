@@ -53,6 +53,12 @@ public:
     {
         bool handled = false;
 
+        // TODO optimize
+        // if sysex => check for sysex end
+        // else if < 0x80 => handle value
+        // else if >= 0x80 (status byte) => all cases for status bytes
+
+        //TODO sysex -> midi systemrealtime can come inbetween, status byte ends sysex
         if (m_InsideSysex)
         {
             // ignore everything, except midi sysex end
