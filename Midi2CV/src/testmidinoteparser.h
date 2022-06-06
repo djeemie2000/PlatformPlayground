@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include "midinoteparser.h"
+#include "midivoicemessage.h"
 
 void ExpectEquals(bool expected, bool actual, const char* description)
 {

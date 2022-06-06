@@ -31,28 +31,10 @@ void setup()
   Dac1.ConfigureChannel(1, MCP4728Dac::vref::MCP4728_VREF_VDD, MCP4728Dac::gain::MCP4728_GAIN_1X);
   Dac1.ConfigureChannel(2, MCP4728Dac::vref::MCP4728_VREF_INTERNAL, MCP4728Dac::gain::MCP4728_GAIN_2X);
   Dac1.ConfigureChannel(3, MCP4728Dac::vref::MCP4728_VREF_VDD, MCP4728Dac::gain::MCP4728_GAIN_1X);
-}
 
-void TestDac()
-{
-  // test Dac
-  const int delayPeriod = 400;
-  for (int ch = 0; ch < MCP4728Dac::NumChannels; ++ch)
-  {
-    // 12 bits value
-    for (int value = 0; value < 4096; value += 500)
-    {
-      Dac1.SetValue(ch, value);
-      Dac1.Update();
+  // test here?
+  TestAll();
 
-      Serial.print("ch ");
-      Serial.print(ch);
-      Serial.print(" : ");
-      Serial.println(value);
-
-      delay(delayPeriod);
-    }
-  }
 }
 
 void NoteOn(int midiNote, int velocity, int channel)
@@ -133,11 +115,6 @@ void TestPlayScale()
 void loop()
 {
   // put your main code here, to run repeatedly:
-
-  TestAll();
-  delay(1000);
-
-  return;
 
   ScanI2C(Serial);
 
