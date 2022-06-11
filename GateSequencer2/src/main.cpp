@@ -137,11 +137,14 @@ void setup()
   }
 
   // setup I2C, SPI, peripherals
+  // short pause before configuring the led matrix
+  delay(1000);
   peripherals.ledMatrix.Configure();
+  delay(200);
   peripherals.touchPad.Begin(TTP8229TouchPad::I2CMode);
 
   // run tests for UI here (ledMatrix, touchpad)
-  //TestTouchPad(peripherals.touchPad, peripherals.serialOut, 10);
+  TestTouchPad(peripherals.touchPad, peripherals.serialOut, 5);
   TestDigitalOutMatrix(peripherals.ledMatrix, peripherals.serialOut, 30);
   //peripherals.serialOut.printf("State size %d", sizeof(loopState));
 
@@ -187,6 +190,7 @@ void loop()
   }
   else if(peripherals.touchPad.Get(13))
   {
+    //Serial.println("play mode");
     // toggle play/mute on track
     for(int trk = 0 ; trk<8; ++trk)
     {
@@ -198,11 +202,13 @@ void loop()
     // play related controls: reset / advance / ..
     if(peripherals.touchPad.IsClicked(8))
     {
+      //Serial.println("reset");
       // trigger a reset in the interrupt
       sharedState.doReset = true;
     }
     if(peripherals.touchPad.IsClicked(9))
     {
+      //Serial.println("advance");
       // trigger an advance in the interrupt
       sharedState.doAdvance = true;
     }
