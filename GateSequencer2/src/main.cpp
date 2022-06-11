@@ -65,6 +65,19 @@ void oninterrupt()
     //advance current step
     sharedState.currentStep = (sharedState.currentStep+1<Pattern::NumSteps) ? sharedState.currentStep + 1 : 0;
   }
+
+  if(sharedState.doReset)
+  {
+    sharedState.currentStep = 0;
+    sharedState.doReset = false;
+  }
+
+  if(sharedState.doAdvance)
+  {
+    //advance current step
+    sharedState.currentStep = (sharedState.currentStep+1<Pattern::NumSteps) ? sharedState.currentStep + 1 : 0;
+    sharedState.doAdvance = false;
+  }
   
   // update input state
   interruptState.clockIn = clockIn;
@@ -129,7 +142,7 @@ void setup()
 
   // run tests for UI here (ledMatrix, touchpad)
   //TestTouchPad(peripherals.touchPad, peripherals.serialOut, 10);
-  TestDigitalOutMatrix(peripherals.ledMatrix, peripherals.serialOut, 50);
+  TestDigitalOutMatrix(peripherals.ledMatrix, peripherals.serialOut, 30);
   //peripherals.serialOut.printf("State size %d", sizeof(loopState));
 
   // load params from EEPROM
@@ -164,6 +177,7 @@ void loop()
          loopState.editTrack = trk;
       }
     }
+    // edit track properties of selected track
     if(peripherals.touchPad.IsClicked(8))
     {
       // toggle legato on/off on edit track
@@ -181,6 +195,17 @@ void loop()
          TogglePlayMute(sharedState.currentPattern, trk);
       }
     }
+    // play related controls: reset / advance / ..
+    if(peripherals.touchPad.IsClicked(8))
+    {
+      // trigger a reset in the interrupt
+      sharedState.doReset = true;
+    }
+    if(peripherals.touchPad.IsClicked(9))
+    {
+      // trigger an advance in the interrupt
+      sharedState.doAdvance = true;
+    }
   }
   else if(peripherals.touchPad.Get(14))
   {
@@ -197,7 +222,7 @@ void loop()
   }
   else
   {
-    // (default) toggle mode
+    // (default) toggle step mode
     for(int quad = 0; quad<4; ++quad)
     {
       if(peripherals.touchPad.Get(8+quad))

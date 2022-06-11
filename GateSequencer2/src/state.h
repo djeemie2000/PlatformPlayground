@@ -118,10 +118,14 @@ struct SharedState
 {
   Pattern* currentPattern;
   int currentStep;//[0,31]
+  bool doReset;
+  bool doAdvance;
 
   SharedState()
    : currentPattern(0)
    , currentStep(0)
+   , doReset(false)
+   , doAdvance(false)
   {}
 };
 
