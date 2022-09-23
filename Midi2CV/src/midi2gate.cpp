@@ -14,7 +14,7 @@ Midi2Gate::Midi2Gate()
 
 void Midi2Gate::Begin(uint8_t pin0, uint8_t pin1, uint8_t pin2, uint8_t pin3,
                       uint8_t pin4, uint8_t pin5, uint8_t pin6, uint8_t pin7,
-                      uint8_t pin8, uint8_t pin9, uint8_t pin10, uint8_t pin11)
+                      uint8_t statusLed)
 {
     m_OutputPin[0] = pin0;
     m_OutputPin[1] = pin1;
@@ -26,10 +26,7 @@ void Midi2Gate::Begin(uint8_t pin0, uint8_t pin1, uint8_t pin2, uint8_t pin3,
     m_OutputPin[6] = pin6;
     m_OutputPin[7] = pin7;
 
-    m_OutputPin[8] = pin8;
-    m_OutputPin[9] = pin9;
-    m_OutputPin[10] = pin10;
-    m_OutputPin[11] = pin11;
+    m_StatusLed = statusLed;
 
     for(int gate = 0; gate<NumGates; ++gate)
     {
@@ -38,7 +35,11 @@ void Midi2Gate::Begin(uint8_t pin0, uint8_t pin1, uint8_t pin2, uint8_t pin3,
             pinMode(m_OutputPin[gate], OUTPUT);
         }
         m_Gate[gate] = 0;
+        digitalWrite(m_OutputPin[gate], LOW);
     }
+
+    pinMode(m_StatusLed, OUTPUT);
+    digitalWrite(m_StatusLed, HIGH);
 }
 
 void Midi2Gate::OnMessage(MidiVoiceMessage &message)
@@ -78,7 +79,7 @@ void Midi2Gate::OnMessage(MidiVoiceMessage &message)
                 {
                     m_Gate[gate] = 0;
                 }
-                // TODO update here or in onTick() ???
+                // update here or in onTick() ???
                 if (0 <= m_OutputPin[gate])
                 {
                     digitalWrite(m_OutputPin[gate], m_Gate[gate]);
@@ -95,12 +96,14 @@ void Midi2Gate::OnTick(uint8_t counter)
     if (IsLearning())
     {
         bool blink = counter & 0x40;
-        for (int gate = 0; gate < NumGates; ++gate)
-        {
-            m_Gate[gate] = (m_LearnIndex == gate && blink) ? 1 : 0;
-            digitalWrite(m_OutputPin[gate], m_Gate[gate]);//TODO fastdigitalwrite
-        }
+        digitalWrite(m_StatusLed, blink ? 1 : 0);
     }
+    else
+    {
+        digitalWrite(m_StatusLed, HIGH);
+    }
+
+    //TODO update gates here???
 }
 
 void Midi2Gate::ToggleLearning()
@@ -109,6 +112,9 @@ void Midi2Gate::ToggleLearning()
     {
         // no learning
         m_LearnIndex = -1;
+
+        // statusled here?
+        digitalWrite(m_StatusLed, HIGH);
     }
     else
     {
