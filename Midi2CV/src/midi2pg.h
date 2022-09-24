@@ -5,16 +5,14 @@
 
 class MidiVoiceMessage;
 
-class Midi2Gate
+class Midi2PG
 {
 public:
-    static const int NumGates = 8;
+    static const int NumVoices = 8;
 
-    Midi2Gate();
+    Midi2PG();
 
-    void Begin(uint8_t pin0, uint8_t pin1, uint8_t pin2, uint8_t pin3, 
-                uint8_t pin4, uint8_t pin5, uint8_t pin6, uint8_t pin7,
-                uint8_t statusLed);
+    void Begin(uint8_t statusLed);
 
     void OnMessage(MidiVoiceMessage &message);
     void OnTick(uint8_t counter); // only for blinking in learn mode?
@@ -28,10 +26,11 @@ public:
     void PrintState();
 
 private:
-    uint8_t m_OutputPin[NumGates];
-    uint8_t m_Channel[NumGates];
-    uint8_t m_MidiNote[NumGates];
-    uint8_t m_Gate[NumGates];
+    uint8_t m_Channel[NumVoices];
+    uint8_t m_MidiBaseNote[NumVoices];
+    uint8_t m_MidiNote[NumVoices];
+    uint8_t m_IsActive[NumVoices];
+
     int m_LearnIndex;
     
     uint8_t m_StatusLed;

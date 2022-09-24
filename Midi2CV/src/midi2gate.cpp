@@ -44,7 +44,7 @@ void Midi2Gate::Begin(uint8_t pin0, uint8_t pin1, uint8_t pin2, uint8_t pin3,
 
 void Midi2Gate::OnMessage(MidiVoiceMessage &message)
 {
-    // TODO handle notes/gates that are on when starting to learn
+    // handle notes/gates that are on when starting to learn -> in ToggleLearning()
     if (IsLearning())
     {
         // learning
@@ -53,6 +53,8 @@ void Midi2Gate::OnMessage(MidiVoiceMessage &message)
             m_Channel[m_LearnIndex] = Channel(message);
             m_MidiNote[m_LearnIndex] = MidiNote(message);
 
+            // gate high 
+
             ++m_LearnIndex;
             if (NumGates <= m_LearnIndex)
             {
@@ -60,7 +62,7 @@ void Midi2Gate::OnMessage(MidiVoiceMessage &message)
                 m_LearnIndex = -1;
             }
         }
-        // ignore note off
+        // note off => gate low
     }
     else
     {
@@ -133,4 +135,17 @@ void Midi2Gate::ToggleLearning()
 bool Midi2Gate::IsLearning() const
 {
     return 0 <= m_LearnIndex;
+}
+
+void Midi2Gate::PrintState()
+{
+    Serial.println(m_LearnIndex);
+    for(int idx = 0; idx<NumGates;++idx)
+    {
+        Serial.print(m_Channel[idx], HEX);
+        Serial.print(' ');
+        Serial.print(m_MidiNote[idx], HEX);
+        Serial.print(' ');
+        Serial.println(m_Gate[idx], DEC);
+    }
 }
