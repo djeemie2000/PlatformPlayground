@@ -45,6 +45,9 @@ void setup()
   midi2Gate1.Begin(4, 5, 6, 7, A0, A1, A2, A3, statusLed1Pin);
   midi2Gate2.Begin(8, 9, 10, 11, 12, 13, A4, A5, statusLed2Pin);
 
+  TestAnalogButtonIn2(buttons1, 100);
+  TestAnalogButtonIn2(buttons2, 100);
+
   // PWM out -> RC filter 104 47k -> buffer opamp
   // setupNormalPwm();
 
@@ -168,7 +171,7 @@ void loop()
     midi2Gate2.ToggleLearning();
   }
 
-  // TODO limit # bytes read
+  // limit max # bytes read
   const int maxNumBytes = 6;
   int numBytes = 0;
   while (Serial.available() && numBytes++ < maxNumBytes)
