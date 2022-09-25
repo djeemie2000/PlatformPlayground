@@ -122,3 +122,18 @@ bool Midi2PG::IsLearning() const
 {
     return 0 <= m_LearnIndex;
 }
+
+void Midi2PG::PrintState()
+{
+    Serial.println(m_LearnIndex, DEC);
+    for(int idx = 0; idx<NumVoices;++idx)
+    {
+        Serial.print(m_Channel[idx], HEX);
+        Serial.print(' ');
+        Serial.print(m_MidiBaseNote[idx], HEX);
+        Serial.print(' ');
+        Serial.print(m_MidiNote[idx], HEX);
+        Serial.print(' ');
+        Serial.println(m_IsActive[idx], DEC);
+    }
+}

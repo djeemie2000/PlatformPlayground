@@ -139,7 +139,7 @@ bool Midi2Gate::IsLearning() const
 
 void Midi2Gate::PrintState()
 {
-    Serial.println(m_LearnIndex);
+    Serial.println(m_LearnIndex, DEC);
     for(int idx = 0; idx<NumGates;++idx)
     {
         Serial.print(m_Channel[idx], HEX);

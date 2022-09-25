@@ -7,35 +7,39 @@
 #include "testmidinoteparser.h"
 #include "midi2gate.h"
 #include "analogbuttonin2.h"
+#include "debugcounter.h"
 
 // outputs: 2x gate 2x pitch 2x velocity
 // const int gatePin0 = 4;
 // const int gatePin1 = 5;
 const int statusLed1Pin = 2;
-const int statusLed2Pin= 3;
+const int statusLed2Pin = 3;
 
 AnalogButtonIn2 buttons1;
 AnalogButtonIn2 buttons2;
 
-//MCP4728Dac Dac1;
+DebugCounter debugCounter;
+
+// MCP4728Dac Dac1;
 MidiNoteParser midiNoteParser;
 Midi2Gate midi2Gate1;
 Midi2Gate midi2Gate2;
 
-
 void setup()
 {
   // put your setup code here, to run once:
-  Serial.begin(115200); // TODO midi Rx/Tx
+  Serial.begin(31250); // TODO midi Rx/Tx
 
   Serial.println("Midi16 Midi2Gate poc ...");
 
- // test here?
+  // test here?
   TestAll();
 
   // setup common
   buttons1.Begin(A6);
   buttons2.Begin(A7);
+
+  debugCounter.Begin(10000);
 
   // setup midi2gate
   midi2Gate1.Begin(4, 5, 6, 7, A0, A1, A2, A3, statusLed1Pin);
@@ -129,6 +133,14 @@ void setup()
 //     }
 //   }
 // }
+void printVoiceMessage(MidiVoiceMessage &message)
+{
+  Serial.print(message.StatusByte, HEX);
+  Serial.print(' ');
+  Serial.print(message.Param1, HEX);
+  Serial.print(' ');
+  Serial.println(message.Param2, HEX);
+}
 
 void loop()
 {
@@ -144,34 +156,52 @@ void loop()
   // read and decode analogin from 2 buttons via R2R dac
   buttons1.update();
   buttons2.update();
-  //TODO debounce??
+  // TODO debounce??
 
-  if(buttons1.IsClicked1())
+  if (buttons1.IsClicked1())
   {
     midi2Gate1.ToggleLearning();
   }
 
-  if(buttons2.IsClicked1())
+  if (buttons2.IsClicked1())
   {
     midi2Gate2.ToggleLearning();
   }
 
-  // TODO limit # bytes read 
-  const int maxNumBytes = 3;
-  int numBytes = 3;
-  while(Serial.available() && numBytes++<maxNumBytes)
+  // TODO limit # bytes read
+  const int maxNumBytes = 6;
+  int numBytes = 0;
+  while (Serial.available() && numBytes++ < maxNumBytes)
   {
-     uint8_t byte = Serial.read();
-     MidiVoiceMessage message;
-     if(midiNoteParser.Parse(byte, message))
-     {
-       midi2Gate1.OnMessage(message);
-       midi2Gate2.OnMessage(message);
-     }
+    uint8_t byte = Serial.read();
+    // Serial.println(byte, HEX);
+
+    MidiVoiceMessage message;
+    if (midiNoteParser.Parse(byte, message))
+    {
+      midi2Gate1.OnMessage(message);
+      midi2Gate2.OnMessage(message);
+
+      printVoiceMessage(message);
+    }
   }
 
   // onTick based on millis
   unsigned long millies = millis();
-  midi2Gate1.OnTick(millies >> 3);
-  midi2Gate1.OnTick(millies >> 3);
+  midi2Gate1.OnTick(millies >> 2);
+  midi2Gate2.OnTick(millies >> 2);
+
+  unsigned long elapsedMillis = 0;
+  if (debugCounter.Tick(millies, elapsedMillis))
+  {
+    // print state + elapsed time once per 1000 loops or so
+    Serial.print('c');
+    Serial.println(debugCounter.GetPeriod(), DEC);
+    Serial.print('e');
+    Serial.println(elapsedMillis, DEC);
+    Serial.println();
+
+    midi2Gate1.PrintState();
+    midi2Gate2.PrintState();
+  }
 }
