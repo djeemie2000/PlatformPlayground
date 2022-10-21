@@ -75,6 +75,28 @@ int Max7219Matrix::WriteRow(int row)
     return 0;
 }
 
+// void Max7219Matrix::WriteColFast(int col, uint8_t content1, uint8_t content2, uint8_t content3, uint8_t content4)
+// {
+//     if(0<=col && col<Size*MaxNumDevices)
+//     {
+//                                          //8000000
+//         SPI.beginTransaction(SPISettings(4000000ul, MSBFIRST, SPI_MODE0));
+//         digitalWrite(m_CsPin, LOW);
+//         delayMicroseconds(5);
+//         SPI.transfer(Digit0Command+(col&0x07));
+//         SPI.transfer(content1);
+//         SPI.transfer(Digit0Command+(col&0x07));
+//         SPI.transfer(content2);
+//         SPI.transfer(Digit0Command+(col&0x07));
+//         SPI.transfer(content3);
+//         SPI.transfer(Digit0Command+(col&0x07));
+//         SPI.transfer(content4);
+//         digitalWrite(m_CsPin, HIGH);
+//         delayMicroseconds(5);
+//         SPI.endTransaction();
+//     }
+// }
+
 int Max7219Matrix::WriteAll()
 {
     for(int row=0; row<Size; ++row)

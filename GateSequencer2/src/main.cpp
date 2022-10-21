@@ -146,6 +146,8 @@ void setup()
   // run tests for UI here (ledMatrix, touchpad)
   TestTouchPad(peripherals.touchPad, peripherals.serialOut, 5);
   TestDigitalOutMatrix(peripherals.ledMatrix, peripherals.serialOut, 30);
+  
+  //TestDigitalOutMatrixFast(peripherals.ledMatrix, peripherals.serialOut, 200);
   //peripherals.serialOut.printf("State size %d", sizeof(loopState));
 
   // load params from EEPROM

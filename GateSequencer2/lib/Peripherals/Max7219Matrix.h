@@ -19,6 +19,8 @@ public:
     int WriteRow(int row);
     int WriteAll();
     
+    //void WriteColFast(int col, uint8_t content1, uint8_t content2, uint8_t content3, uint8_t content4);
+    
 private:
     static const int Size = 8;//8x8 led matrix
     static const int MaxNumDevices = 4;
