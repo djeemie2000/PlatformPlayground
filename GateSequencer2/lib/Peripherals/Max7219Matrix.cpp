@@ -142,8 +142,7 @@ bool Max7219Matrix::Clear(int row, int col)
 {
     int device = col/Size;
     if(0<=device && device<m_NumDevices)
-    {
-       
+    {       
         int r = Size-1-row;
         int c = col-device*Size;
         ClearBits(device,r,c);//not rotated

@@ -163,7 +163,7 @@ void setup()
   ITimer1.attachInterrupt(1000, oninterrupt);
 }
 
-void showCurrentPattern()
+void displayCurrentPattern()
 {
   // show state in ui (ledmatrix)
   Pattern *pat = sharedState.currentPattern;
@@ -190,6 +190,95 @@ void showCurrentPattern()
       }
     }
   }
+  peripherals.ledMatrix.WriteAll();
+}
+
+void displayTrackProperties()
+{
+  // display all track properties (for current pattern)
+  // TODO indicate current edit track by blinking that row
+  Pattern * pat = sharedState.currentPattern;
+  for(int row = 0; row< Pattern::NumTracks; ++row)
+  {
+    int col = 0;
+    if (bitRead(pat->clockOnValue, row))
+    {
+      peripherals.ledMatrix.Set(row, col++);
+    }
+    else
+    {
+      peripherals.ledMatrix.Clear(row, col++);
+    }
+
+    if (bitRead(pat->clockOffValue, row))
+    {
+      peripherals.ledMatrix.Set(row, col++);
+    }
+    else
+    {
+      peripherals.ledMatrix.Clear(row, col++);
+    }
+
+    if (bitRead(pat->gateTrigger, row))
+    {
+      peripherals.ledMatrix.Set(row, col++);
+    }
+    else
+    {
+      peripherals.ledMatrix.Clear(row, col++);
+    }
+
+    if (bitRead(pat->trackLink, row))
+    {
+      peripherals.ledMatrix.Set(row, col++);
+    }
+    else
+    {
+      peripherals.ledMatrix.Clear(row, col++);
+    }
+
+    if (bitRead(pat->trackProperty5, row))
+    {
+      peripherals.ledMatrix.Set(row, col++);
+    }
+    else
+    {
+      peripherals.ledMatrix.Clear(row, col++);
+    }
+
+    if (bitRead(pat->trackProperty6, row))
+    {
+      peripherals.ledMatrix.Set(row, col++);
+    }
+    else
+    {
+      peripherals.ledMatrix.Clear(row, col++);
+    }
+
+    if (bitRead(pat->trackProperty7, row))
+    {
+      peripherals.ledMatrix.Set(row, col++);
+    }
+    else
+    {
+      peripherals.ledMatrix.Clear(row, col++);
+    }
+
+    if (bitRead(pat->trackProperty8, row))
+    {
+      peripherals.ledMatrix.Set(row, col++);
+    }
+    else
+    {
+      peripherals.ledMatrix.Clear(row, col++);
+    }
+
+    for(; col<Pattern::NumSteps; ++col)
+    {
+      peripherals.ledMatrix.Clear(row, col);
+    }
+  }
+
   peripherals.ledMatrix.WriteAll();
 }
 
@@ -393,38 +482,6 @@ void loop()
     }
   }
 
-  // // update state according to input
-  // // including toggle play/mute
-  // // including change slot/currentPattern
-  // if(peripherals.touchPad.Get(12))
-  // {
-  //   // select edit track mode
-  //   for(int trk = 0 ; trk<8; ++trk)
-  //   {
-  //     if(peripherals.touchPad.IsClicked(trk))
-  //     {
-  //        loopState.editTrack = trk;
-  //     }
-  //   }
-  //   // edit track properties of selected track
-  //   if(peripherals.touchPad.IsClicked(8))
-  //   {
-  //     // toggle legato on/off on edit track
-  //     ToggleClockOnValue(sharedState.currentPattern, loopState.editTrack);
-  //   }
-  //   // perhaps other track related parameters could be set here?
-  // }
-  // else if(peripherals.touchPad.Get(13))
-  // {
-  //   //Serial.println("play mode");
-  //   // toggle play/mute on track
-  //   for(int trk = 0 ; trk<8; ++trk)
-  //   {
-  //     if(peripherals.touchPad.IsClicked(trk))
-  //     {
-  //        TogglePlayMute(sharedState.currentPattern, trk);
-  //     }
-  //   }
   //   // play related controls: reset / advance / ..
   //   if(peripherals.touchPad.IsClicked(8))
   //   {
@@ -452,23 +509,17 @@ void loop()
   //     }
   //   }
   // }
-  // else
-  // {
-  //   //...
-  // }
 
-  // show current pattern (on led matrix) 
-  showCurrentPattern();
-
-  // TODO!!!
-  //  if(peripherals.touchPad.IsClicked(3))
-  //  {
-  //    peripherals.serialOut.print("Saving params...");
-  //    saveParams();
-  //    peripherals.serialOut.println(" done");
-  //  }
-
-
+  // check if edit mode and FA or FB pressed
+  if(loopState.mode == 0x05 || loopState.mode == 0x09)
+  {
+    displayTrackProperties();
+  }
+  else
+  {
+    // show current pattern (on led matrix) 
+    displayCurrentPattern();
+  }
 
 #ifdef DEBUGAPP
   // debug/test code:
