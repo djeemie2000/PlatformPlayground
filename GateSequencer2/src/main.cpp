@@ -337,6 +337,51 @@ void loop()
       }
     }
   }
+  else
+  {
+    // --- performance mode ---
+    if(peripherals.touchPad.Get(2))
+    {
+      // FA => save all to current bank
+      peripherals.serialOut.print("Saving params...");
+      saveParams();
+      peripherals.serialOut.println(" done");
+    }
+
+    // any Button 1-8 clicked => action depending on whcih function key (FA) FB F1-F4 is pressed 
+    for (int btn = 0; btn < 8; ++btn)
+    {
+      if (peripherals.touchPad.IsClicked(8 + btn))
+      {
+        if(peripherals.touchPad.Get(3))
+        {
+          // jump to slot stp
+          loopState.slot = btn;
+          sharedState.currentPattern = &(loopState.pattern[loopState.slot]);
+        }
+        else if(peripherals.touchPad.Get(4))
+        {
+          // F1
+          TogglePlayMute(sharedState.currentPattern, btn);
+        }
+        else if(peripherals.touchPad.Get(5))
+        {
+          // F2 => solo
+          ToggleSolo(sharedState.currentPattern, btn);
+        }
+        else if(peripherals.touchPad.Get(6))
+        {
+          // F3 => toggle fill
+          //TODO
+        }
+        else if(peripherals.touchPad.Get(7))
+        {
+          // F4 => toggle play property 4
+          //TODO
+        }
+      }
+    }
+  }
 
   // // update state according to input
   // // including toggle play/mute

@@ -7,20 +7,20 @@ struct Pattern
   static const int NumTracks = 8;
   static const int NumSteps = 32;
   uint8_t steps[NumSteps];// 1 bit per track
-  // 4 play/performance properties
-  uint8_t playMute;// 1 bit per track
-  uint8_t solo;// 1 bit per track
-  uint8_t fill;// 1 bit per track
-  uint8_t playProperty4;// 1 bit per track  
-  // 8 track properties
-  uint8_t clockOnValue;// 1 bit per track
-  uint8_t clockOffValue;// 1 bit per track
-  uint8_t gateTrigger;// 1 bit per track,gate=1 trigger = 0
-  uint8_t trackLink;// 1 bit per track
-  uint8_t trackProperty5;// 1 bit per track
-  uint8_t trackProperty6;// 1 bit per track
-  uint8_t trackProperty7;// 1 bit per track
-  uint8_t trackProperty8;// 1 bit per track
+  // 4 play/performance properties, 1 bit per track
+  uint8_t playMute;
+  uint8_t solo;// only 1 or zero solo at any time!
+  uint8_t fill;
+  uint8_t playProperty4;  
+  // 8 track properties, 1 bit per track
+  uint8_t clockOnValue;
+  uint8_t clockOffValue;
+  uint8_t gateTrigger;// gate=1 trigger = 0
+  uint8_t trackLink;// 2 bits per 2 tracks , or / chain 2 tracks
+  uint8_t trackProperty5;
+  uint8_t trackProperty6;
+  uint8_t trackProperty7;
+  uint8_t trackProperty8;
 
   Pattern()
    : playMute(0xFF)
@@ -88,6 +88,20 @@ void ToggleGateTrigger(Pattern* pattern, int track)
   bitToggle(pattern->gateTrigger, track);
 }
 
+void ToggleSolo(Pattern* pattern, int track)
+{
+  // on to off?
+  if(bitRead(pattern->solo, track))
+  {
+    pattern->solo = 0x00;
+  }
+  // or else set (only 1 solo at a time!)
+  else 
+  {
+    pattern->solo = bit(track);
+  }
+}
+
 
 // loop state
 struct State
@@ -104,7 +118,7 @@ struct State
   int bank;
   int editTrack;//[0-7]
   int editQuadrant; // [0-3]
-  int mode; // 0 edit, 1 performance, 3 utility?
+  int mode; // bit 0 edit mode, bit 1 performance mode, (bit 0 and 1 utility?), bit 2 and 3 for FA FB sub modes 
   // playing????
 
   State()
@@ -112,7 +126,7 @@ struct State
    , bank(0)
    , editTrack(0)
    , editQuadrant(0)
-   , mode(0)
+   , mode(1)//edit mode
   {
     // // default pattern for debugging/testing 
     // pattern[0].playMute = 0xFF;//all tracks playing?
