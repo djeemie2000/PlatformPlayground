@@ -65,12 +65,18 @@ void ToggleStep(Pattern* pattern, int track, int step)
 
 int IsPlaying(Pattern* pattern, int track)
 {
-  return bitRead(pattern->playMute, track);
+  //return bitRead(pattern->playMute, track);
+  return pattern->solo == 0x00 ? bitRead(pattern->playMute, track) : bitRead(pattern->solo, track);
 }
 
 void TogglePlayMute(Pattern* pattern, int track)
 {
   bitToggle(pattern->playMute, track);
+}
+
+void ToggleFill(Pattern* pattern, int track)
+{
+  bitToggle(pattern->fill, track);
 }
 
 void ToggleClockOnValue(Pattern* pattern, int track)

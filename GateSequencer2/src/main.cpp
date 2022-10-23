@@ -27,10 +27,16 @@ Peripherals peripherals;
 
 void printState(State& state, SerialOut& serial)
 {
-  serial.println("state");
+  serial.println("state:");
   serial.printf("bank %d slot %d editTrack %d editQ %d mode %d", state.bank, state.slot, state.editTrack, state.editQuadrant, state.mode);
 }
 
+void printSharedState(SharedState state, SerialOut& serial)
+{
+  serial.printf("step %d", state.currentStep);
+  serial.println("current track:");
+  serial.printf("playmute %x solo %x fill %x", state.currentPattern->playMute, state.currentPattern->solo, state.currentPattern->fill);
+}
 
 void saveParams()
 {
@@ -92,11 +98,14 @@ void oninterrupt()
   interruptState.resetIn = resetIn;
 
   // set track outputs (currentStep, currentPattern, clock high/low)
-  uint8_t gateMask = sharedState.currentPattern->steps[sharedState.currentStep];
-  uint8_t playMask = sharedState.currentPattern->playMute;
-  // gate outputs
-  // ~ current step of current pattern and ~playmute!
-  // also take into account the clokcOn/Offvalue!
+  // gate outputs:
+  //    start from current step of current pattern
+  //      when fill => always gate
+  //   take into account playmute
+  //      when there is a solo, only play the solo track (solo mask bit = 1 => solo)
+  uint8_t gateMask = sharedState.currentPattern->steps[sharedState.currentStep] | sharedState.currentPattern->fill;
+  uint8_t playMask = sharedState.currentPattern->solo == 0x00 ? sharedState.currentPattern->playMute : sharedState.currentPattern->solo;
+  // also take into account the clockOn/clockOff value!
   uint8_t legatoMask = interruptState.clockIn ? sharedState.currentPattern->clockOnValue : sharedState.currentPattern->clockOffValue;
   fastDigitalWritePortD<2>(gateMask & 0x01 & playMask & legatoMask); // gate 0
   fastDigitalWritePortD<3>(gateMask & 0x02 & playMask & legatoMask); // gate 1
@@ -130,8 +139,10 @@ void setup()
   // setup I2C, SPI, peripherals
   // short pause before configuring the led matrix
   delay(1000);
+  peripherals.serialOut.println("Setup led matrix...");
   peripherals.ledMatrix.Configure();
   delay(200);
+  peripherals.serialOut.println("Setup touchpad...");
   peripherals.touchPad.Begin(TTP8229TouchPad::I2CMode);
 
   // run tests for UI here (ledMatrix, touchpad)
@@ -142,8 +153,8 @@ void setup()
   // peripherals.serialOut.printf("State size %d", sizeof(loopState));
 
   // load params from EEPROM
-  peripherals.serialOut.print("TODO Loading params...");
-  // TODO loadParams();
+  peripherals.serialOut.print("Loading params...");
+  loadParams();
   sharedState.currentPattern = &(loopState.pattern[loopState.slot]);
   peripherals.serialOut.println(" done");
 
@@ -226,7 +237,6 @@ void loop()
     bitClear(loopState.mode, 3);
   }
 
-  // TODO performance mode
   if (bitRead(loopState.mode, 0))
   {
     // -- edit mode ---
@@ -372,12 +382,12 @@ void loop()
         else if(peripherals.touchPad.Get(6))
         {
           // F3 => toggle fill
-          //TODO
+          ToggleFill(sharedState.currentPattern, btn);
         }
         else if(peripherals.touchPad.Get(7))
         {
           // F4 => toggle play property 4
-          //TODO
+          bitToggle(sharedState.currentPattern->playProperty4, btn);
         }
       }
     }
@@ -466,6 +476,7 @@ void loop()
   // Serial.print(interruptState.resetIn);
   // Serial.println(sharedState.currentStep);
   printState(loopState, peripherals.serialOut);
-  delay(250);
+  printSharedState(sharedState, peripherals.serialOut);
+  delay(125);
 #endif
 }
