@@ -6,7 +6,7 @@
 #define USE_TIMER_2 false
 #define USE_TIMER_3 false
 
-#define DEBUGAPP 1
+//#define DEBUGAPP 1
 
 #include "TimerInterrupt.h"
 #include <Wire.h>
@@ -146,7 +146,9 @@ void setup()
   peripherals.touchPad.Begin(TTP8229TouchPad::I2CMode);
 
   // run tests for UI here (ledMatrix, touchpad)
+ #ifdef DEBUGAPP
   TestTouchPad(peripherals.touchPad, peripherals.serialOut, 5);
+ #endif
   TestDigitalOutMatrix(peripherals.ledMatrix, peripherals.serialOut, 30);
 
   // TestDigitalOutMatrixFast(peripherals.ledMatrix, peripherals.serialOut, 200);
@@ -196,7 +198,6 @@ void displayCurrentPattern()
 void displayTrackProperties()
 {
   // display all track properties (for current pattern)
-  // TODO indicate current edit track by blinking that row
   Pattern * pat = sharedState.currentPattern;
   for(int row = 0; row< Pattern::NumTracks; ++row)
   {
@@ -278,6 +279,11 @@ void displayTrackProperties()
       peripherals.ledMatrix.Clear(row, col);
     }
   }
+
+  // indicate current edit track by setting that row for some columns
+  peripherals.ledMatrix.Set(loopState.editTrack, 9);
+  peripherals.ledMatrix.Set(loopState.editTrack, 10);
+  peripherals.ledMatrix.Set(loopState.editTrack, 11);
 
   peripherals.ledMatrix.WriteAll();
 }
