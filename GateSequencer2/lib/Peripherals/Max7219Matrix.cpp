@@ -23,6 +23,7 @@ Max7219Matrix::Max7219Matrix(int numDevices, uint8_t csPin)
     }
 
     pinMode(m_CsPin, OUTPUT);
+    digitalWrite(m_CsPin, HIGH);
 }
 
 void Max7219Matrix::Configure()
