@@ -13,6 +13,7 @@ public:
     void Begin(int mode);
 
     void Read();
+    
     int GetNumPads() const;
     bool Get(int Pad) const;
     bool IsPushed(int Pad) const;
