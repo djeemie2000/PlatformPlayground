@@ -92,7 +92,7 @@ void MidiTouchPad::Update(MidiVoiceMessage& message)
 
 int MidiTouchPad::GetNumPads() const
 {
-    return 16;
+    return 20;
 }
 
 bool MidiTouchPad::Get(int Pad) const

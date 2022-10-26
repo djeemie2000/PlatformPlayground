@@ -7,7 +7,7 @@ struct MidiVoiceMessage;
 class MidiTouchPad
 {
 public:
-    static const int Capacity = 16;
+    static const int Capacity = 20;
 
     MidiTouchPad();
 
@@ -25,8 +25,8 @@ public:
     bool IsReleased(int Pad) const;
 
 private:
-    uint16_t m_TouchState;// bit = 1 => touched, bit is 0 => not touched
-    uint16_t m_PrevTouchState;
+    uint32_t m_TouchState;// bit = 1 => touched, bit is 0 => not touched
+    uint32_t m_PrevTouchState;
     // configuration:
     uint8_t m_IsNote[Capacity]; 
     uint8_t m_Channel[Capacity];
