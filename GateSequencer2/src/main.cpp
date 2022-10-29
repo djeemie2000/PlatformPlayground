@@ -7,11 +7,13 @@
 #define USE_TIMER_3 false
 
 //#define DEBUGAPP 1
+//#define DEBUGMIDI 1
 
 #include "TimerInterrupt.h"
 #include <Wire.h>
 #include "peripherals.h"
 #include <EEPROM.h>
+#include "midivoicemessage.h"
 
 // global variables
 State loopState;
@@ -27,15 +29,13 @@ Peripherals peripherals;
 
 void printState(State& state, SerialOut& serial)
 {
-  serial.println("state:");
-  serial.printf("bank %d slot %d editTrack %d editQ %d mode %d", state.bank, state.slot, state.editTrack, state.editQuadrant, state.mode);
+  serial.printf("S: b %d s %d eT %d eQ %d m %d", state.bank, state.slot, state.editTrack, state.editQuadrant, state.mode);
 }
 
 void printSharedState(SharedState state, SerialOut& serial)
 {
-  serial.printf("step %d", state.currentStep);
-  serial.println("current track:");
-  serial.printf("playmute %x solo %x fill %x", state.currentPattern->playMute, state.currentPattern->solo, state.currentPattern->fill);
+  serial.printf("s %d", state.currentStep);
+  serial.printf("eT: p %x s %x f %x", state.currentPattern->playMute, state.currentPattern->solo, state.currentPattern->fill);
 }
 
 void saveParams()
@@ -121,8 +121,8 @@ void setup()
 {
   // put your setup code here, to run once:
 
-  // serial port for debugging
-  Serial.begin(115200);
+  // serial port for midi in and debugging
+  Serial.begin(31250);//midi baudrate!!
   Serial.println("GateSequencer2...");
 
   sharedState.currentPattern = &(loopState.pattern[0]);
@@ -139,26 +139,48 @@ void setup()
   // setup I2C, SPI, peripherals
   // short pause before configuring the led matrix
   delay(1000);
-  peripherals.serialOut.println("Setup led matrix...");
+  Serial.println("Setup led matrix...");
   peripherals.ledMatrix.Configure();
   delay(200);
-  peripherals.serialOut.println("Setup touchpad...");
-  peripherals.touchPad.Begin(TTP8229TouchPad::I2CMode);
-
+  Serial.println("Setup touchpad...");
+  // M1 M2
+  peripherals.midiTouchPad.ConfigureNote(0x09, 0x28, 0);
+  peripherals.midiTouchPad.ConfigureNote(0x09, 0x29, 1);  
+  // FA FB
+  peripherals.midiTouchPad.ConfigureNote(0x09, 0x2A, 2);
+  peripherals.midiTouchPad.ConfigureNote(0x09, 0x2B, 3);
+  // F1-4
+  peripherals.midiTouchPad.ConfigureNote(0x09, 0x30, 4);
+  peripherals.midiTouchPad.ConfigureNote(0x09, 0x31, 5);
+  peripherals.midiTouchPad.ConfigureNote(0x09, 0x32, 6);
+  peripherals.midiTouchPad.ConfigureNote(0x09, 0x33, 7);
+  // btn1-8
+  peripherals.midiTouchPad.ConfigureNote(0x09, 0x24, 8);
+  peripherals.midiTouchPad.ConfigureNote(0x09, 0x25, 9);
+  peripherals.midiTouchPad.ConfigureNote(0x09, 0x26, 10);
+  peripherals.midiTouchPad.ConfigureNote(0x09, 0x27, 11);
+  peripherals.midiTouchPad.ConfigureNote(0x09, 0x2C, 12);
+  peripherals.midiTouchPad.ConfigureNote(0x09, 0x2D, 13);
+  peripherals.midiTouchPad.ConfigureNote(0x09, 0x2E, 14);
+  peripherals.midiTouchPad.ConfigureNote(0x09, 0x2F, 15);
+  // play/stop
+  peripherals.midiTouchPad.ConfigureController(0x0F, 0x73, 16);
+  // advance
+  peripherals.midiTouchPad.ConfigureController(0x0F, 0x69, 17);
+  // advance
+  peripherals.midiTouchPad.ConfigureController(0x0F, 0x68, 18);
+  
   // run tests for UI here (ledMatrix, touchpad)
- #ifdef DEBUGAPP
-  TestTouchPad(peripherals.touchPad, peripherals.serialOut, 5);
- #endif
-  TestDigitalOutMatrix(peripherals.ledMatrix, peripherals.serialOut, 30);
+  TestDigitalOutMatrix(peripherals.ledMatrix, 30);
 
   // TestDigitalOutMatrixFast(peripherals.ledMatrix, peripherals.serialOut, 200);
   // peripherals.serialOut.printf("State size %d", sizeof(loopState));
 
   // load params from EEPROM
-  peripherals.serialOut.print("Loading params...");
-  loadParams();
+  Serial.print("Loading params...");
+  //loadParams();
   sharedState.currentPattern = &(loopState.pattern[loopState.slot]);
-  peripherals.serialOut.println(" done");
+  Serial.println(" done");
 
   // start timer with period 1 msec (this determines the resolution for the gate/clock handling)
   ITimer1.init();
@@ -288,29 +310,25 @@ void displayTrackProperties()
   peripherals.ledMatrix.WriteAll();
 }
 
-void loop()
+void handleInput()
 {
-  // put your main code here, to run repeatedly:
-
-  // read input (touchpad)
-  peripherals.touchPad.Read();
-
+  // -- update mode
   // M1 M2
-  if (peripherals.touchPad.Get(0))
+  if (peripherals.midiTouchPad.IsClicked(0))
   {
-    // edit mode, no track properties editing
+    // go to edit mode, no track properties editing
     // set bit 0
     loopState.mode = bit(0);
   }
-  if (peripherals.touchPad.Get(1))
+  if (peripherals.midiTouchPad.IsClicked(1))
   {
-    // performance mode
+    // go to performance mode
     // set bit 1
     loopState.mode = bit(1);
   }
   // TODO utilities mode if both are pressed??
 
-  if (peripherals.touchPad.Get(2))
+  if (peripherals.midiTouchPad.Get(2))
   {
     // FA pressed
     bitSet(loopState.mode, 2);
@@ -321,7 +339,7 @@ void loop()
     bitClear(loopState.mode, 2);
   }
 
-  if (peripherals.touchPad.Get(3))
+  if (peripherals.midiTouchPad.Get(3))
   {
     // FB pressed
     bitSet(loopState.mode, 3);
@@ -332,6 +350,7 @@ void loop()
     bitClear(loopState.mode, 3);
   }
 
+  // handle input
   if (bitRead(loopState.mode, 0))
   {
     // -- edit mode ---
@@ -342,25 +361,25 @@ void loop()
       // select track + edit track properties 0-3
       for (int trk = 0; trk < 8; ++trk)
       {
-        if (peripherals.touchPad.IsClicked(8 + trk))
+        if (peripherals.midiTouchPad.IsClicked(8 + trk))
         {
           loopState.editTrack = trk;
         }
       }
       // button F1-F4 (4-7) -> track properties
-      if (peripherals.touchPad.IsClicked(4))
+      if (peripherals.midiTouchPad.IsClicked(4))
       {
         ToggleClockOnValue(sharedState.currentPattern, loopState.editTrack);
       }
-      if (peripherals.touchPad.IsClicked(5))
+      if (peripherals.midiTouchPad.IsClicked(5))
       {
         ToggleClockOffValue(sharedState.currentPattern, loopState.editTrack);
       }
-      if (peripherals.touchPad.IsClicked(6))
+      if (peripherals.midiTouchPad.IsClicked(6))
       {
         ToggleGateTrigger(sharedState.currentPattern, loopState.editTrack);
       }
-      if (peripherals.touchPad.IsClicked(7))
+      if (peripherals.midiTouchPad.IsClicked(7))
       {
         // toggle link state!!
         // bit 0 -> or track 0 and 1
@@ -394,25 +413,25 @@ void loop()
       // Button B1-B8 -> select edit track
       for (int trk = 0; trk < 8; ++trk)
       {
-        if (peripherals.touchPad.IsClicked(8 + trk))
+        if (peripherals.midiTouchPad.IsClicked(8 + trk))
         {
           loopState.editTrack = trk;
         }
       }
       // button F1-F4 (4-7) -> toggle track properties
-      if (peripherals.touchPad.IsClicked(4))
+      if (peripherals.midiTouchPad.IsClicked(4))
       {
         bitToggle(sharedState.currentPattern->trackProperty5, loopState.editTrack);
       }
-      if (peripherals.touchPad.IsClicked(5))
+      if (peripherals.midiTouchPad.IsClicked(5))
       {
         bitToggle(sharedState.currentPattern->trackProperty6, loopState.editTrack);
       }
-      if (peripherals.touchPad.IsClicked(6))
+      if (peripherals.midiTouchPad.IsClicked(6))
       {
         bitToggle(sharedState.currentPattern->trackProperty7, loopState.editTrack);
       }
-      if (peripherals.touchPad.IsClicked(7))
+      if (peripherals.midiTouchPad.IsClicked(7))
       {
         bitToggle(sharedState.currentPattern->trackProperty8, loopState.editTrack);
       }
@@ -424,7 +443,7 @@ void loop()
       // button F1-F4 (4-7) =>select quadrant
       for (int quad = 0; quad < 4; ++quad)
       {
-        if (peripherals.touchPad.Get(4 + quad))
+        if (peripherals.midiTouchPad.Get(4 + quad))
         {
           loopState.editQuadrant = quad;
         }
@@ -432,7 +451,7 @@ void loop()
       // Button B1-B8 (8-15) for steps
       for (int stp = 0; stp < 8; ++stp)
       {
-        if (peripherals.touchPad.IsClicked(8 + stp))
+        if (peripherals.midiTouchPad.IsClicked(8 + stp))
         {
           int step = 8 * loopState.editQuadrant + stp;
           // peripherals.serialOut.printf("Toggle track %d step %d", loopState.editTrack, step);
@@ -445,41 +464,44 @@ void loop()
   else
   {
     // --- performance mode ---
-    if(peripherals.touchPad.Get(2))
+    if(peripherals.midiTouchPad.Get(2))
     {
       // FA => save all to current bank
-      peripherals.serialOut.print("Saving params...");
+      Serial.print("Saving params...");
       saveParams();
-      peripherals.serialOut.println(" done");
+      Serial.println(" done");
     }
 
     // any Button 1-8 clicked => action depending on whcih function key (FA) FB F1-F4 is pressed 
     for (int btn = 0; btn < 8; ++btn)
     {
-      if (peripherals.touchPad.IsClicked(8 + btn))
+      if (peripherals.midiTouchPad.IsClicked(8 + btn))
       {
-        if(peripherals.touchPad.Get(3))
+        if(peripherals.midiTouchPad.Get(3))
         {
           // jump to slot stp
-          loopState.slot = btn;
-          sharedState.currentPattern = &(loopState.pattern[loopState.slot]);
+          if(btn<State::NumSlots)
+          {
+            loopState.slot = btn;
+            sharedState.currentPattern = &(loopState.pattern[loopState.slot]);
+          }
         }
-        else if(peripherals.touchPad.Get(4))
+        else if(peripherals.midiTouchPad.Get(4))
         {
           // F1
           TogglePlayMute(sharedState.currentPattern, btn);
         }
-        else if(peripherals.touchPad.Get(5))
+        else if(peripherals.midiTouchPad.Get(5))
         {
           // F2 => solo
           ToggleSolo(sharedState.currentPattern, btn);
         }
-        else if(peripherals.touchPad.Get(6))
+        else if(peripherals.midiTouchPad.Get(6))
         {
           // F3 => toggle fill
           ToggleFill(sharedState.currentPattern, btn);
         }
-        else if(peripherals.touchPad.Get(7))
+        else if(peripherals.midiTouchPad.Get(7))
         {
           // F4 => toggle play property 4
           bitToggle(sharedState.currentPattern->playProperty4, btn);
@@ -487,43 +509,71 @@ void loop()
       }
     }
   }
+  //
+  if(peripherals.midiTouchPad.IsClicked(16))
+  {
+    //Serial.println("toggle playmode");
+    sharedState.playing = !sharedState.playing;
+  }
+  // play related controls: reset / advance / ..
+  if(peripherals.midiTouchPad.IsClicked(17))
+  {
+    //Serial.println("reset");
+    // trigger a reset in the interrupt
+    sharedState.doReset = true;
+  }
+  if(peripherals.midiTouchPad.IsClicked(18))
+  {
+    //Serial.println("advance");
+    // trigger an advance in the interrupt
+    sharedState.doAdvance = true;
+  }
 
-  //   // play related controls: reset / advance / ..
-  //   if(peripherals.touchPad.IsClicked(8))
-  //   {
-  //     //Serial.println("reset");
-  //     // trigger a reset in the interrupt
-  //     sharedState.doReset = true;
-  //   }
-  //   if(peripherals.touchPad.IsClicked(9))
-  //   {
-  //     //Serial.println("advance");
-  //     // trigger an advance in the interrupt
-  //     sharedState.doAdvance = true;
-  //   }
-  // }
-  // else if(peripherals.touchPad.Get(14))
-  // {
-  //   // toggle slot
-  //   // toggle bank -> not enough memory, perhaps later load bank from memorybank storage?
-  //   for(int trk = 0 ; trk<8; ++trk)
-  //   {
-  //     if(peripherals.touchPad.IsClicked(trk))
-  //     {
-  //       loopState.slot = trk;
-  //       sharedState.currentPattern = &(loopState.pattern[loopState.slot]);
-  //     }
-  //   }
-  // }
 
-  // check if edit mode and FA or FB pressed
+}
+
+void loop()
+{
+  // put your main code here, to run repeatedly:
+
+  // read input (touchpad)
+  //peripherals.touchPad.Read();
+
+  // read midi in
+  bool updated = false;
+  while(Serial.available() && !updated)
+  {
+    uint8_t byte = Serial.read();
+
+#ifdef DEBUGMIDI
+    if(byte != 0xF8)
+    {
+      Serial.println(byte, HEX);
+    }
+#endif
+
+    MidiVoiceMessage message;
+    if (peripherals.midiParser.Parse(byte, message))
+    {
+      peripherals.midiTouchPad.Update(message);
+      updated = true;
+    }
+  }
+  if(!updated)
+  {
+    peripherals.midiTouchPad.Update();
+  }
+
+  handleInput();
+
   if(loopState.mode == 0x05 || loopState.mode == 0x09)
   {
+    // edit mode and FA or FB pressed => display track properties
     displayTrackProperties();
   }
   else
   {
-    // show current pattern (on led matrix) 
+    // otherwise => display current pattern (on led matrix) 
     displayCurrentPattern();
   }
 
@@ -533,7 +583,8 @@ void loop()
   // Serial.print(interruptState.resetIn);
   // Serial.println(sharedState.currentStep);
   printState(loopState, peripherals.serialOut);
-  printSharedState(sharedState, peripherals.serialOut);
+  //printSharedState(sharedState, peripherals.serialOut);
+  peripherals.serialOut.printf("s %d", sharedState.currentStep);
   delay(125);
 #endif
 }

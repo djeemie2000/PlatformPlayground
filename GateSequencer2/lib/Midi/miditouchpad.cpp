@@ -85,6 +85,7 @@ void MidiTouchPad::Update(MidiVoiceMessage& message)
                 //  value == 0 off 
                 //  value  > 0 on
                 bitWrite(m_TouchState, idx, message.Param2);
+                //Serial.println(m_TouchState, BIN);
             }
         }
     }
@@ -99,7 +100,7 @@ bool MidiTouchPad::Get(int Pad) const
 {
     if(0<=Pad && Pad<GetNumPads())
     {
-        return m_TouchState & (1<<Pad);
+        return m_TouchState & (1ul<<Pad);
     }
     return false;
 }
@@ -108,7 +109,7 @@ bool MidiTouchPad::IsPushed(int Pad) const
 {
 	if(0<=Pad && Pad<GetNumPads())
     {
-        return m_TouchState & (1<<Pad);
+        return m_TouchState & (1ul<<Pad);
     }
     return false;
 }
@@ -117,7 +118,7 @@ bool MidiTouchPad::IsClicked(int Pad) const
 {
     if(0<=Pad && Pad<GetNumPads())
     {
-        return !(m_PrevTouchState & (1<<Pad)) && (m_TouchState & (1<<Pad));
+        return !(m_PrevTouchState & (1ul<<Pad)) && (m_TouchState & (1ul<<Pad));
     }
     return false;
 }
@@ -126,7 +127,7 @@ bool MidiTouchPad::IsReleased(int Pad) const
 {
     if(0<=Pad && Pad<GetNumPads())
     {
-        return (m_PrevTouchState & (1<<Pad)) && !(m_TouchState & (1<<Pad));
+        return (m_PrevTouchState & (1ul<<Pad)) && !(m_TouchState & (1ul<<Pad));
     }
     return false;
 }
