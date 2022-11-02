@@ -164,8 +164,19 @@ struct SharedState
 
 struct InterruptState
 {
+  static const uint8_t TriggerDuration = 8;
+
   int clockIn;
   int resetIn;
   //uint8_t clockCounter;//??
   //TODO trigger counter per track?
+  uint8_t clockOnTrigger;
+  uint8_t clockOffTrigger;
+
+  InterruptState()
+   : clockIn(0)
+   , resetIn(0)
+   , clockOnTrigger(0x00)
+   , clockOffTrigger(0x00)
+  {}
 };

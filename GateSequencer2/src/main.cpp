@@ -73,12 +73,29 @@ void oninterrupt()
   int clockIn = fastDigitalReadPortC<0>();
   int resetIn = fastDigitalReadPortC<1>();
 
-  // handle rising inputs (update currentStep)
+  // handle rising clock (update currentStep)
   if (clockIn && !interruptState.clockIn)
   {
     // advance current step
     sharedState.currentStep = (sharedState.currentStep + 1 < Pattern::NumSteps) ? sharedState.currentStep + 1 : 0;
+
+    interruptState.clockOnTrigger = InterruptState::TriggerDuration;
   }
+  else if(interruptState.clockOnTrigger>0)
+  {
+    --interruptState.clockOnTrigger;
+  }
+  
+  // handle falling clock
+  if(!clockIn && interruptState.clockIn)
+  {
+    interruptState.clockOffTrigger = InterruptState::TriggerDuration;
+  }
+  else if(interruptState.clockOffTrigger>0)
+  {
+    --interruptState.clockOffTrigger;
+  }
+  
 
   if (sharedState.doReset)
   {
@@ -105,8 +122,16 @@ void oninterrupt()
   //      when there is a solo, only play the solo track (solo mask bit = 1 => solo)
   uint8_t gateMask = sharedState.currentPattern->steps[sharedState.currentStep] | sharedState.currentPattern->fill;
   uint8_t playMask = sharedState.currentPattern->solo == 0x00 ? sharedState.currentPattern->playMute : sharedState.currentPattern->solo;
+  
+  // use gate (bit==1) or use trigger (bit==0)?
   // also take into account the clockOn/clockOff value!
-  uint8_t legatoMask = interruptState.clockIn ? sharedState.currentPattern->clockOnValue : sharedState.currentPattern->clockOffValue;
+  uint8_t triggerMaskClockOn = interruptState.clockOnTrigger ? 0xFF : 0x00;
+  uint8_t legatoMaskClockOn = (sharedState.currentPattern->clockOnValue & sharedState.currentPattern->gateTrigger) | (sharedState.currentPattern->clockOnValue & triggerMaskClockOn & ~sharedState.currentPattern->gateTrigger);
+  uint8_t triggerMaskClockOff = interruptState.clockOffTrigger ? 0xFF : 0x00;
+  uint8_t legatoMaskClockOff = (sharedState.currentPattern->clockOffValue & sharedState.currentPattern->gateTrigger) | (sharedState.currentPattern->clockOffValue & triggerMaskClockOff & ~sharedState.currentPattern->gateTrigger);
+  uint8_t legatoMask = interruptState.clockIn ? legatoMaskClockOn : legatoMaskClockOff;
+
+  // update gate outputs
   fastDigitalWritePortD<2>(gateMask & 0x01 & playMask & legatoMask); // gate 0
   fastDigitalWritePortD<3>(gateMask & 0x02 & playMask & legatoMask); // gate 1
   fastDigitalWritePortD<4>(gateMask & 0x04 & playMask & legatoMask); // gate 2
@@ -178,7 +203,7 @@ void setup()
 
   // load params from EEPROM
   Serial.print("Loading params...");
-  //loadParams();
+  loadParams();
   sharedState.currentPattern = &(loopState.pattern[loopState.slot]);
   Serial.println(" done");
 
