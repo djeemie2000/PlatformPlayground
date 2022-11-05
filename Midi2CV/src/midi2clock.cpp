@@ -1,15 +1,12 @@
 #include "midi2clock.h"
+#include "gateoutbank.h"
 
 Midi2Clock::Midi2Clock()
-    : m_ClockIsRunning(true)
+    : m_Gates(0)
+    , m_ClockIsRunning(true)
     , m_DoReset(true)
-    , m_StatusLed(-1)
-{
-    for (int gate = 0; gate < NumGates; ++gate)
-    {
-        m_OutputPin[gate] = -1;
-    }
 
+{
     for (int cntr = 0; cntr < NumCounters; ++cntr)
     {
         m_TicksOn[cntr] = 1;
@@ -18,21 +15,9 @@ Midi2Clock::Midi2Clock()
     }
 }
 
-void Midi2Clock::Begin(uint8_t pin0, uint8_t pin1, uint8_t pin2, uint8_t pin3,
-                      uint8_t pin4, uint8_t pin5, uint8_t pin6, uint8_t pin7,
-                      uint8_t statusLed)
+void Midi2Clock::Begin(GateOutBank* gates)
 {
-    m_OutputPin[0] = pin0;
-    m_OutputPin[1] = pin1;
-    m_OutputPin[2] = pin2;
-    m_OutputPin[3] = pin3;
-
-    m_OutputPin[4] = pin4;
-    m_OutputPin[5] = pin5;
-    m_OutputPin[6] = pin6;
-    m_OutputPin[7] = pin7;
-
-    m_StatusLed = statusLed;
+    m_Gates = gates;
 
     // counter 0 -> 3/6 -> 4PPQ
     m_TicksOn[0] = 3;
@@ -54,15 +39,11 @@ void Midi2Clock::Begin(uint8_t pin0, uint8_t pin1, uint8_t pin2, uint8_t pin3,
 
     for(int gate = 0; gate<NumGates; ++gate)
     {
-        if(0<=m_OutputPin[gate])
-        {
-            pinMode(m_OutputPin[gate], OUTPUT);
-        }
-        digitalWrite(m_OutputPin[gate], LOW);
+        m_Gates->GateOff(gate);
     }
 
-    pinMode(m_StatusLed, OUTPUT);
-    digitalWrite(m_StatusLed, HIGH);
+    // status led on
+    m_Gates->GateOn(8);
 }
 
 void Midi2Clock::OnMessage(uint8_t byte)
@@ -73,8 +54,8 @@ void Midi2Clock::OnMessage(uint8_t byte)
         m_ClockIsRunning = true;
         m_DoReset = true;
 
-        digitalWrite(m_OutputPin[0], HIGH);
-        digitalWrite(m_OutputPin[1], HIGH);
+        m_Gates->GateOn(0);
+        m_Gates->GateOn(1);
     }
     else if(byte == 0xFC)
     {
@@ -83,9 +64,9 @@ void Midi2Clock::OnMessage(uint8_t byte)
         // all (clock + reset) outputs low
         for(int gate = 0; gate<NumGates; ++gate)
         {        
-            digitalWrite(m_OutputPin[gate], LOW);
+             m_Gates->GateOff(0);
         }
-        digitalWrite(m_StatusLed, HIGH);//always on when clock is not running
+         m_Gates->GateOff(8);//always on when clock is not running
     }
     // midi continue => ignored or threated as midi start?
     else if(byte == 0XF8)
@@ -104,8 +85,8 @@ void Midi2Clock::OnMessage(uint8_t byte)
                     m_TicksCounter[cntr] = 0x00;
                 }
 
-                digitalWrite(m_OutputPin[0], LOW);
-                digitalWrite(m_OutputPin[1], LOW);
+                m_Gates->GateOff(0);
+                m_Gates->GateOff(1);
             }
             else 
             {
@@ -119,16 +100,48 @@ void Midi2Clock::OnMessage(uint8_t byte)
                 }
             }
 
-            digitalWrite(m_OutputPin[2], m_TicksCounter[0]<m_TicksPeriod[0] ? HIGH : LOW);
-            digitalWrite(m_OutputPin[3], m_TicksCounter[0]<m_TicksPeriod[0] ? HIGH : LOW);
+            if(m_TicksCounter[0]<m_TicksPeriod[0])
+            {
+                m_Gates->GateOn(2);
+                m_Gates->GateOn(3);
+            }
+            else
+            {
+                m_Gates->GateOff(2);
+                m_Gates->GateOff(3);
+            }
 
-            digitalWrite(m_OutputPin[4], m_TicksCounter[1]<m_TicksPeriod[1] ? HIGH : LOW);
-            digitalWrite(m_OutputPin[5], m_TicksCounter[1]<m_TicksPeriod[1] ? HIGH : LOW);
 
-            digitalWrite(m_OutputPin[6], m_TicksCounter[2]<m_TicksPeriod[2] ? HIGH : LOW);
-            digitalWrite(m_OutputPin[7], m_TicksCounter[2]<m_TicksPeriod[2] ? HIGH : LOW);
+            if(m_TicksCounter[1]<m_TicksPeriod[1])
+            {
+                m_Gates->GateOn(4);
+                m_Gates->GateOn(5);
+            }
+            else
+            {
+                m_Gates->GateOff(4);
+                m_Gates->GateOff(5);
+            }
 
-            digitalWrite(m_StatusLed, m_TicksCounter[3]<m_TicksPeriod[3] ? HIGH : LOW);
+            if(m_TicksCounter[2]<m_TicksPeriod[2])
+            {
+                m_Gates->GateOn(6);
+                m_Gates->GateOn(7);
+            }
+            else
+            {
+                m_Gates->GateOff(6);
+                m_Gates->GateOff(7);
+            }
+
+            if(m_TicksCounter[3]<m_TicksPeriod[3])
+            {
+                m_Gates->GateOn(8);
+            }
+            else
+            {
+                m_Gates->GateOff(8);
+            }
         }
     }
 }

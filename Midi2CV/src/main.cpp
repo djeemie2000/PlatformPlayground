@@ -9,6 +9,7 @@
 #include "midi2clock.h"
 #include "analogbuttonin2.h"
 #include "debugcounter.h"
+#include "gateoutbank.h"
 
 //#define DEBUGAPP 1
 //#define DEBUGMIDI 1
@@ -18,6 +19,8 @@ const int statusLed2Pin = 3;
 
 AnalogButtonIn2 buttons1;
 AnalogButtonIn2 buttons2;
+GateOutBank midi2Gate1Out;
+GateOutBank midi2Gate2Out;
 
 #ifdef DEBUGAPP
 DebugCounter debugCounter;
@@ -43,14 +46,16 @@ void setup()
   // setup common
   buttons1.Begin(A6);
   buttons2.Begin(A7);
+  midi2Gate1Out.Begin(4, 5, 6, 7, A0, A1, A2, A3, statusLed1Pin);
+  midi2Gate2Out.Begin(8, 9, 10, 11, 12, 13, A4, A5, statusLed2Pin);
 
 #ifdef DEBUGAPP
   debugCounter.Begin(10000);
 #endif
 
   // setup midi2gate
-  midi2Gate1.Begin(4, 5, 6, 7, A0, A1, A2, A3, statusLed1Pin);
-  midi2Gate2.Begin(8, 9, 10, 11, 12, 13, A4, A5, statusLed2Pin);
+  midi2Gate1.Begin(&midi2Gate1Out);
+  midi2Gate2.Begin(&midi2Gate2Out);
 
   TestAnalogButtonIn2(buttons1, 100);
   TestAnalogButtonIn2(buttons2, 100);
@@ -188,6 +193,9 @@ void loop()
   {
     uint8_t byte = Serial.read();
 
+    midi2Clock1.OnMessage(byte);
+    midi2Clock2.OnMessage(byte);
+
 #ifdef DEBUGMIDI
     if(byte != 0xF8)
     {
@@ -200,16 +208,21 @@ void loop()
     {
       midi2Gate1.OnMessage(message);
       midi2Gate2.OnMessage(message);
+      
 #ifdef DEBUGAPP
       printVoiceMessage(message);
 #endif
     }
   }
 
+  // TODO ledoutbank with on/off/blink
   // onTick based on millis
   unsigned long millies = millis();
   midi2Gate1.OnTick(millies >> 2);
   midi2Gate2.OnTick(millies >> 2);
+
+  midi2Gate1Out.Update(millies >> 2);
+  midi2Gate2Out.Update(millies >> 2);
 
 #ifdef DEBUGAPP
   unsigned long elapsedMillis = 0;

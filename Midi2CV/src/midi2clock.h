@@ -1,5 +1,7 @@
 #include <Arduino.h>
 
+class GateOutBank;
+
 // TODO make more generic cfr configuration 
 // has 2 x reset pulse output (pulse on upon midi start, pulse off upon first midi clock)
 // has 2x 4PPPQ (1/16th) clock output
@@ -16,9 +18,7 @@ public:
 
     Midi2Clock();
 
-    void Begin(uint8_t pin0, uint8_t pin1, uint8_t pin2, uint8_t pin3, 
-                uint8_t pin4, uint8_t pin5, uint8_t pin6, uint8_t pin7,
-                uint8_t statusLed);
+    void Begin(GateOutBank* gates);
 
     void OnMessage(uint8_t byte);
 //    void OnTick(uint8_t counter); // only for blinking in learn mode?
@@ -32,7 +32,7 @@ public:
     void PrintState();
 
 private:
-    uint8_t m_OutputPin[NumGates];
+    GateOutBank* m_Gates;
 
     uint8_t m_TicksOn[NumCounters];
     uint8_t m_TicksPeriod[NumCounters];
@@ -40,6 +40,4 @@ private:
 
     bool m_ClockIsRunning;
     bool m_DoReset;
-    
-    uint8_t m_StatusLed;
 };
