@@ -1,8 +1,6 @@
 #pragma once
 #include <Arduino.h>
 
-#include "midivoicemessage.h"
-
 class MidiVoiceMessage;
 
 class Midi2Gate

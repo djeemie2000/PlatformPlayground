@@ -1,4 +1,5 @@
 #include "midi2gate.h"
+#include "midivoicemessage.h"
 
 Midi2Gate::Midi2Gate()
     : m_LearnIndex(-1)

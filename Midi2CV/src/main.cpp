@@ -1,29 +1,34 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-#include "ScanI2C.h"
-#include "mcp4728.h"
+// #include "ScanI2C.h"
+// #include "mcp4728.h"
 #include "midinoteparser.h"
 #include "testmidinoteparser.h"
 #include "midi2gate.h"
+#include "midi2clock.h"
 #include "analogbuttonin2.h"
 #include "debugcounter.h"
 
-// outputs: 2x gate 2x pitch 2x velocity
-// const int gatePin0 = 4;
-// const int gatePin1 = 5;
+//#define DEBUGAPP 1
+//#define DEBUGMIDI 1
+
 const int statusLed1Pin = 2;
 const int statusLed2Pin = 3;
 
 AnalogButtonIn2 buttons1;
 AnalogButtonIn2 buttons2;
 
+#ifdef DEBUGAPP
 DebugCounter debugCounter;
+#endif
 
 // MCP4728Dac Dac1;
 MidiNoteParser midiNoteParser;
 Midi2Gate midi2Gate1;
 Midi2Gate midi2Gate2;
+Midi2Clock midi2Clock1;
+Midi2Clock midi2Clock2;
 
 void setup()
 {
@@ -39,7 +44,9 @@ void setup()
   buttons1.Begin(A6);
   buttons2.Begin(A7);
 
+#ifdef DEBUGAPP
   debugCounter.Begin(10000);
+#endif
 
   // setup midi2gate
   midi2Gate1.Begin(4, 5, 6, 7, A0, A1, A2, A3, statusLed1Pin);
@@ -136,6 +143,7 @@ void setup()
 //     }
 //   }
 // }
+
 void printVoiceMessage(MidiVoiceMessage &message)
 {
   Serial.print(message.StatusByte, HEX);
@@ -171,21 +179,30 @@ void loop()
     midi2Gate2.ToggleLearning();
   }
 
+
+
   // limit max # bytes read
   const int maxNumBytes = 6;
   int numBytes = 0;
   while (Serial.available() && numBytes++ < maxNumBytes)
   {
     uint8_t byte = Serial.read();
-    // Serial.println(byte, HEX);
+
+#ifdef DEBUGMIDI
+    if(byte != 0xF8)
+    {
+      Serial.println(byte, HEX);
+    }
+#endif
 
     MidiVoiceMessage message;
     if (midiNoteParser.Parse(byte, message))
     {
       midi2Gate1.OnMessage(message);
       midi2Gate2.OnMessage(message);
-
+#ifdef DEBUGAPP
       printVoiceMessage(message);
+#endif
     }
   }
 
@@ -194,6 +211,7 @@ void loop()
   midi2Gate1.OnTick(millies >> 2);
   midi2Gate2.OnTick(millies >> 2);
 
+#ifdef DEBUGAPP
   unsigned long elapsedMillis = 0;
   if (debugCounter.Tick(millies, elapsedMillis))
   {
@@ -207,4 +225,6 @@ void loop()
     midi2Gate1.PrintState();
     midi2Gate2.PrintState();
   }
+#endif
+
 }
