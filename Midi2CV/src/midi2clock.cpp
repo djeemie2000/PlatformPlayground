@@ -1,5 +1,6 @@
 #include "midi2clock.h"
 #include "gateoutbank.h"
+#include "ledout.h"
 
 Midi2Clock::Midi2Clock()
     : m_Gates(0)
@@ -15,9 +16,10 @@ Midi2Clock::Midi2Clock()
     }
 }
 
-void Midi2Clock::Begin(GateOutBank* gates)
+void Midi2Clock::Begin(GateOutBank* gates, LedOut* ledOut)
 {
     m_Gates = gates;
+    m_LedOut = ledOut;
 
     // counter 0 -> 3/6 -> 4PPQ
     m_TicksOn[0] = 3;
@@ -43,7 +45,7 @@ void Midi2Clock::Begin(GateOutBank* gates)
     }
 
     // status led on
-    m_Gates->GateOn(8);
+    m_LedOut->LedOn();
 }
 
 void Midi2Clock::OnMessage(uint8_t byte)
@@ -66,7 +68,8 @@ void Midi2Clock::OnMessage(uint8_t byte)
         {        
              m_Gates->GateOff(0);
         }
-         m_Gates->GateOff(8);//always on when clock is not running
+
+        m_LedOut->LedOn();//always on when clock is not running
     }
     // midi continue => ignored or threated as midi start?
     else if(byte == 0XF8)
@@ -136,17 +139,38 @@ void Midi2Clock::OnMessage(uint8_t byte)
 
             if(m_TicksCounter[3]<m_TicksPeriod[3])
             {
-                m_Gates->GateOn(8);
+                m_LedOut->LedOn();
             }
             else
             {
-                m_Gates->GateOff(8);
+                m_LedOut->LedOff();
             }
         }
     }
 }
 
+bool Midi2Clock::ClockIsRunning() const
+{
+    return m_ClockIsRunning;
+}
+
+
 void Midi2Clock::PrintState()
 {
     //TODO print counters
+}
+
+
+void ToggleClockIsRunning(Midi2Clock& midi2Clock)
+{
+    if(midi2Clock.ClockIsRunning())
+    {
+        // midi stop
+        midi2Clock.OnMessage(0xFC);
+    }
+    else    
+    {
+        // midi start
+        midi2Clock.OnMessage(0xFA);
+    }
 }

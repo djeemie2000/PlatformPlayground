@@ -3,6 +3,7 @@
 
 class MidiVoiceMessage;
 class GateOutBank;
+class LedOut;
 
 class Midi2Gate
 {
@@ -11,10 +12,9 @@ public:
 
     Midi2Gate();
 
-    void Begin(GateOutBank* gates);
+    void Begin(GateOutBank* gates, LedOut* ledOut);
 
     void OnMessage(MidiVoiceMessage &message);
-    void OnTick(uint8_t counter); // only for blinking in learn mode?
     void ToggleLearning();
     bool IsLearning() const;
 
@@ -26,6 +26,7 @@ public:
 
 private:
     GateOutBank* m_Gates;
+    LedOut* m_LedOut;
     uint8_t m_Channel[NumGates];
     uint8_t m_MidiNote[NumGates];
     uint8_t m_Gate[NumGates];

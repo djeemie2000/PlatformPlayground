@@ -5,8 +5,7 @@ GateOutBank::GateOutBank()
 }
 
 void GateOutBank::Begin(uint8_t pin0, uint8_t pin1, uint8_t pin2, uint8_t pin3, 
-                uint8_t pin4, uint8_t pin5, uint8_t pin6, uint8_t pin7,
-                uint8_t pin8)
+                uint8_t pin4, uint8_t pin5, uint8_t pin6, uint8_t pin7)
 {
     m_OutputPin[0] = pin0;   
     m_OutputPin[1] = pin1;   
@@ -16,7 +15,6 @@ void GateOutBank::Begin(uint8_t pin0, uint8_t pin1, uint8_t pin2, uint8_t pin3,
     m_OutputPin[5] = pin5;   
     m_OutputPin[6] = pin6; 
     m_OutputPin[7] = pin7;  
-    m_OutputPin[8] = pin8;
 
      for(int idx = 0; idx<GateOutBank::Size; ++idx)
     {
@@ -58,7 +56,6 @@ void GateOutBank::Update(uint8_t counter)
 
 void GateOutBank::PrintState()
 {}
-
 
 
 void AllGateOff(GateOutBank& bank)

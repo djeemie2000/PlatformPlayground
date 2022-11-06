@@ -1,6 +1,7 @@
 #include "midi2gate.h"
 #include "midivoicemessage.h"
 #include "gateoutbank.h"
+#include "ledout.h"
 
 Midi2Gate::Midi2Gate()
     : m_Gates(0)
@@ -14,9 +15,10 @@ Midi2Gate::Midi2Gate()
     }
 }
 
-void Midi2Gate::Begin(GateOutBank* gates)
+void Midi2Gate::Begin(GateOutBank* gates, LedOut* ledOut)
 {
     m_Gates = gates;
+    m_LedOut = ledOut;
 
     for(int gate = 0; gate<NumGates; ++gate)
     {       
@@ -25,7 +27,7 @@ void Midi2Gate::Begin(GateOutBank* gates)
     }
 
     // status led on
-    m_Gates->GateOn(8);
+    m_LedOut->LedOn();
 }
 
 void Midi2Gate::OnMessage(MidiVoiceMessage &message)
@@ -74,21 +76,6 @@ void Midi2Gate::OnMessage(MidiVoiceMessage &message)
     }
 }
 
-void Midi2Gate::OnTick(uint8_t counter)
-{
-    // only for blinking led in learn mode?
-    // TODO counter for blinking
-    if (IsLearning())
-    {
-        bool blink = counter & 0x40;
-        SetGate(*m_Gates, 8, blink ? 1 : 0);
-    }
-    else
-    {
-        m_Gates->GateOn(8);
-    }
-}
-
 void Midi2Gate::ToggleLearning()
 {
     if (IsLearning())
@@ -96,8 +83,8 @@ void Midi2Gate::ToggleLearning()
         // no learning
         m_LearnIndex = -1;
 
-        // statusled here?
-         m_Gates->GateOn(8);
+        // statusled on 
+         m_LedOut->LedOn();
     }
     else
     {
@@ -110,6 +97,9 @@ void Midi2Gate::ToggleLearning()
             m_Gate[gate] = 0;
             m_Gates->GateOff(gate);
         }
+
+        // blink statusled
+        m_LedOut->LedBlink();
     }
 }
 
