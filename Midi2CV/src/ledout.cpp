@@ -1,14 +1,12 @@
 #include "ledout.h"
 
 LedOut::LedOut() 
-: m_LedOutPin(-1)
-, m_LedOutMask(0x00)
+: m_LedOutMask(0x00)
 {}
 
-void LedOut::Begin(uint8_t ledOutPin)
+void LedOut::Begin()
 {
-    m_LedOutPin = ledOutPin;
-    pinMode(m_LedOutPin, OUTPUT);
+    m_LedOutMask = 0x00;
 }
 
 void LedOut::LedOn()
@@ -36,7 +34,8 @@ void LedOut::LedBlinkSlow()
     m_LedOutMask = 0x80;
 }
 
-void LedOut::Update(uint8_t counter)
+void LedOut::Apply(uint8_t counter, uint8_t ledOutPin)
 {
-    digitalWrite(m_LedOutPin, m_LedOutMask == 0xFF ? 1 : m_LedOutMask & counter);
+    //DigitalOut class?
+    digitalWrite(ledOutPin, m_LedOutMask == 0xFF ? 1 : m_LedOutMask & counter);
 }

@@ -6,7 +6,7 @@ class LedOut
 public:
     LedOut();
 
-    void Begin(uint8_t ledOutPin);
+    void Begin();
 
     void LedOn();
     void LedOff();
@@ -14,9 +14,8 @@ public:
     void LedBlinkFast();
     void LedBlinkSlow();
 
-    void Update(uint8_t counter);
+    void Apply(uint8_t counter, uint8_t ledOutPin);//DigitalOut class?
 
 private:
-    uint8_t m_LedOutPin;
     uint8_t m_LedOutMask;
 };

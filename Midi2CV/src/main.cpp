@@ -9,6 +9,7 @@
 #include "midi2clock.h"
 #include "analogbuttonin2.h"
 #include "debugcounter.h"
+#include "digitaloutbank.h"
 #include "gateoutbank.h"
 #include "ledout.h"
 
@@ -20,10 +21,16 @@ const int statusLed2Pin = 3;
 
 AnalogButtonIn2 buttons1;
 AnalogButtonIn2 buttons2;
-GateOutBank midi2Gate1Out;
-GateOutBank midi2Gate2Out;
+DigitalOutBank digitalOutBank1;
+DigitalOutBank digitalOutBank2;
+GateOutBank midi2Gate1Gates;
+GateOutBank midi2Gate2Gates;
+GateOutBank midi2Clock1Gates;
+GateOutBank midi2Clock2Gates;
 LedOut ledOut1;
 LedOut ledOut2;
+LedOut clockLedOut1;
+LedOut clockLedOut2;
 
 #ifdef DEBUGAPP
 DebugCounter debugCounter;
@@ -49,18 +56,27 @@ void setup()
   // setup common
   buttons1.Begin(A6);
   buttons2.Begin(A7);
-  midi2Gate1Out.Begin(4, 5, 6, 7, A0, A1, A2, A3);
-  midi2Gate2Out.Begin(8, 9, 10, 11, 12, 13, A4, A5);
-  ledOut1.Begin(statusLed1Pin);
-  ledOut2.Begin(statusLed2Pin);
+  digitalOutBank1.Begin(4, 5, 6, 7, A0, A1, A2, A3);
+  digitalOutBank2.Begin(8, 9, 10, 11, 12, 13, A4, A5);
+  ledOut1.Begin();
+  ledOut2.Begin();
+  clockLedOut1.Begin();
+  clockLedOut2.Begin();
+  midi2Gate1Gates.Begin();
+  midi2Gate2Gates.Begin();
+  midi2Clock1Gates.Begin();
+  midi2Clock2Gates.Begin();
 
 #ifdef DEBUGAPP
   debugCounter.Begin(10000);
 #endif
 
   // setup midi2gate
-  midi2Gate1.Begin(&midi2Gate1Out, &ledOut1);
-  midi2Gate2.Begin(&midi2Gate2Out, &ledOut2);
+  midi2Gate1.Begin(&midi2Gate1Gates, &ledOut1);
+  midi2Gate2.Begin(&midi2Gate2Gates, &ledOut2);
+  // setup midi2Clock
+  midi2Clock1.Begin(&midi2Clock1Gates, &clockLedOut1);
+  midi2Clock1.Begin(&midi2Clock2Gates, &clockLedOut2);
 
   TestAnalogButtonIn2(buttons1, 100);
   TestAnalogButtonIn2(buttons2, 100);
@@ -190,7 +206,6 @@ void loop()
   }
 
 
-
   // limit max # bytes read
   const int maxNumBytes = 6;
   int numBytes = 0;
@@ -220,12 +235,26 @@ void loop()
     }
   }
 
-  // onTick based on millis
+  // update based on millis
   unsigned long millies = millis();
-  ledOut1.Update(millies >> 2);
-  ledOut2.Update(millies >> 2);
-  midi2Gate1Out.Update(millies >> 2);
-  midi2Gate2Out.Update(millies >> 2);
+  midi2Gate1Gates.Update(millies);
+  midi2Gate2Gates.Update(millies);
+
+  midi2Clock1Gates.Update(millies);
+  midi2Clock2Gates.Update(millies);
+
+  // apply depending on gate vs clock mode
+  // gate mode
+  ledOut1.Apply(statusLed1Pin, millies >> 2);
+  ledOut2.Apply(statusLed2Pin, millies >> 2);
+  midi2Gate1Gates.Apply(digitalOutBank1);
+  midi2Gate2Gates.Apply(digitalOutBank1);
+ // ifclock mode =>
+  // clockLedOut1.Apply(statusLed1Pin, millies >> 2);
+  // clockLedOut2.Apply(statusLed2Pin, millies >> 2);
+  // midi2Clock1Gates.Apply(digitalOutBank1);
+  // midi2Clock2Gates.Apply(digitalOutBank1);
+ 
 
 #ifdef DEBUGAPP
   unsigned long elapsedMillis = 0;

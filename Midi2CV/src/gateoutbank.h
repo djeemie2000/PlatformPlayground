@@ -1,6 +1,8 @@
 #pragma once
 #include <Arduino.h>
 
+class DigitalOutBank;
+
 class GateOutBank
 {
 public:
@@ -8,20 +10,20 @@ public:
 
     GateOutBank();
 
-    void Begin(uint8_t pin0, uint8_t pin1, uint8_t pin2, uint8_t pin3, 
-                uint8_t pin4, uint8_t pin5, uint8_t pin6, uint8_t pin7);
+    void Begin();
 
     void GateOn(int idx);
     void GateOff(int idx);
     void Trigger(int idx);
 
     void Update(uint8_t counter); // counter for triggers ?
+    void Apply(DigitalOutBank& bank);
 
     void PrintState();
 
 private:
-    uint8_t m_OutputPin[Size];
-    uint8_t m_Gate[Size];
+    uint8_t m_Gate[Size];//TODO uint8_t m_State;
+    uint8_t m_Counter;
 };
 
 void AllGateOff(GateOutBank& bank);
