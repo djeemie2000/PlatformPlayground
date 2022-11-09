@@ -1,23 +1,38 @@
 #include "midi2pg.h"
+#include "ledout.h"
+#include "gateoutbank.h"
+#include "cvoutbank.h"
 
 Midi2PG::Midi2PG()
     : m_LearnIndex(-1)
 {
-    for (int gate = 0; gate < NumVoices; ++gate)
+    for (int voice = 0; voice < NumVoices; ++voice)
     {        
-        m_Channel[gate] = 0x00;
-        m_MidiBaseNote[gate] = 0x00;
-        m_MidiNote[gate] = 0x00;
-        m_IsActive[gate] = 0;
+        m_Channel[voice] = 0x00;
+        m_MidiBaseNote[voice] = 0x00;
+        m_MidiNote[voice] = 0x00;
+        m_IsActive[voice] = 0;
     }
 }
 
-void Midi2PG::Begin(uint8_t statusLed)
+void Midi2PG::Begin(GateOutBank* gates, LedOut* ledOut, CVOutBank* cvOuts)
 {
-    m_StatusLed = statusLed;
+    m_Gates = gates;
+    m_LedOut = ledOut;
+    m_CvOuts = cvOuts;
 
-    pinMode(m_StatusLed, OUTPUT);
-    digitalWrite(m_StatusLed, HIGH);
+    for(int voice = 0; voice<NumVoices; ++voice)
+    {       
+        m_Channel[voice] = 0x00;
+        m_MidiBaseNote[voice] = 0x00;
+        m_MidiNote[voice] = 0x00;
+        m_IsActive[voice] = 0;
+        m_Gates->GateOff(voice);
+        m_CvOuts->PitchOut(voice, 0x00, 0x00);
+    }
+
+    // status led on
+    m_LedOut->LedOn();
 }
 
 void Midi2PG::OnMessage(MidiVoiceMessage &message)
@@ -43,7 +58,6 @@ void Midi2PG::OnMessage(MidiVoiceMessage &message)
             // all gates learned
             m_LearnIndex = -1;
         }
-
     }
     else 
     {
@@ -61,36 +75,22 @@ void Midi2PG::OnMessage(MidiVoiceMessage &message)
                 {
                     m_MidiNote[voice] = midiNote;
                     m_IsActive[voice] = 1;
-                    //TODO update pitch out and gate out
+                    // update pitch out and gate out
+                    m_Gates->GateOn(voice);
+                    m_CvOuts->PitchOut(voice, m_MidiBaseNote[voice], m_MidiNote[voice]);
                     handled = true;
                 }
                 else if (IsNoteOff(message) && m_IsActive[voice] == 1)
                 {
                     m_IsActive[voice] = 0;
                     // keep midi note
-                    //TODO update gate out
+                    // update gate out
+                    m_Gates->GateOff(voice);
                     handled = true;
                 }                
             }
         }
     }
-}
-
-void Midi2PG::OnTick(uint8_t counter)
-{
-    // only for blinking in learn mode?
-    // TODO counter for blinking
-    if (IsLearning())
-    {
-        bool blink = counter & 0x40;
-        digitalWrite(m_StatusLed, blink ? 1 : 0);
-    }
-    else
-    {
-        digitalWrite(m_StatusLed, HIGH);
-    }
-
-    //TODO update gates here???
 }
 
 void Midi2PG::ToggleLearning()
@@ -101,7 +101,7 @@ void Midi2PG::ToggleLearning()
         m_LearnIndex = -1;
 
         // statusled here?
-        digitalWrite(m_StatusLed, HIGH);
+        m_LedOut->LedBlink();
     }
     else
     {
@@ -109,12 +109,14 @@ void Midi2PG::ToggleLearning()
         m_LearnIndex = 0;
         
         // all gates off here?
-        for(int gate = 0; gate<NumVoices; ++ gate)
+        for(int voice = 0; voice<NumVoices; ++voice)
         {
-            m_IsActive[gate] = 0;
-            // TODO all gate off
-            // digitalWrite(m_OutputPin[gate], m_Gate[gate]);//TODO fastdigitalwrite
+            m_IsActive[voice] = 0;
+            m_Gates->GateOff(voice);
         }
+
+        // blink statusled
+        m_LedOut->LedBlink();
     }
 }
 

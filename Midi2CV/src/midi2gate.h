@@ -31,6 +31,4 @@ private:
     uint8_t m_MidiNote[NumGates];
     uint8_t m_Gate[NumGates];
     int m_LearnIndex;
-    
-    uint8_t m_StatusLed;
 };

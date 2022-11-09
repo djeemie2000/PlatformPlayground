@@ -4,6 +4,9 @@
 #include "midivoicemessage.h"
 
 class MidiVoiceMessage;
+class GateOutBank;
+class LedOut;
+class CVOutBank;
 
 class Midi2PG
 {
@@ -12,7 +15,7 @@ public:
 
     Midi2PG();
 
-    void Begin(uint8_t statusLed);
+    void Begin(GateOutBank* gates, LedOut* ledOut, CVOutBank* cvOuts);
 
     void OnMessage(MidiVoiceMessage &message);
     void OnTick(uint8_t counter); // only for blinking in learn mode?
@@ -26,12 +29,13 @@ public:
     void PrintState();
 
 private:
+    GateOutBank* m_Gates;
+    LedOut* m_LedOut;
+    CVOutBank* m_CvOuts;
     uint8_t m_Channel[NumVoices];
     uint8_t m_MidiBaseNote[NumVoices];
     uint8_t m_MidiNote[NumVoices];
     uint8_t m_IsActive[NumVoices];
 
     int m_LearnIndex;
-    
-    uint8_t m_StatusLed;
 };
