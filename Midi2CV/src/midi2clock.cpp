@@ -96,7 +96,7 @@ void Midi2Clock::OnMessage(uint8_t byte)
                 for (int cntr = 0; cntr < NumCounters; ++cntr)
                 {
                     ++m_TicksCounter[cntr];
-                    if(m_TicksCounter[cntr]<=m_TicksPeriod[cntr])
+                    if(m_TicksPeriod[cntr]<=m_TicksCounter[cntr])
                     {
                         m_TicksCounter[cntr] = 0;
                     }

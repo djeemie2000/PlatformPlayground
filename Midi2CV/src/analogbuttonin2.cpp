@@ -46,6 +46,7 @@ void TestAnalogButtonIn2(AnalogButtonIn2 &in, int repeats)
     {
         in.update();
 
+        Serial.print("A2 ");
         Serial.print(idx);
         Serial.print(' ');
         Serial.print(in.GetValue());

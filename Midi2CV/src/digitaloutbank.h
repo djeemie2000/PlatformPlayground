@@ -18,3 +18,5 @@ private:
     // no state is needed!
     uint8_t m_OutputPin[Size];
 };
+
+void TestDigitalOutBank(DigitalOutBank& bank, int repeats);

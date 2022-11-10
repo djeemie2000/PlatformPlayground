@@ -16,7 +16,7 @@ public:
     void GateOff(int idx);
     void Trigger(int idx);
 
-    void Update(uint8_t counter); // counter for triggers ?
+    void Update(uint8_t counter); // counter for triggers
     void Apply(DigitalOutBank& bank);
 
     void PrintState();

@@ -13,8 +13,8 @@
 #include "gateoutbank.h"
 #include "ledout.h"
 
-//#define DEBUGAPP 1
-//#define DEBUGMIDI 1
+#define DEBUGAPP 1
+#define DEBUGMIDI 1
 
 const int statusLed1Pin = 2;
 const int statusLed2Pin = 3;
@@ -23,12 +23,14 @@ AnalogButtonIn2 buttons1;
 AnalogButtonIn2 buttons2;
 DigitalOutBank digitalOutBank1;
 DigitalOutBank digitalOutBank2;
+
 GateOutBank midi2Gate1Gates;
 GateOutBank midi2Gate2Gates;
-GateOutBank midi2Clock1Gates;
-GateOutBank midi2Clock2Gates;
 LedOut ledOut1;
 LedOut ledOut2;
+
+GateOutBank midi2Clock1Gates;
+GateOutBank midi2Clock2Gates;
 LedOut clockLedOut1;
 LedOut clockLedOut2;
 
@@ -48,27 +50,32 @@ void setup()
   // put your setup code here, to run once:
   Serial.begin(31250); // TODO midi Rx/Tx
 
-  Serial.println("Midi16 Midi2Gate poc ...");
+  Serial.println("Midi16 Midi2Gate poc V0.6...");
 
-  // test here?
-  TestAll();
+  // test midi parser here?
+  //TestAll();
 
   // setup common
   buttons1.Begin(A6);
   buttons2.Begin(A7);
+
   digitalOutBank1.Begin(4, 5, 6, 7, A0, A1, A2, A3);
   digitalOutBank2.Begin(8, 9, 10, 11, 12, 13, A4, A5);
+
+  pinMode(statusLed1Pin, OUTPUT);
+  pinMode(statusLed2Pin, OUTPUT);  
   ledOut1.Begin();
   ledOut2.Begin();
   clockLedOut1.Begin();
   clockLedOut2.Begin();
+
   midi2Gate1Gates.Begin();
   midi2Gate2Gates.Begin();
   midi2Clock1Gates.Begin();
   midi2Clock2Gates.Begin();
 
 #ifdef DEBUGAPP
-  debugCounter.Begin(10000);
+  debugCounter.Begin(2000);
 #endif
 
   // setup midi2gate
@@ -78,9 +85,16 @@ void setup()
   midi2Clock1.Begin(&midi2Clock1Gates, &clockLedOut1);
   midi2Clock1.Begin(&midi2Clock2Gates, &clockLedOut2);
 
-  TestAnalogButtonIn2(buttons1, 100);
-  TestAnalogButtonIn2(buttons2, 100);
+#ifdef DEBUGAPP
+  TestDigitalOutBank(digitalOutBank1, 1);
+  TestDigitalOutBank(digitalOutBank2, 1);
 
+  TestLedOut(ledOut1, statusLed1Pin, 1);
+  TestLedOut(ledOut2, statusLed2Pin, 1);
+  
+  TestAnalogButtonIn2(buttons1, 20);
+  TestAnalogButtonIn2(buttons2, 20);
+#endif
   // // Dac1.Begin(MCP4728Dac::MCP4728_I2CADDR_DEFAULT);
   // // pitch channels : internal ref + gain x2 => 0-4.096 V
   // // velocity channels : VDD (5V) ref + gain x1 => 0-5V
@@ -104,9 +118,8 @@ void loop()
   // put your main code here, to run repeatedly:
 
   //  ScanI2C(Serial);
-  // TestDac();
 
-  // TODO regular interval for reading inputs
+  // TODO regular interval for reading inputs?
 
   // read buttons in for toggle midi learn
   // read and decode analogin from 2 buttons via R2R dac
@@ -124,6 +137,8 @@ void loop()
     midi2Gate2.ToggleLearning();
   }
 
+  //Serial.print("1");
+
 
   // limit max # bytes read
   const int maxNumBytes = 6;
@@ -132,8 +147,8 @@ void loop()
   {
     uint8_t byte = Serial.read();
 
-    midi2Clock1.OnMessage(byte);
-    midi2Clock2.OnMessage(byte);
+//    midi2Clock1.OnMessage(byte);
+//    midi2Clock2.OnMessage(byte);
 
 #ifdef DEBUGMIDI
     if(byte != 0xF8)
@@ -154,8 +169,11 @@ void loop()
     }
   }
 
+ // Serial.print("2");
+
   // update based on millis
   unsigned long millies = millis();
+  uint8_t counter = millies >> 2;
   midi2Gate1Gates.Update(millies);
   midi2Gate2Gates.Update(millies);
 
@@ -163,17 +181,19 @@ void loop()
   midi2Clock2Gates.Update(millies);
 
   // apply depending on gate vs clock mode
-  // gate mode
-  ledOut1.Apply(statusLed1Pin, millies >> 2);
-  ledOut2.Apply(statusLed2Pin, millies >> 2);
+  // if gate mode
   midi2Gate1Gates.Apply(digitalOutBank1);
-  midi2Gate2Gates.Apply(digitalOutBank1);
- // ifclock mode =>
-  // clockLedOut1.Apply(statusLed1Pin, millies >> 2);
-  // clockLedOut2.Apply(statusLed2Pin, millies >> 2);
+  ledOut1.Apply(counter, statusLed1Pin);
+  midi2Gate2Gates.Apply(digitalOutBank2);
+  ledOut2.Apply(counter, statusLed2Pin);
+  // if clock mode =>
+  // clockLedOut1.Apply(millies >> 2, statusLed1Pin);
   // midi2Clock1Gates.Apply(digitalOutBank1);
+  // clockLedOut2.Apply(millies >> 2, statusLed2Pin);
   // midi2Clock2Gates.Apply(digitalOutBank1);
  
+  //Serial.print("3");
+
 
 #ifdef DEBUGAPP
   unsigned long elapsedMillis = 0;
@@ -190,5 +210,8 @@ void loop()
     midi2Gate2.PrintState();
   }
 #endif
+
+//  Serial.print("4");
+
 
 }

@@ -48,6 +48,8 @@ void Midi2Gate::OnMessage(MidiVoiceMessage &message)
             {
                 // all gates learned
                 m_LearnIndex = -1;
+
+                m_LedOut->LedOn();
             }
         }
         // note off => gate low
@@ -111,7 +113,7 @@ bool Midi2Gate::IsLearning() const
 void Midi2Gate::PrintState()
 {
     Serial.println(m_LearnIndex, DEC);
-    for(int idx = 0; idx<NumGates;++idx)
+    for(int idx = 0; idx<Midi2Gate::NumGates;++idx)
     {
         Serial.print(m_Channel[idx], HEX);
         Serial.print(' ');

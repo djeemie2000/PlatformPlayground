@@ -19,3 +19,5 @@ public:
 private:
     uint8_t m_LedOutMask;
 };
+
+void TestLedOut(LedOut& ledOut, uint8_t ledOutPin, int repeats);
