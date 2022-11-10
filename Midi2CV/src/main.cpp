@@ -14,7 +14,7 @@
 #include "ledout.h"
 
 #define DEBUGAPP 1
-#define DEBUGMIDI 1
+//#define DEBUGMIDI 1
 
 const int statusLed1Pin = 2;
 const int statusLed2Pin = 3;
@@ -44,6 +44,9 @@ Midi2Gate midi2Gate1;
 Midi2Gate midi2Gate2;
 Midi2Clock midi2Clock1;
 Midi2Clock midi2Clock2;
+// mode : 0 = midi2gate 1=midi2clock
+int mode1;
+int mode2;
 
 void setup()
 {
@@ -83,17 +86,20 @@ void setup()
   midi2Gate2.Begin(&midi2Gate2Gates, &ledOut2);
   // setup midi2Clock
   midi2Clock1.Begin(&midi2Clock1Gates, &clockLedOut1);
-  midi2Clock1.Begin(&midi2Clock2Gates, &clockLedOut2);
+  midi2Clock2.Begin(&midi2Clock2Gates, &clockLedOut2);
+
+  mode1 = 0;
+  mode2 = 0;
 
 #ifdef DEBUGAPP
   TestDigitalOutBank(digitalOutBank1, 1);
   TestDigitalOutBank(digitalOutBank2, 1);
 
-  TestLedOut(ledOut1, statusLed1Pin, 1);
-  TestLedOut(ledOut2, statusLed2Pin, 1);
+  // TestLedOut(ledOut1, statusLed1Pin, 1);
+  // TestLedOut(ledOut2, statusLed2Pin, 1);
   
-  TestAnalogButtonIn2(buttons1, 20);
-  TestAnalogButtonIn2(buttons2, 20);
+  // TestAnalogButtonIn2(buttons1, 20);
+  // TestAnalogButtonIn2(buttons2, 20);
 #endif
   // // Dac1.Begin(MCP4728Dac::MCP4728_I2CADDR_DEFAULT);
   // // pitch channels : internal ref + gain x2 => 0-4.096 V
@@ -131,14 +137,19 @@ void loop()
   {
     midi2Gate1.ToggleLearning();
   }
+  if(buttons1.IsClicked2())
+  {
+    mode1 = 1- mode1;
+  }
 
   if (buttons2.IsClicked1())
   {
     midi2Gate2.ToggleLearning();
   }
-
-  //Serial.print("1");
-
+  if(buttons2.IsClicked2())
+  {
+    mode2 = 1- mode2;
+  }
 
   // limit max # bytes read
   const int maxNumBytes = 6;
@@ -147,8 +158,8 @@ void loop()
   {
     uint8_t byte = Serial.read();
 
-//    midi2Clock1.OnMessage(byte);
-//    midi2Clock2.OnMessage(byte);
+    midi2Clock1.OnMessage(byte);
+    midi2Clock2.OnMessage(byte);
 
 #ifdef DEBUGMIDI
     if(byte != 0xF8)
@@ -169,8 +180,6 @@ void loop()
     }
   }
 
- // Serial.print("2");
-
   // update based on millis
   unsigned long millies = millis();
   uint8_t counter = millies >> 2;
@@ -181,19 +190,27 @@ void loop()
   midi2Clock2Gates.Update(millies);
 
   // apply depending on gate vs clock mode
-  // if gate mode
-  midi2Gate1Gates.Apply(digitalOutBank1);
-  ledOut1.Apply(counter, statusLed1Pin);
-  midi2Gate2Gates.Apply(digitalOutBank2);
-  ledOut2.Apply(counter, statusLed2Pin);
-  // if clock mode =>
-  // clockLedOut1.Apply(millies >> 2, statusLed1Pin);
-  // midi2Clock1Gates.Apply(digitalOutBank1);
-  // clockLedOut2.Apply(millies >> 2, statusLed2Pin);
-  // midi2Clock2Gates.Apply(digitalOutBank1);
- 
-  //Serial.print("3");
+  if(0 == mode1)
+  {
+    midi2Gate1Gates.Apply(digitalOutBank1);
+    ledOut1.Apply(counter, statusLed1Pin);
+  }
+  else
+  {
+    midi2Clock1Gates.Apply(digitalOutBank1);
+    clockLedOut1.Apply(counter, statusLed1Pin);
+  }
 
+  if(0 == mode2)
+  {
+    midi2Gate2Gates.Apply(digitalOutBank2);
+    ledOut2.Apply(counter, statusLed2Pin);
+  }
+  else
+  {
+    midi2Clock2Gates.Apply(digitalOutBank2);
+    clockLedOut2.Apply(counter, statusLed2Pin);
+  }
 
 #ifdef DEBUGAPP
   unsigned long elapsedMillis = 0;
@@ -206,12 +223,16 @@ void loop()
     Serial.println(elapsedMillis, DEC);
     Serial.println();
 
+    Serial.print(mode1);
+    Serial.print(' ');
+    Serial.println(mode2);
+    
     midi2Gate1.PrintState();
     midi2Gate2.PrintState();
+    midi2Clock1.PrintState();
+    midi2Clock2.PrintState();
+
   }
 #endif
-
-//  Serial.print("4");
-
 
 }

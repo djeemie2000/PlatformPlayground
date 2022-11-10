@@ -31,8 +31,8 @@ void Midi2Clock::Begin(GateOutBank* gates, LedOut* ledOut)
     m_TicksOn[2] = 1;
     m_TicksPeriod[2] = 2;
     // counter 3 -> 12/24 -> 1PPQ
-    m_TicksOn[0] = 12;
-    m_TicksPeriod[0] = 24;
+    m_TicksOn[3] = 12;
+    m_TicksPeriod[3] = 24;
 
     for (int cntr = 0; cntr < NumCounters; ++cntr)
     {
@@ -103,7 +103,7 @@ void Midi2Clock::OnMessage(uint8_t byte)
                 }
             }
 
-            if(m_TicksCounter[0]<m_TicksPeriod[0])
+            if(m_TicksCounter[0]<m_TicksOn[0])
             {
                 m_Gates->GateOn(2);
                 m_Gates->GateOn(3);
@@ -115,7 +115,7 @@ void Midi2Clock::OnMessage(uint8_t byte)
             }
 
 
-            if(m_TicksCounter[1]<m_TicksPeriod[1])
+            if(m_TicksCounter[1]<m_TicksOn[1])
             {
                 m_Gates->GateOn(4);
                 m_Gates->GateOn(5);
@@ -126,7 +126,7 @@ void Midi2Clock::OnMessage(uint8_t byte)
                 m_Gates->GateOff(5);
             }
 
-            if(m_TicksCounter[2]<m_TicksPeriod[2])
+            if(m_TicksCounter[2]<m_TicksOn[2])
             {
                 m_Gates->GateOn(6);
                 m_Gates->GateOn(7);
@@ -137,7 +137,7 @@ void Midi2Clock::OnMessage(uint8_t byte)
                 m_Gates->GateOff(7);
             }
 
-            if(m_TicksCounter[3]<m_TicksPeriod[3])
+            if(m_TicksCounter[3]<m_TicksOn[3])
             {
                 m_LedOut->LedOn();
             }
