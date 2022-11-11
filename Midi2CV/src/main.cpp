@@ -5,6 +5,7 @@
 // #include "mcp4728.h"
 #include "midinoteparser.h"
 #include "testmidinoteparser.h"
+#include "debugcounter.h"
 #include "midi2gateclockapp.h"
 
 #define DEBUGAPP 1
