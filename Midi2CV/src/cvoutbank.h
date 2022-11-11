@@ -1,6 +1,8 @@
 #pragma once
 #include <Arduino.h>
 
+class MCP4822Bank;
+
 class CVOutBank
 {
 public:
@@ -17,6 +19,7 @@ public:
     void VelocityOut(int idx, uint8_t velocity);
 
     //TODO Apply() to MCP4822 x2 / to MCP4728 DAC
+    void Apply(MCP4822Bank& bank);
 
 private:
     // TODO state!
