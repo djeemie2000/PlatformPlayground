@@ -16,37 +16,93 @@
 #define DEBUGAPP 1
 //#define DEBUGMIDI 1
 
-const int statusLed1Pin = 2;
-const int statusLed2Pin = 3;
-
-AnalogButtonIn2 buttons1;
-AnalogButtonIn2 buttons2;
-DigitalOutBank digitalOutBank1;
-DigitalOutBank digitalOutBank2;
-
-GateOutBank midi2Gate1Gates;
-GateOutBank midi2Gate2Gates;
-LedOut ledOut1;
-LedOut ledOut2;
-
-GateOutBank midi2Clock1Gates;
-GateOutBank midi2Clock2Gates;
-LedOut clockLedOut1;
-LedOut clockLedOut2;
-
 #ifdef DEBUGAPP
 DebugCounter debugCounter;
 #endif
 
+
 // MCP4728Dac Dac1;
 MidiNoteParser midiNoteParser;
-Midi2Gate midi2Gate1;
-Midi2Gate midi2Gate2;
-Midi2Clock midi2Clock1;
-Midi2Clock midi2Clock2;
-// mode : 0 = midi2gate 1=midi2clock
-int mode1;
-int mode2;
+
+struct Midi2GateClockApp
+{
+  int statusLed1Pin;
+  AnalogButtonIn2 buttons;
+  DigitalOutBank digitalOutBank;
+  GateOutBank gatesOut_midi2Gate;
+  LedOut ledOut;
+  GateOutBank gateOut_midi2Clock;
+  LedOut clockLedOut;
+  Midi2Gate midi2Gate;
+  Midi2Clock midi2Clock;
+  // mode : 0 = midi2gate 1=midi2clock
+  int mode;
+
+  void Begin(uint8_t analogBtnInPin, uint8_t statusLedPin,
+              uint8_t pin0, uint8_t pin1, uint8_t pin2, uint8_t pin3, 
+              uint8_t pin4, uint8_t pin5, uint8_t pin6, uint8_t pin7)
+  {
+    buttons.Begin(analogBtnInPin);
+
+    statusLed1Pin = statusLedPin;
+    pinMode(statusLed1Pin, OUTPUT);
+    ledOut.Begin();
+
+    digitalOutBank.Begin(pin0, pin1, pin2, pin3, pin4, pin5, pin6, pin7);
+
+    clockLedOut.Begin();
+    gatesOut_midi2Gate.Begin();
+    gateOut_midi2Clock.Begin();
+
+    midi2Gate.Begin(&gatesOut_midi2Gate, &ledOut);
+    midi2Clock.Begin(&gateOut_midi2Clock, &clockLedOut);
+    
+    mode = 0;
+  }
+
+  void OnMidiMessage(uint8_t byte)
+  {
+    midi2Clock.OnMessage(byte);
+  }
+
+  void OnMidiMessage(MidiVoiceMessage& message)
+  {
+    midi2Gate.OnMessage(message);
+  }
+
+  void Update(unsigned long millies)
+  {
+    // read and decode analogin from 2 buttons via R2R dac
+    buttons.update();
+    if (buttons.IsClicked1())// not in mode 0??
+    {
+      midi2Gate.ToggleLearning();
+    }
+    if(buttons.IsClicked2())
+    {
+      mode = 1- mode;
+    }
+
+    uint8_t counter = millies >> 2;
+    gatesOut_midi2Gate.Update(millies);
+    gateOut_midi2Clock.Update(millies);
+
+    // apply depending on gate vs clock mode
+    if(0 == mode)
+    {
+      gatesOut_midi2Gate.Apply(digitalOutBank);
+      ledOut.Apply(counter, statusLed1Pin);
+    }
+    else
+    {
+      gateOut_midi2Clock.Apply(digitalOutBank);
+      clockLedOut.Apply(counter, statusLed1Pin);
+    }
+  }
+};
+
+Midi2GateClockApp app1;
+Midi2GateClockApp app2;
 
 void setup()
 {
@@ -58,48 +114,26 @@ void setup()
   // test midi parser here?
   //TestAll();
 
-  // setup common
-  buttons1.Begin(A6);
-  buttons2.Begin(A7);
-
-  digitalOutBank1.Begin(4, 5, 6, 7, A0, A1, A2, A3);
-  digitalOutBank2.Begin(8, 9, 10, 11, 12, 13, A4, A5);
-
-  pinMode(statusLed1Pin, OUTPUT);
-  pinMode(statusLed2Pin, OUTPUT);  
-  ledOut1.Begin();
-  ledOut2.Begin();
-  clockLedOut1.Begin();
-  clockLedOut2.Begin();
-
-  midi2Gate1Gates.Begin();
-  midi2Gate2Gates.Begin();
-  midi2Clock1Gates.Begin();
-  midi2Clock2Gates.Begin();
+  app1.Begin(A6, 2, 4, 5, 6, 7, A0, A1, A2, A3);
+  app2.Begin(A7, 3, 8, 9, 10, 11, 12, 13, A4, A5);
 
 #ifdef DEBUGAPP
   debugCounter.Begin(2000);
 #endif
 
   // setup midi2gate
-  midi2Gate1.Begin(&midi2Gate1Gates, &ledOut1);
-  midi2Gate2.Begin(&midi2Gate2Gates, &ledOut2);
   // setup midi2Clock
-  midi2Clock1.Begin(&midi2Clock1Gates, &clockLedOut1);
-  midi2Clock2.Begin(&midi2Clock2Gates, &clockLedOut2);
 
-  mode1 = 0;
-  mode2 = 0;
 
 #ifdef DEBUGAPP
-  TestDigitalOutBank(digitalOutBank1, 1);
-  TestDigitalOutBank(digitalOutBank2, 1);
+  TestDigitalOutBank(app1.digitalOutBank, 1);
+  TestDigitalOutBank(app2.digitalOutBank, 1);
 
-  // TestLedOut(ledOut1, statusLed1Pin, 1);
-  // TestLedOut(ledOut2, statusLed2Pin, 1);
+  // TestLedOut(app1.ledOut, app1.statusLed1Pin, 1);
+  // TestLedOut(app2.ledOut, app2.statusLed1Pin, 1);
   
-  // TestAnalogButtonIn2(buttons1, 20);
-  // TestAnalogButtonIn2(buttons2, 20);
+  // TestAnalogButtonIn2(app1.buttons, 20);
+  // TestAnalogButtonIn2(app2.buttons, 20);
 #endif
   // // Dac1.Begin(MCP4728Dac::MCP4728_I2CADDR_DEFAULT);
   // // pitch channels : internal ref + gain x2 => 0-4.096 V
@@ -124,32 +158,7 @@ void loop()
   // put your main code here, to run repeatedly:
 
   //  ScanI2C(Serial);
-
   // TODO regular interval for reading inputs?
-
-  // read buttons in for toggle midi learn
-  // read and decode analogin from 2 buttons via R2R dac
-  buttons1.update();
-  buttons2.update();
-  // TODO debounce??
-
-  if (buttons1.IsClicked1())
-  {
-    midi2Gate1.ToggleLearning();
-  }
-  if(buttons1.IsClicked2())
-  {
-    mode1 = 1- mode1;
-  }
-
-  if (buttons2.IsClicked1())
-  {
-    midi2Gate2.ToggleLearning();
-  }
-  if(buttons2.IsClicked2())
-  {
-    mode2 = 1- mode2;
-  }
 
   // limit max # bytes read
   const int maxNumBytes = 6;
@@ -158,8 +167,8 @@ void loop()
   {
     uint8_t byte = Serial.read();
 
-    midi2Clock1.OnMessage(byte);
-    midi2Clock2.OnMessage(byte);
+    app1.OnMidiMessage(byte);
+    app2.OnMidiMessage(byte);
 
 #ifdef DEBUGMIDI
     if(byte != 0xF8)
@@ -171,8 +180,8 @@ void loop()
     MidiVoiceMessage message;
     if (midiNoteParser.Parse(byte, message))
     {
-      midi2Gate1.OnMessage(message);
-      midi2Gate2.OnMessage(message);
+      app1.OnMidiMessage(message);
+      app2.OnMidiMessage(message);
       
 #ifdef DEBUGAPP
       printVoiceMessage(message);
@@ -182,36 +191,9 @@ void loop()
 
   // update based on millis
   unsigned long millies = millis();
-  uint8_t counter = millies >> 2;
-  midi2Gate1Gates.Update(millies);
-  midi2Gate2Gates.Update(millies);
-
-  midi2Clock1Gates.Update(millies);
-  midi2Clock2Gates.Update(millies);
-
-  // apply depending on gate vs clock mode
-  if(0 == mode1)
-  {
-    midi2Gate1Gates.Apply(digitalOutBank1);
-    ledOut1.Apply(counter, statusLed1Pin);
-  }
-  else
-  {
-    midi2Clock1Gates.Apply(digitalOutBank1);
-    clockLedOut1.Apply(counter, statusLed1Pin);
-  }
-
-  if(0 == mode2)
-  {
-    midi2Gate2Gates.Apply(digitalOutBank2);
-    ledOut2.Apply(counter, statusLed2Pin);
-  }
-  else
-  {
-    midi2Clock2Gates.Apply(digitalOutBank2);
-    clockLedOut2.Apply(counter, statusLed2Pin);
-  }
-
+  app1.Update(millies);
+  app2.Update(millies);
+  
 #ifdef DEBUGAPP
   unsigned long elapsedMillis = 0;
   if (debugCounter.Tick(millies, elapsedMillis))
@@ -223,14 +205,14 @@ void loop()
     Serial.println(elapsedMillis, DEC);
     Serial.println();
 
-    Serial.print(mode1);
+    Serial.print(app1.mode);
     Serial.print(' ');
-    Serial.println(mode2);
+    Serial.println(app2.mode);
     
-    midi2Gate1.PrintState();
-    midi2Gate2.PrintState();
-    midi2Clock1.PrintState();
-    midi2Clock2.PrintState();
+    app1.midi2Gate.PrintState();
+    app2.midi2Gate.PrintState();
+    app1.midi2Clock.PrintState();
+    app2.midi2Clock.PrintState();
 
   }
 #endif
