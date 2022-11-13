@@ -37,7 +37,7 @@ void ChipSelectLow(int dac)
   }
   else if(dac == 2)
   {
-    PORTB &= ~0x20;//PC5
+    PORTC &= ~0x20;//PC5
   }
   else if(dac == 3)
   {
@@ -57,7 +57,7 @@ void ChipSelectHigh(int dac)
   }
   else if(dac == 2)
   {
-    PORTB |= 0x20;//PC5
+    PORTC |= 0x20;//PC5
   }
   else if(dac == 3)
   {
