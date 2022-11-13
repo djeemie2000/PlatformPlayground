@@ -7,9 +7,12 @@
 #include "testmidinoteparser.h"
 #include "debugcounter.h"
 #include "midi2gateclockapp.h"
+#include "midi2cvapp.h"
 
 #define DEBUGAPP 1
 //#define DEBUGMIDI 1
+#define CVAPP 1
+
 
 #ifdef DEBUGAPP
 DebugCounter debugCounter;
@@ -19,10 +22,14 @@ DebugCounter debugCounter;
 // MCP4728Dac Dac1;
 MidiNoteParser midiNoteParser;
 
-
-
+#ifndef CVAPP
 Midi2GateClockApp app1;
 Midi2GateClockApp app2;
+#endif
+
+#ifdef CVAPP
+Midi2CVApp app3;
+#endif
 
 void setup()
 {
@@ -34,8 +41,14 @@ void setup()
   // test midi parser here?
   //TestAll();
 
+#ifndef CVAPP
   app1.Begin(A6, 2, 4, 5, 6, 7, A0, A1, A2, A3);
   app2.Begin(A7, 3, 8, 9, 10, 11, 12, 13, A4, A5);
+#endif
+
+#ifdef CVAPP
+  app3.Begin(A6, 17, 2, 3, 4, 5, 6, 7, A0, A1, A2, A3);
+#endif
 
 #ifdef DEBUGAPP
   debugCounter.Begin(2000);
@@ -46,6 +59,8 @@ void setup()
 
 
 #ifdef DEBUGAPP
+
+#ifndef CVAPP
   TestDigitalOutBank(app1.digitalOutBank, 1);
   TestDigitalOutBank(app2.digitalOutBank, 1);
 
@@ -55,6 +70,16 @@ void setup()
   // TestAnalogButtonIn2(app1.buttons, 20);
   // TestAnalogButtonIn2(app2.buttons, 20);
 #endif
+
+#ifdef CVAPP
+  TestDigitalOutBank(app3.digitalOutBank, 1);
+
+  //TODO test MCP4822 DAC!
+  TestMCP4822Bank(app3.dacBank, 30);
+#endif
+
+#endif
+
   // // Dac1.Begin(MCP4728Dac::MCP4728_I2CADDR_DEFAULT);
   // // pitch channels : internal ref + gain x2 => 0-4.096 V
   // // velocity channels : VDD (5V) ref + gain x1 => 0-5V
@@ -87,8 +112,10 @@ void loop()
   {
     uint8_t byte = Serial.read();
 
+#ifndef CVAPP
     app1.OnMidiMessage(byte);
     app2.OnMidiMessage(byte);
+#endif
 
 #ifdef DEBUGMIDI
     if(byte != 0xF8)
@@ -100,9 +127,16 @@ void loop()
     MidiVoiceMessage message;
     if (midiNoteParser.Parse(byte, message))
     {
+
+#ifndef CVAPP
       app1.OnMidiMessage(message);
       app2.OnMidiMessage(message);
-      
+#endif
+
+#ifdef CVAPP
+      app3.OnMidiMessage(message);
+#endif
+
 #ifdef DEBUGAPP
       printVoiceMessage(message);
 #endif
@@ -111,9 +145,16 @@ void loop()
 
   // update based on millis
   unsigned long millies = millis();
+
+#ifndef CVAPP
   app1.Update(millies);
   app2.Update(millies);
-  
+#endif
+
+#ifdef CVAPP
+  app3.Update(millies);
+#endif
+
 #ifdef DEBUGAPP
   unsigned long elapsedMillis = 0;
   if (debugCounter.Tick(millies, elapsedMillis))
@@ -125,6 +166,7 @@ void loop()
     Serial.println(elapsedMillis, DEC);
     Serial.println();
 
+#ifndef CVAPP
     Serial.print(app1.mode);
     Serial.print(' ');
     Serial.println(app2.mode);
@@ -133,7 +175,14 @@ void loop()
     app2.midi2Gate.PrintState();
     app1.midi2Clock.PrintState();
     app2.midi2Clock.PrintState();
+#endif
 
+#ifdef CVAPP
+    Serial.println(app3.mode);
+    
+    app3.midi2PG.PrintState();
+    app3.midi2PGVG.PrintState();
+#endif
   }
 #endif
 
