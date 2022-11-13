@@ -7,7 +7,7 @@ Midi2PGVG::Midi2PGVG()
     : m_LearnIndex(-1)
 {
     for (int voice = 0; voice < NumVoices; ++voice)
-    {        
+    {
         m_Channel[voice] = 0x00;
         m_MidiBaseNote[voice] = 0x00;
         m_MidiNote[voice] = 0x00;
@@ -15,22 +15,22 @@ Midi2PGVG::Midi2PGVG()
     }
 }
 
-void Midi2PGVG::Begin(GateOutBank* gates, LedOut* ledOut, CVOutBank* cvOuts)
+void Midi2PGVG::Begin(GateOutBank *gates, LedOut *ledOut, CVOutBank *cvOuts)
 {
     m_Gates = gates;
     m_LedOut = ledOut;
     m_CvOuts = cvOuts;
 
-    for(int voice = 0; voice<NumVoices; ++voice)
-    {       
+    for (int voice = 0; voice < NumVoices; ++voice)
+    {
         m_Channel[voice] = 0x00;
         m_MidiBaseNote[voice] = 0x00;
         m_MidiNote[voice] = 0x00;
         m_IsActive[voice] = 0;
-        m_Gates->GateOff(voice*2);
-        m_Gates->GateOff(voice*2+1);
-        m_CvOuts->PitchOut(voice*2, 0x00, 0x00);
-        m_CvOuts->VelocityOut(voice*2+1, 0x00);
+        m_Gates->GateOff(voice * 2);
+        m_Gates->GateOff(voice * 2 + 1);
+        m_CvOuts->PitchOut(voice * 2, 0x00, 0x00);
+        m_CvOuts->VelocityOut(voice * 2 + 1, 0x00);
     }
 
     // status led on
@@ -39,29 +39,34 @@ void Midi2PGVG::Begin(GateOutBank* gates, LedOut* ledOut, CVOutBank* cvOuts)
 
 void Midi2PGVG::OnMessage(MidiVoiceMessage &message)
 {
-    if(IsLearning())
+    if (IsLearning())
     {
-        m_Channel[m_LearnIndex] = Channel(message);
-        m_MidiBaseNote[m_LearnIndex] = MidiNote(message);
-
-        // if other voices have same channel, use same (first) base note
-        for(int voice = 0; voice<m_LearnIndex; ++voice)
+        if (IsNoteOn(message))
         {
-            if(m_Channel[m_LearnIndex] == m_Channel[voice])
+            m_Channel[m_LearnIndex] = Channel(message);
+            m_MidiBaseNote[m_LearnIndex] = MidiNote(message);
+
+            // if other voices have same channel, use same (first) base note
+            for (int voice = 0; voice < m_LearnIndex; ++voice)
             {
-                m_MidiBaseNote[m_LearnIndex] = m_MidiBaseNote[voice];
-                break;
+                if (m_Channel[m_LearnIndex] == m_Channel[voice])
+                {
+                    m_MidiBaseNote[m_LearnIndex] = m_MidiBaseNote[voice];
+                    break;
+                }
+            }
+
+            ++m_LearnIndex;
+            if (NumVoices <= m_LearnIndex)
+            {
+                // all voices learned
+                m_LearnIndex = -1;
+
+                m_LedOut->LedOn();
             }
         }
-
-        ++m_LearnIndex;
-        if (NumVoices <= m_LearnIndex)
-        {
-            // all gates learned
-            m_LearnIndex = -1;
-        }
     }
-    else 
+    else
     {
         // normal operation (poly mode)
         // first voice matching the channel that is not active yet will handle a note on
@@ -79,10 +84,10 @@ void Midi2PGVG::OnMessage(MidiVoiceMessage &message)
                     m_MidiNote[voice] = midiNote;
                     m_IsActive[voice] = 1;
                     // update pitch out and gate out
-                    m_Gates->GateOn(voice*2);
-                    m_Gates->GateOn(voice*2+1);
-                    m_CvOuts->PitchOut(voice*2, m_MidiBaseNote[voice], m_MidiNote[voice]);
-                    m_CvOuts->VelocityOut(voice*2+1, velocity);
+                    m_Gates->GateOn(voice * 2);
+                    m_Gates->GateOn(voice * 2 + 1);
+                    m_CvOuts->PitchOut(voice * 2, m_MidiBaseNote[voice], m_MidiNote[voice]);
+                    m_CvOuts->VelocityOut(voice * 2 + 1, velocity);
                     handled = true;
                 }
                 else if (IsNoteOff(message) && m_IsActive[voice] == 1)
@@ -90,10 +95,10 @@ void Midi2PGVG::OnMessage(MidiVoiceMessage &message)
                     m_IsActive[voice] = 0;
                     // keep midi note and velocity
                     // update gate out
-                    m_Gates->GateOff(voice*2);
-                    m_Gates->GateOff(voice*2+1);
+                    m_Gates->GateOff(voice * 2);
+                    m_Gates->GateOff(voice * 2 + 1);
                     handled = true;
-                }                
+                }
             }
         }
     }
@@ -106,20 +111,20 @@ void Midi2PGVG::ToggleLearning()
         // no learning
         m_LearnIndex = -1;
 
-        // statusled here?
-        m_LedOut->LedBlink();
+        // statusled on
+        m_LedOut->LedOn();
     }
     else
     {
         // start learning
         m_LearnIndex = 0;
-        
+
         // all gates off here?
-        for(int voice = 0; voice<NumVoices; ++voice)
+        for (int voice = 0; voice < NumVoices; ++voice)
         {
             m_IsActive[voice] = 0;
-            m_Gates->GateOff(voice*2);
-            m_Gates->GateOff(voice*2+1);
+            m_Gates->GateOff(voice * 2);
+            m_Gates->GateOff(voice * 2 + 1);
         }
 
         // blink statusled
@@ -135,7 +140,7 @@ bool Midi2PGVG::IsLearning() const
 void Midi2PGVG::PrintState()
 {
     Serial.println(m_LearnIndex, DEC);
-    for(int idx = 0; idx<NumVoices;++idx)
+    for (int idx = 0; idx < NumVoices; ++idx)
     {
         Serial.print(m_Channel[idx], HEX);
         Serial.print(' ');

@@ -47,7 +47,7 @@ void setup()
 #endif
 
 #ifdef CVAPP
-  app3.Begin(A6, 17, 2, 3, 4, 5, 6, 7, A0, A1, A2, A3);
+  app3.Begin(A6, A7, 2, 3, 4, 5, 6, 7, A0, A1, A2, A3);
 #endif
 
 #ifdef DEBUGAPP
@@ -75,7 +75,7 @@ void setup()
   TestDigitalOutBank(app3.digitalOutBank, 1);
 
   //TODO test MCP4822 DAC!
-  TestMCP4822Bank(app3.dacBank, 30);
+  TestMCP4822Bank(app3.dacBank, 2);
 #endif
 
 #endif

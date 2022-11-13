@@ -82,8 +82,12 @@ struct Midi2CVApp
     {
         // read and decode analogin from 2 buttons via R2R dac
         buttons1.update();
+        buttons2.update();
+        
         if (buttons2.IsClicked1())
         {
+            // toggle mode button
+
             // stop learning in original mode
             if (0 == mode)
             {
@@ -103,8 +107,11 @@ struct Midi2CVApp
             // toggle mode
             mode = 1 - mode;
         }
+
         if (buttons1.IsClicked1())
         {
+            // toggle learning on/off
+
             // depending on mode, handle learning by PG or PGVG?
             if (0 == mode)
             {
