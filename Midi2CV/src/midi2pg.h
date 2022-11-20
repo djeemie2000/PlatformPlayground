@@ -29,13 +29,17 @@ public:
     void PrintState();
 
 private:
+    static const int NumMidiChannels = 16;
+
     GateOutBank* m_Gates;
     LedOut* m_LedOut;
     CVOutBank* m_CvOuts;
     uint8_t m_Channel[NumVoices];
-    uint8_t m_MidiBaseNote[NumVoices];
     uint8_t m_MidiNote[NumVoices];
     uint8_t m_IsActive[NumVoices];
+
+    uint8_t m_ChannelCount[NumMidiChannels]; // mono or poly?
+    uint8_t m_ChannelBaseNote[NumMidiChannels]; // 
 
     int m_LearnIndex;
 };
