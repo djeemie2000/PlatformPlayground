@@ -182,7 +182,7 @@ void Midi2PGVG::OnMessage(MidiVoiceMessage &message)
                         m_CvOuts->VelocityOut(voice * 2 + 1, velocity);
                         handled = true;
                     }
-                    else if (IsNoteOff(message) && m_IsActive[voice] == 1)
+                    else if (IsNoteOff(message) && m_IsActive[voice] == 1 && midiNote == m_MidiNote[voice])
                     {
                         m_IsActive[voice] = 0;
                         // keep midi note and velocity

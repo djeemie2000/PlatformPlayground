@@ -169,7 +169,7 @@ void Midi2PG::OnMessage(MidiVoiceMessage &message)
                         m_CvOuts->PitchOut(voice, m_ChannelBaseNote[channel], m_MidiNote[voice]);
                         handled = true;
                     }
-                    else if (IsNoteOff(message) && m_IsActive[voice] == 1)
+                    else if (IsNoteOff(message) && m_IsActive[voice] == 1 && midiNote == m_MidiNote[voice])
                     {
                         m_IsActive[voice] = 0;
                         // keep midi note
