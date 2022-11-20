@@ -10,6 +10,7 @@ Midi2PGVG::Midi2PGVG()
     {
         m_Channel[voice] = 0x00;
         m_MidiNote[voice] = 0x00;
+        m_MidiNote2[voice] = 0x00;
         m_IsActive[voice] = 0;
     }
 
@@ -31,6 +32,7 @@ void Midi2PGVG::Begin(GateOutBank *gates, LedOut *ledOut, CVOutBank *cvOuts)
     {
         m_Channel[voice] = 0x00;
         m_MidiNote[voice] = 0x00;
+        m_MidiNote2[voice] = 0x00;
         m_IsActive[voice] = 0;
         m_Gates->GateOff(voice * 2);
         m_Gates->GateOff(voice * 2 + 1);
@@ -86,25 +88,109 @@ void Midi2PGVG::OnMessage(MidiVoiceMessage &message)
         {
             if (channel == m_Channel[voice])
             {
-                if (IsNoteOn(message) && m_IsActive[voice] == 0)
+                if(m_ChannelCount[channel] == 1)
                 {
-                    m_MidiNote[voice] = midiNote;
-                    m_IsActive[voice] = 1;
-                    // update pitch out and gate out
-                    m_Gates->GateOn(voice * 2);
-                    m_Gates->GateOn(voice * 2 + 1);
-                    m_CvOuts->PitchOut(voice * 2, m_ChannelBaseNote[channel], m_MidiNote[voice]);
-                    m_CvOuts->VelocityOut(voice * 2 + 1, velocity);
-                    handled = true;
+                    // mono mode
+                    if (IsNoteOn(message))
+                    {
+                        if(0== bitRead(m_IsActive[voice], 0))
+                        {
+                            m_MidiNote[voice] = midiNote;
+                            bitSet(m_IsActive[voice], 0);
+                            // update pitch out and gate out
+                            m_Gates->GateOn(voice * 2);
+                            m_Gates->GateOn(voice * 2 + 1);
+                            m_CvOuts->PitchOut(voice * 2, m_ChannelBaseNote[channel], m_MidiNote[voice]);
+                            m_CvOuts->VelocityOut(voice * 2 + 1, velocity);
+                            handled = true;
+                        }
+                        else if(0 ==bitRead(m_IsActive[voice], 1))
+                        {
+                            m_MidiNote2[voice] = midiNote;
+                            bitSet(m_IsActive[voice], 1);
+                            // update pitch out and gate out
+                            m_Gates->GateOn(voice * 2);
+                            m_Gates->GateOn(voice * 2 + 1);
+                            m_CvOuts->PitchOut(voice * 2, m_ChannelBaseNote[channel], m_MidiNote2[voice]);
+                            m_CvOuts->VelocityOut(voice * 2 + 1, velocity);
+                            handled = true;
+                        }
+                        // more than 2 notes pressed => drop note
+                    }
+                    else if (IsNoteOff(message))
+                    {
+                        if(midiNote == m_MidiNote[voice])
+                        {
+                            bitClear(m_IsActive[voice], 0); // 1st note off
+
+                            if(0 == m_IsActive[voice])
+                            {
+                                // 2nd note is also off => 
+                                // keep midi note
+                                // update gate out
+                                m_Gates->GateOff(voice * 2);
+                                m_Gates->GateOff(voice * 2 + 1);
+                                handled = true;
+                            }
+                            else
+                            {
+                                // 2nd note is on => 
+                                // change pitch to 2nd note, keep gate on, keep velocity
+                                m_Gates->GateOn(voice * 2);
+                                m_Gates->GateOn(voice * 2 + 1);
+                                m_CvOuts->PitchOut(voice * 2, m_ChannelBaseNote[channel], m_MidiNote2[voice]);
+                                handled = true;
+                            }
+                        }
+                        else if(midiNote == m_MidiNote2[voice])
+                        {
+                            bitClear(m_IsActive[voice], 1); // 2nd note off
+
+                            if(0 == m_IsActive[voice])
+                            {
+                                // 1st note is also off => 
+                                // keep midi note
+                                // update gate out
+                                m_Gates->GateOff(voice * 2);
+                                m_Gates->GateOff(voice * 2 + 1);
+                                handled = true;
+                            }
+                            else
+                            {
+                                // 1st note is on => 
+                                // change pitch to 1st note, keep gate on, keep velocity
+                                m_Gates->GateOn(voice);
+                                m_Gates->GateOn(voice * 2);
+                                m_Gates->GateOn(voice * 2 + 1);
+                                m_CvOuts->PitchOut(voice * 2, m_ChannelBaseNote[channel], m_MidiNote[voice]);
+                                handled = true;
+                            }
+                        }
+                    }
                 }
-                else if (IsNoteOff(message) && m_IsActive[voice] == 1)
+                else
                 {
-                    m_IsActive[voice] = 0;
-                    // keep midi note and velocity
-                    // update gate out
-                    m_Gates->GateOff(voice * 2);
-                    m_Gates->GateOff(voice * 2 + 1);
-                    handled = true;
+                    // poly mode
+                    if (IsNoteOn(message) && m_IsActive[voice] == 0)
+                    {
+                        m_MidiNote[voice] = midiNote;
+                        m_IsActive[voice] = 1;
+                        // update pitch out and gate out
+                        m_Gates->GateOn(voice * 2);
+                        m_Gates->GateOn(voice * 2 + 1);
+                        m_CvOuts->PitchOut(voice * 2, m_ChannelBaseNote[channel], m_MidiNote[voice]);
+                        m_CvOuts->VelocityOut(voice * 2 + 1, velocity);
+                        handled = true;
+                    }
+                    else if (IsNoteOff(message) && m_IsActive[voice] == 1)
+                    {
+                        m_IsActive[voice] = 0;
+                        // keep midi note and velocity
+                        // update gate out
+                        m_Gates->GateOff(voice * 2);
+                        m_Gates->GateOff(voice * 2 + 1);
+                        handled = true;
+                    }
                 }
             }
         }

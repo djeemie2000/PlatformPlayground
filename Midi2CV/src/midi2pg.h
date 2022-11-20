@@ -34,9 +34,11 @@ private:
     GateOutBank* m_Gates;
     LedOut* m_LedOut;
     CVOutBank* m_CvOuts;
+    
     uint8_t m_Channel[NumVoices];
     uint8_t m_MidiNote[NumVoices];
-    uint8_t m_IsActive[NumVoices];
+    uint8_t m_MidiNote2[NumVoices];//basic 2 note stack for mono voice
+    uint8_t m_IsActive[NumVoices];//bit0 bit1
 
     uint8_t m_ChannelCount[NumMidiChannels]; // mono or poly?
     uint8_t m_ChannelBaseNote[NumMidiChannels]; // 
