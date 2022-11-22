@@ -29,6 +29,10 @@ public:
     void PrintState();
 
 private:
+    void VoiceOn(int voice, uint8_t midiBaseNote, uint8_t midiNote, uint8_t velocity);
+    void VoiceOn(int voice, uint8_t midiBaseNote, uint8_t midiNote);
+    void VoiceOff(int voice);
+
     static const int NumMidiChannels = 16;
 
     GateOutBank* m_Gates;

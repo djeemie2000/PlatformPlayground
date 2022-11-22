@@ -49,6 +49,26 @@ void Midi2PG::Begin(GateOutBank *gates, LedOut *ledOut, CVOutBank *cvOuts)
     m_LedOut->LedOn();
 }
 
+void Midi2PG::VoiceOn(int voice, uint8_t midiBaseNote, uint8_t midiNote, uint8_t velocity)
+{
+    m_Gates->GateOn(voice);
+    m_CvOuts->PitchOut(voice, midiBaseNote, midiNote);
+    // ignore velocity
+}
+
+void Midi2PG::VoiceOn(int voice, uint8_t midiBaseNote, uint8_t midiNote)
+{
+    m_Gates->GateOn(voice);
+    m_CvOuts->PitchOut(voice, midiBaseNote, midiNote);
+}
+
+void Midi2PG::VoiceOff(int voice)
+{
+    // keep midi note, keep velocity
+    // update gate out
+    m_Gates->GateOff(voice);
+}
+
 void Midi2PG::OnMessage(MidiVoiceMessage &message)
 {
     if (IsLearning())
@@ -95,8 +115,7 @@ void Midi2PG::OnMessage(MidiVoiceMessage &message)
                             m_MidiNote[voice] = midiNote;
                             bitSet(m_IsActive[voice], 0);
                             // update pitch out and gate out
-                            m_Gates->GateOn(voice);
-                            m_CvOuts->PitchOut(voice, m_ChannelBaseNote[channel], m_MidiNote[voice]);
+                            VoiceOn(voice, m_ChannelBaseNote[channel], m_MidiNote[voice]);
                             handled = true;
                         }
                         else if(0 ==bitRead(m_IsActive[voice], 1))
@@ -104,8 +123,7 @@ void Midi2PG::OnMessage(MidiVoiceMessage &message)
                             m_MidiNote2[voice] = midiNote;
                             bitSet(m_IsActive[voice], 1);
                             // update pitch out and gate out
-                            m_Gates->GateOn(voice);
-                            m_CvOuts->PitchOut(voice, m_ChannelBaseNote[channel], m_MidiNote2[voice]);
+                            VoiceOn(voice, m_ChannelBaseNote[channel], m_MidiNote2[voice]);
                             handled = true;
                         }
                         // more than 2 notes pressed => drop note
@@ -122,15 +140,14 @@ void Midi2PG::OnMessage(MidiVoiceMessage &message)
                                 // 2nd note is also off => 
                                 // keep midi note
                                 // update gate out
-                                m_Gates->GateOff(voice);
+                                VoiceOff(voice);
                                 handled = true;
                             }
                             else
                             {
                                 // 2nd note is on => 
                                 // change pitch to 2nd note, keep gate on
-                                m_Gates->GateOn(voice);
-                                m_CvOuts->PitchOut(voice, m_ChannelBaseNote[channel], m_MidiNote2[voice]);
+                                VoiceOn(voice, m_ChannelBaseNote[channel], m_MidiNote2[voice]);
                                 handled = true;
                             }
                         }
@@ -143,15 +160,14 @@ void Midi2PG::OnMessage(MidiVoiceMessage &message)
                                 // 1st note is also off => 
                                 // keep midi note
                                 // update gate out
-                                m_Gates->GateOff(voice);
+                                VoiceOff(voice);
                                 handled = true;
                             }
                             else
                             {
                                 // 1st note is on => 
                                 // change pitch to 1st note, keep gate on
-                                m_Gates->GateOn(voice);
-                                m_CvOuts->PitchOut(voice, m_ChannelBaseNote[channel], m_MidiNote[voice]);
+                                VoiceOn(voice, m_ChannelBaseNote[channel], m_MidiNote[voice]);
                                 handled = true;
                             }
                         }
@@ -165,8 +181,7 @@ void Midi2PG::OnMessage(MidiVoiceMessage &message)
                         m_MidiNote[voice] = midiNote;
                         m_IsActive[voice] = 1;
                         // update pitch out and gate out
-                        m_Gates->GateOn(voice);
-                        m_CvOuts->PitchOut(voice, m_ChannelBaseNote[channel], m_MidiNote[voice]);
+                        VoiceOn(voice, m_ChannelBaseNote[channel], m_MidiNote[voice]);
                         handled = true;
                     }
                     else if (IsNoteOff(message) && m_IsActive[voice] == 1 && midiNote == m_MidiNote[voice])
@@ -174,7 +189,7 @@ void Midi2PG::OnMessage(MidiVoiceMessage &message)
                         m_IsActive[voice] = 0;
                         // keep midi note
                         // update gate out
-                        m_Gates->GateOff(voice);
+                        VoiceOff(voice);
                         handled = true;
                     }
 
@@ -203,7 +218,7 @@ void Midi2PG::ToggleLearning()
         for (int voice = 0; voice < NumVoices; ++voice)
         {
             m_IsActive[voice] = 0;
-            m_Gates->GateOff(voice);
+            VoiceOff(voice);
         }
 
         // blink statusled
@@ -219,14 +234,30 @@ bool Midi2PG::IsLearning() const
 void Midi2PG::PrintState()
 {
     Serial.println(m_LearnIndex, DEC);
+    
+    for(int ch = 0; ch<NumMidiChannels; ++ch)
+    {
+        if(0<m_ChannelCount[ch])
+        {
+            Serial.print(ch, HEX);
+            Serial.print(' ');
+            Serial.print(m_ChannelCount[ch], DEC);
+            Serial.print(' ');
+            Serial.println(m_ChannelBaseNote[ch], HEX);    
+        }
+    }
+    Serial.println();
+
     for (int idx = 0; idx < NumVoices; ++idx)
     {
         Serial.print(m_Channel[idx], HEX);
+        Serial.print(' ');
+        Serial.print(m_IsActive[idx], DEC);
         Serial.print(' ');
         Serial.print(m_ChannelBaseNote[m_Channel[idx]], HEX);
         Serial.print(' ');
         Serial.print(m_MidiNote[idx], HEX);
         Serial.print(' ');
-        Serial.println(m_IsActive[idx], DEC);
+        Serial.println(m_MidiNote2[idx], HEX);
     }
 }
