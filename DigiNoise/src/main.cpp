@@ -14,6 +14,7 @@
 #include "diginoise.h"
 #include "comparepulser.h"
 #include "dualclockrandomizer.h"
+#include "dualclockquantizer.h"
 
 #define LED_PIN PB3 // PB0
 
@@ -28,7 +29,8 @@
 // MasterClock2 masterClock;
 // DigiNoise digiNoise;
 // ComparePulser comparePulser;
-DualClockRandomizer clockRandomizer;
+// DualClockRandomizer clockRandomizer;
+DualClockQuantizer clockQuantizer;
 
 void setup()
 {
@@ -51,7 +53,7 @@ void setup()
   //  attiny_timer_mode(FAST_PWM);
   //  attiny_timer_prescale(1);
   //  Cntr = 0;
-  clockRandomizer.setup();
+  clockQuantizer.setup();
   // digiNoise.setup();
   // comparePulser.setup();
 }
@@ -91,7 +93,7 @@ int main()
 
   while (true)
   {
-    clockRandomizer.loop();
+    clockQuantizer.loop();
     // digiNoise.loop();
     // comparePulser.loop();
   }

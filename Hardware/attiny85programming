@@ -1,0 +1,35 @@
+https://andreasrohner.at/posts/Electronics/How-to-fix-device-permissions-for-the-USBasp-programmer/
+
+--- 
+
+The problem is that the device permissions by default only allow root to write to the device. By using the command lsusb you can find out the bus and device id of your USBasp device:
+
+$ lsusb
+...
+Bus 003 Device 018: ID 16c0:05dc Van Ooijen Technische Informatica shared ID for use with libusb
+...
+$ ls -al /dev/bus/usb/003/018
+crw-rw-r-- 1 root root 189, 273 23. Aug 11:23 /dev/bus/usb/003/018
+The quick and dirty solution is to simply change the device permissions by hand. The downside of this is that you have to repeat this procedure every time you reconnect the device.
+
+$ sudo chmod 666 /dev/bus/usb/003/018
+
+---
+
+avrdude: warning: cannot set sck period. please check for usbasp firmware update.
+avrdude: error: program enable: target doesn't answer. 1 
+avrdude: initialization failed, rc=-1
+avrdude: AVR device initialized and ready to accept instructions
+avrdude: Device signature = 0xa0e337
+avrdude: Expected signature for ATtiny85 is 1E 93 0B
+
+avrdude done.  Thank you.
+
+*** [upload] Error 1
+
+---> remove everything that is connected to the pins!!!!!!!!!!!!
+
+
+
+
+
