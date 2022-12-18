@@ -11,23 +11,25 @@ uint8_t
 attiny_digital_read(uint8_t pin)
 {
 
-        if ((PINB & (1 << pin)) > 0)
-                return ATTINY_HIGH;
+	if ((PINB & (1 << pin)) > 0)
+		return ATTINY_HIGH;
 
-        return ATTINY_LOW;
+	return ATTINY_LOW;
 }
 
-void
-attiny_digital_write(uint8_t pin, uint8_t value)
+void attiny_digital_write(uint8_t pin, uint8_t value)
 {
 	uint8_t sreg;
 
-	if (value == ATTINY_HIGH) {
+	if (value != ATTINY_LOW)
+	{
 		sreg = SREG;
 		cli();
 		sbi(PORTB, pin);
 		SREG = sreg;
-	} else { // value == LOW
+	}
+	else
+	{ // value == LOW
 		sreg = SREG;
 		cli();
 		cbi(PORTB, pin);
@@ -35,8 +37,7 @@ attiny_digital_write(uint8_t pin, uint8_t value)
 	}
 }
 
-void
-attiny_digital_toggle(uint8_t pin)
+void attiny_digital_toggle(uint8_t pin)
 {
 
 	PORTB ^= 1 << (pin);
