@@ -26,7 +26,13 @@ struct DualClockQuantizer
 
         attiny_pin_mode(ClockOutPin1, ATTINY_OUTPUT);
         attiny_pin_mode(ClockOutPin2, ATTINY_OUTPUT);
+
+        attiny_pin_mode(ClockInPin, ATTINY_INPUT);
+
         // pin mode input needed for ADC in??
+        attiny_pin_mode(CV1InPin, ATTINY_INPUT);
+        attiny_pin_mode(CV2InPin, ATTINY_INPUT);
+
         m_ClockIn.begin(ClockInPin);
 
         // avoid noise from other pins => everything LOW upon setup
@@ -36,9 +42,6 @@ struct DualClockQuantizer
 
     void loop()
     {
-        uint32_t cv1 = attiny_analog_read(CV1InPin);
-        uint32_t cv2 = attiny_analog_read(CV2InPin);
-
         // Update cntr / clock
         uint32_t period = 256;
         if (m_Cntr < period)
@@ -50,16 +53,32 @@ struct DualClockQuantizer
             m_Cntr = 0;
         }
 
-        if (m_ClockIn.IsRising() || m_Cntr == 0)
+        uint32_t cv1 = attiny_analog_read(CV1InPin);
+        uint32_t cv2 = attiny_analog_read(CV2InPin);
+
+        if (1008 < cv1)
         {
-            // TODO
+            cv1 = 1024;
+        }
+        else if (cv1 < 16)
+        {
+            cv1 = 0;
+        }
+
+        if (1008 < cv2)
+        {
+            cv2 = 1024;
+        }
+        else if (cv2 < 16)
+        {
+            cv2 = 0;
         }
 
         uint8_t clockInValue = m_Cntr < (period >> 1) ? 1 : 0;
         // TODO m_ClockIn.Get();
 
         int out1 = m_State1.Tick(clockInValue, cv1);
-        int out2 = m_State1.Tick(clockInValue, cv2);
+        int out2 = m_State2.Tick(clockInValue, cv2);
 
         attiny_digital_write(ClockOutPin1, out1);
         attiny_digital_write(ClockOutPin2, out2);
