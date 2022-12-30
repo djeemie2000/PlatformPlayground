@@ -2,6 +2,7 @@
 #include "midivoicemessage.h"
 #include "gateoutbank.h"
 #include "ledout.h"
+#include "EEPROM.h"
 
 Midi2Gate::Midi2Gate()
     : m_Gates(0)
@@ -120,5 +121,39 @@ void Midi2Gate::PrintState()
         Serial.print(m_MidiNote[idx], HEX);
         Serial.print(' ');
         Serial.println(m_Gate[idx], DEC);
+    }
+}
+
+void Midi2Gate::saveParams(int offset)
+{
+    int off = offset;
+    EEPROM.update(off++, 'G');
+    EEPROM.update(off++, 'G');
+    for(int voice = 0; voice<NumGates; ++voice)
+    {
+        uint8_t channel = m_Channel[voice];
+        uint8_t baseNote = m_MidiNote[voice];
+        EEPROM.update(off++, channel);
+        EEPROM.update(off++, baseNote);
+    }
+}
+
+int Midi2Gate::paramSize() const
+{
+    return 2+2*NumGates;
+}
+
+void Midi2Gate::loadParams(int offset)
+{
+    int off = offset;
+    if ('G' == EEPROM.read(off++) && 'G' == EEPROM.read(off++))
+    {
+        for(int voice = 0; voice<NumGates; ++voice)
+        {
+            uint8_t channel = EEPROM.read(off++);
+            uint8_t baseNote = EEPROM.read(off++);
+            m_Channel[voice] = channel;
+            m_MidiNote[voice] = baseNote;
+        }
     }
 }

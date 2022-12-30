@@ -2,6 +2,7 @@
 #include "ledout.h"
 #include "gateoutbank.h"
 #include "cvoutbank.h"
+#include "EEPROM.h"
 
 Midi2PGVG::Midi2PGVG()
     : m_LearnIndex(-1)
@@ -265,5 +266,45 @@ void Midi2PGVG::PrintState()
         Serial.print(m_MidiNote[idx], HEX);
         Serial.print(' ');
         Serial.println(m_MidiNote2[idx], HEX);
+    }
+}
+
+void Midi2PGVG::saveParams(int offset)
+{
+    int off = offset;
+    EEPROM.update(off++, 'P');
+    EEPROM.update(off++, 'V');
+    for(int voice = 0; voice<NumVoices; ++voice)
+    {
+        uint8_t channel = m_Channel[voice];
+        uint8_t baseNote = m_ChannelBaseNote[channel];
+        EEPROM.update(off++, channel);
+        EEPROM.update(off++, baseNote);
+    }
+}
+
+int Midi2PGVG::paramSize() const
+{
+    return 2+2*NumVoices;//actually 10
+}
+
+void Midi2PGVG::loadParams(int offset)
+{
+    int off = offset;
+    if ('P' == EEPROM.read(off++) && 'V' == EEPROM.read(off++))
+    {
+        // channel count to zero for all channels???
+        for(int ch = 0; ch<NumMidiChannels; ++ch)
+        {
+            m_ChannelCount[ch] = 0;
+        }
+        for(int voice = 0; voice<NumVoices; ++voice)
+        {
+            uint8_t channel = EEPROM.read(off++);
+            uint8_t baseNote = EEPROM.read(off++);
+            m_Channel[voice] = channel;
+            ++m_ChannelCount[channel];
+            m_ChannelBaseNote[channel] = baseNote;
+        }
     }
 }
