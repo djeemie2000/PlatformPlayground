@@ -9,6 +9,7 @@
 #include "ledout.h"
 #include "cvoutbank.h"
 #include "mcp4822bank.h"
+#include "EEPROM.h"
 
 struct Midi2CVApp
 {
@@ -31,7 +32,10 @@ struct Midi2CVApp
 
     LedOut ledOut_Mode;
     // mode : 0 = PG mode 1 = PGVG mode
-    int mode;
+    uint8_t mode;
+    // check for saveParams
+    bool prevIsLearning;
+    bool modeChanged;
 
     void Begin(uint8_t analogBtnInPin, uint8_t analogBtnInPin2,
                uint8_t statusLedPin, uint8_t statusLedPin2,
@@ -66,6 +70,9 @@ struct Midi2CVApp
         // mode = 1 => led2 on
         // led1 is hendled by Midi2PG / Midi2PGVG (learning)
         ledOut_Mode.LedOff();
+
+        prevIsLearning = false;
+        modeChanged = false;
     }
 
     void OnMidiMessage(uint8_t byte)
@@ -106,6 +113,7 @@ struct Midi2CVApp
 
             // toggle mode
             mode = 1 - mode;
+            modeChanged = true;
         }
 
         if (buttons1.IsClicked1())
@@ -147,4 +155,66 @@ struct Midi2CVApp
             ledOut_Mode.Apply(counter, statusLed2Pin);
         }
     }
+
+    void CheckSaveParams(int offset)
+    {
+        bool isLearning = midi2PG.IsLearning() || midi2PGVG.IsLearning();
+        if(modeChanged)
+        {
+            int off = offset;
+            EEPROM.update(off++, 'M');
+            EEPROM.update(off++, '2');
+            EEPROM.update(off++, 'C');
+            EEPROM.update(off++, 'V');
+
+            EEPROM.update(off++, mode);
+        }
+        if(isLearning != prevIsLearning)
+        {
+            saveParams(offset);
+        }
+        modeChanged = false;
+        prevIsLearning = isLearning;
+    }
+
+    void saveParams(int offset)
+    {
+        int off = offset;
+        EEPROM.update(off++, 'M');
+        EEPROM.update(off++, '2');
+        EEPROM.update(off++, 'C');
+        EEPROM.update(off++, 'V');
+
+        EEPROM.update(off++, mode);
+
+        midi2PG.saveParams(off);
+        off += midi2PG.paramSize();
+
+        midi2PGVG.saveParams(off);
+        off += midi2PGVG.paramSize();
+    }
+
+    int paramSize() const
+    {
+        return 4+1+midi2PG.paramSize()+midi2PGVG.paramSize();
+    }
+
+    void loadParams(int offset)
+    {
+        int off = offset;
+        if ('M' == EEPROM.read(off++) 
+        && '2' == EEPROM.read(off++)
+        && 'C' == EEPROM.read(off++)
+        && 'V' == EEPROM.read(off++))
+        {
+            mode = EEPROM.read(off++);
+
+            midi2PG.loadParams(off);
+            off += midi2PG.paramSize();
+
+            midi2PGVG.loadParams(off);
+            off += midi2PGVG.paramSize();
+        }
+    }
+
 };

@@ -149,10 +149,15 @@ void loop()
 #ifndef CVAPP
   app1.Update(millies);
   app2.Update(millies);
+
+  app1.CheckSaveParams(128);
+  app1.CheckSaveParams(192); //128 + 64
 #endif
 
 #ifdef CVAPP
   app3.Update(millies);
+
+  app3.CheckSaveParams(256);//128+64+64
 #endif
 
 #ifdef DEBUGAPP

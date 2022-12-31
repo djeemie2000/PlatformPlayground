@@ -8,6 +8,7 @@
 #include "digitaloutbank.h"
 #include "gateoutbank.h"
 #include "ledout.h"
+#include "EEPROM.h"
 
 
 struct Midi2GateClockApp
@@ -22,7 +23,10 @@ struct Midi2GateClockApp
   Midi2Gate midi2Gate;
   Midi2Clock midi2Clock;
   // mode : 0 = midi2gate 1=midi2clock
-  int mode;
+  uint8_t mode;
+  // check for saveParams
+  bool prevIsLearning;
+  bool modeChanged;
 
   void Begin(uint8_t analogBtnInPin, uint8_t statusLedPin,
               uint8_t pin0, uint8_t pin1, uint8_t pin2, uint8_t pin3, 
@@ -44,6 +48,9 @@ struct Midi2GateClockApp
     midi2Clock.Begin(&gateOut_midi2Clock, &clockLedOut);
     
     mode = 0;
+
+    prevIsLearning = false;
+    modeChanged = false;
   }
 
   void OnMidiMessage(uint8_t byte)
@@ -67,6 +74,7 @@ struct Midi2GateClockApp
     if(buttons.IsClicked2())
     {
       mode = 1- mode;
+      modeChanged = true;
     }
 
     uint8_t counter = millies >> 2;
@@ -84,5 +92,66 @@ struct Midi2GateClockApp
       gateOut_midi2Clock.Apply(digitalOutBank);
       clockLedOut.Apply(counter, statusLed1Pin);
     }
+  }
+
+  void CheckSaveParams(int offset)
+  {
+    bool isLearning = midi2Gate.IsLearning();//clock does not learn
+    if(modeChanged)
+    {
+      int off = offset;
+      EEPROM.update(off++, 'M');
+      EEPROM.update(off++, '2');
+      EEPROM.update(off++, 'G');
+      EEPROM.update(off++, 'C');
+
+      EEPROM.update(off++, mode);
+    }
+    if(isLearning != prevIsLearning)
+    {
+      saveParams(offset);
+    }
+    modeChanged = false;
+    prevIsLearning = isLearning;
+  }
+
+  void saveParams(int offset)
+  {
+      int off = offset;
+      EEPROM.update(off++, 'M');
+      EEPROM.update(off++, '2');
+      EEPROM.update(off++, 'G');
+      EEPROM.update(off++, 'C');
+
+      EEPROM.update(off++, mode);
+
+      midi2Gate.saveParams(off);
+      off += midi2Gate.paramSize();
+
+      midi2Clock.saveParams(off);
+      off += midi2Clock.paramSize();
+  }
+
+  int paramSize() const
+  {
+      return 4+1+midi2Gate.paramSize()+midi2Clock.paramSize();
+  }
+
+  void loadParams(int offset)
+  {
+      int off = offset;
+      if ('M' == EEPROM.read(off++) 
+      && '2' == EEPROM.read(off++)
+      && 'G' == EEPROM.read(off++)
+      && 'C' == EEPROM.read(off++))
+      {
+          mode = EEPROM.read(off++);
+
+          midi2Gate.loadParams(off);
+          off += midi2Gate.paramSize();
+
+          midi2Clock.loadParams(off);
+          off += midi2Clock.paramSize();
+      }
   }
 };

@@ -1,6 +1,7 @@
 #include "midi2clock.h"
 #include "gateoutbank.h"
 #include "ledout.h"
+#include "EEPROM.h"
 
 Midi2Clock::Midi2Clock()
     : m_Gates(0)
@@ -172,5 +173,26 @@ void ToggleClockIsRunning(Midi2Clock& midi2Clock)
     {
         // midi start
         midi2Clock.OnMessage(0xFA);
+    }
+}
+
+void Midi2Clock::saveParams(int offset)
+{
+    int off = offset;
+    EEPROM.update(off++, 'C');
+    EEPROM.update(off++, 'L');
+}
+
+int Midi2Clock::paramSize() const
+{
+    return 2;
+}
+
+void Midi2Clock::loadParams(int offset)
+{
+    int off = offset;
+    if ('C' == EEPROM.read(off++) && 'L' == EEPROM.read(off++))
+    {
+        //TODO
     }
 }
