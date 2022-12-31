@@ -9,7 +9,7 @@
 #include "midi2gateclockapp.h"
 #include "midi2cvapp.h"
 
-#define DEBUGAPP 1
+//#define DEBUGAPP 1
 //#define DEBUGMIDI 1
 #define CVAPP 1
 
@@ -44,19 +44,20 @@ void setup()
 #ifndef CVAPP
   app1.Begin(A6, 2, 4, 5, 6, 7, A0, A1, A2, A3);
   app2.Begin(A7, 3, 8, 9, 10, 11, 12, 13, A4, A5);
+
+  app1.loadParams(128);
+  app2.loadParams(192);
 #endif
 
 #ifdef CVAPP
   app3.Begin(A6, A7, 2, 3, 4, 5, 6, 7, A0, A1, A2, A3);
+
+  app3.loadParams(256);
 #endif
 
 #ifdef DEBUGAPP
   debugCounter.Begin(2000);
 #endif
-
-  // setup midi2gate
-  // setup midi2Clock
-
 
 #ifdef DEBUGAPP
 
