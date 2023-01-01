@@ -1,5 +1,6 @@
 #include "gateoutbank.h"
 #include "digitaloutbank.h"
+#include "mcp4822bank.h"
 
 GateOutBank::GateOutBank()
  : m_Counter(0x00)
@@ -62,6 +63,32 @@ void GateOutBank::Apply(DigitalOutBank& bank)
         }
     }
 }
+
+void GateOutBank::Apply(int offset, DigitalOutBank& bank, MCP4822Bank& abank)
+{
+    int halfSize = GateOutBank::Size/2;
+    for(int idx = 0; idx<halfSize; ++idx)
+    {
+        if(m_Gate[2*idx])
+        {
+            abank.SetValue(offset+idx, 4095);
+        }
+        else
+        {
+            abank.SetValue(offset+idx, 0);
+        }
+
+        if(m_Gate[2*idx+1])
+        {
+            bank.Set(offset+idx);
+        }
+        else
+        {
+            bank.Clear(offset+idx);
+        }
+    }
+}
+
 
 void GateOutBank::PrintState()
 {}

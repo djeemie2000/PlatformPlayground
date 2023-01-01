@@ -2,6 +2,7 @@
 #include <Arduino.h>
 
 class DigitalOutBank;
+class MCP4822Bank;
 
 class GateOutBank
 {
@@ -18,6 +19,7 @@ public:
 
     void Update(uint8_t counter); // counter for triggers
     void Apply(DigitalOutBank& bank);
+    void Apply(int offset, DigitalOutBank& bank, MCP4822Bank& abank);
 
     void PrintState();
 

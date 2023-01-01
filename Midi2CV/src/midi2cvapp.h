@@ -30,9 +30,10 @@ struct Midi2CVApp
     LedOut ledOut_Midi2PGVG;
     Midi2PGVG midi2PGVG;
 
-    LedOut ledOut_Mode;
     // mode : 0 = PG mode 1 = PGVG mode
     uint8_t mode;
+    LedOut ledOut_Mode;
+    
     // check for saveParams
     bool prevIsLearning;
     bool modeChanged;

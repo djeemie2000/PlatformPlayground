@@ -16,14 +16,18 @@ struct Midi2GateClockApp
   int statusLed1Pin;
   AnalogButtonIn2 buttons;
   DigitalOutBank digitalOutBank;
+
   GateOutBank gatesOut_midi2Gate;
-  LedOut ledOut;
-  GateOutBank gateOut_midi2Clock;
-  LedOut clockLedOut;
+  LedOut ledOut_midi2Gate;
   Midi2Gate midi2Gate;
+  
+  GateOutBank gatesOut_midi2Clock;
+  LedOut ledOut_midi2clock;
   Midi2Clock midi2Clock;
+
   // mode : 0 = midi2gate 1=midi2clock
   uint8_t mode;
+
   // check for saveParams
   bool prevIsLearning;
   bool modeChanged;
@@ -36,16 +40,16 @@ struct Midi2GateClockApp
 
     statusLed1Pin = statusLedPin;
     pinMode(statusLed1Pin, OUTPUT);
-    ledOut.Begin();
+    ledOut_midi2Gate.Begin();
 
     digitalOutBank.Begin(pin0, pin1, pin2, pin3, pin4, pin5, pin6, pin7);
 
-    clockLedOut.Begin();
+    ledOut_midi2clock.Begin();
     gatesOut_midi2Gate.Begin();
-    gateOut_midi2Clock.Begin();
+    gatesOut_midi2Clock.Begin();
 
-    midi2Gate.Begin(&gatesOut_midi2Gate, &ledOut);
-    midi2Clock.Begin(&gateOut_midi2Clock, &clockLedOut);
+    midi2Gate.Begin(&gatesOut_midi2Gate, &ledOut_midi2Gate);
+    midi2Clock.Begin(&gatesOut_midi2Clock, &ledOut_midi2clock);
     
     mode = 0;
 
@@ -79,18 +83,18 @@ struct Midi2GateClockApp
 
     uint8_t counter = millies >> 2;
     gatesOut_midi2Gate.Update(millies);
-    gateOut_midi2Clock.Update(millies);
+    gatesOut_midi2Clock.Update(millies);
 
     // apply depending on gate vs clock mode
     if(0 == mode)
     {
       gatesOut_midi2Gate.Apply(digitalOutBank);
-      ledOut.Apply(counter, statusLed1Pin);
+      ledOut_midi2Gate.Apply(counter, statusLed1Pin);
     }
     else
     {
-      gateOut_midi2Clock.Apply(digitalOutBank);
-      clockLedOut.Apply(counter, statusLed1Pin);
+      gatesOut_midi2Clock.Apply(digitalOutBank);
+      ledOut_midi2clock.Apply(counter, statusLed1Pin);
     }
   }
 
