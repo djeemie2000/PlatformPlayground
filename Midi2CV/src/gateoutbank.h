@@ -18,6 +18,7 @@ public:
 
     void Update(uint8_t counter); // counter for triggers
     void Apply(DigitalOutBank& bank);
+    void Apply(int offset, DigitalOutBank& bank);
     void Apply(int offset, DigitalOutBank& bank, MCP4822Bank& abank);
 
     void PrintState();
@@ -93,15 +94,21 @@ void GateOutBank<Size>::Update(uint8_t counter)
 template<int Size>
 void GateOutBank<Size>::Apply(DigitalOutBank& bank)
 {
+    Apply(0, bank);
+}
+
+template<int Size>
+void GateOutBank<Size>::Apply(int offset, DigitalOutBank& bank)
+{
     for(int idx = 0; idx<Size; ++idx)
     {
         if(m_Gate[idx])
         {
-            bank.Set(idx);
+            bank.Set(offset+idx);
         }
         else
         {
-            bank.Clear(idx);
+            bank.Clear(offset+idx);
         }
     }
 }
@@ -109,7 +116,7 @@ void GateOutBank<Size>::Apply(DigitalOutBank& bank)
 template<int Size>
 void GateOutBank<Size>::Apply(int offset, DigitalOutBank& bank, MCP4822Bank& abank)
 {
-    int halfSize = GateOutBank::Size/2;
+    int halfSize = Size/2;
     for(int idx = 0; idx<halfSize; ++idx)
     {
         if(m_Gate[2*idx])

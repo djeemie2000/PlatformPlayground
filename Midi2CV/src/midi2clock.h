@@ -1,3 +1,4 @@
+#pragma once
 #include <Arduino.h>
 
 template<int Size>
