@@ -16,7 +16,7 @@ Midi2Gate::Midi2Gate()
     }
 }
 
-void Midi2Gate::Begin(GateOutBank* gates, LedOut* ledOut)
+void Midi2Gate::Begin(GateOutBank<Midi2Gate::NumGates>* gates, LedOut* ledOut)
 {
     m_Gates = gates;
     m_LedOut = ledOut;

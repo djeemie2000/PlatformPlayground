@@ -2,6 +2,7 @@
 #include <Arduino.h>
 
 class MidiVoiceMessage;
+template<int NumGates>
 class GateOutBank;
 class LedOut;
 
@@ -12,7 +13,7 @@ public:
 
     Midi2Gate();
 
-    void Begin(GateOutBank* gates, LedOut* ledOut);
+    void Begin(GateOutBank<NumGates>* gates, LedOut* ledOut);
 
     void OnMessage(MidiVoiceMessage &message);
     void ToggleLearning();
@@ -25,7 +26,7 @@ public:
     void PrintState();
 
 private:
-    GateOutBank* m_Gates;
+    GateOutBank<NumGates>* m_Gates;
     LedOut* m_LedOut;
     uint8_t m_Channel[NumGates];
     uint8_t m_MidiNote[NumGates];

@@ -17,11 +17,11 @@ struct Midi2GateClockApp
   AnalogButtonIn2 buttons;
   DigitalOutBank digitalOutBank;
 
-  GateOutBank gatesOut_midi2Gate;
+  GateOutBank<8> gatesOut_midi2Gate;
   LedOut ledOut_midi2Gate;
   Midi2Gate midi2Gate;
   
-  GateOutBank gatesOut_midi2Clock;
+  GateOutBank<8> gatesOut_midi2Clock;
   LedOut ledOut_midi2clock;
   Midi2Clock midi2Clock;
 

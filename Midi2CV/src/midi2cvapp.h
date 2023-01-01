@@ -20,13 +20,13 @@ struct Midi2CVApp
     DigitalOutBank digitalOutBank;
     MCP4822Bank dacBank;
 
-    GateOutBank gatesOut_Midi2PG;
-    CVOutBank cvOut_Midi2PG;
+    GateOutBank<8> gatesOut_Midi2PG;
+    CVOutBank<8> cvOut_Midi2PG;
     LedOut ledOut_Midi2PG;
-    Midi2PG midi2PG;
+    Midi2PG<8> midi2PG;
 
-    GateOutBank gatesOut_Midi2PGVG;
-    CVOutBank cvOut_Midi2PGVG;
+    GateOutBank<8> gatesOut_Midi2PGVG;
+    CVOutBank<8> cvOut_Midi2PGVG;
     LedOut ledOut_Midi2PGVG;
     Midi2PGVG midi2PGVG;
 

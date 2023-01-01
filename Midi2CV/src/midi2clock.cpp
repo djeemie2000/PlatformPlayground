@@ -17,7 +17,7 @@ Midi2Clock::Midi2Clock()
     }
 }
 
-void Midi2Clock::Begin(GateOutBank* gates, LedOut* ledOut)
+void Midi2Clock::Begin(GateOutBank<Midi2Clock::NumGates>* gates, LedOut* ledOut)
 {
     m_Gates = gates;
     m_LedOut = ledOut;

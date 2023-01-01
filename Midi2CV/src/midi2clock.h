@@ -1,5 +1,6 @@
 #include <Arduino.h>
 
+template<int Size>
 class GateOutBank;
 class LedOut;
 
@@ -19,7 +20,7 @@ public:
 
     Midi2Clock();
 
-    void Begin(GateOutBank* gates, LedOut* ledOut);
+    void Begin(GateOutBank<NumGates>* gates, LedOut* ledOut);
 
     void OnMessage(uint8_t byte);
 //    void OnTick(uint8_t counter); // only for blinking in learn mode?
@@ -33,7 +34,7 @@ public:
     void PrintState();
 
 private:
-    GateOutBank* m_Gates;
+    GateOutBank<NumGates>* m_Gates;
     LedOut* m_LedOut;
 
     uint8_t m_TicksOn[NumCounters];

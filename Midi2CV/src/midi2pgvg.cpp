@@ -23,7 +23,7 @@ Midi2PGVG::Midi2PGVG()
     m_ChannelCount[0x00] = NumVoices;
 }
 
-void Midi2PGVG::Begin(GateOutBank *gates, LedOut *ledOut, CVOutBank *cvOuts)
+void Midi2PGVG::Begin(GateOutBank<Midi2PGVG::NumVoices*2> *gates, LedOut *ledOut, CVOutBank<Midi2PGVG::NumVoices*2> *cvOuts)
 {
     m_Gates = gates;
     m_LedOut = ledOut;
