@@ -47,11 +47,13 @@ void loop() {
 
   if(tickerAdvanced)
   {
-    //TODO tick midi looper ticker (24PPQ)
+    // tick midi looper ticker (24PPQ)
+    app.Tick();
     
     // send midi clock at 24PPQ
     app.PlayMidiClock(devBoard.serialMidi);
     
+    // TODO detect clock on<->off
     // send midi notes upon clock off->on, upon clock on-> off
   }
 

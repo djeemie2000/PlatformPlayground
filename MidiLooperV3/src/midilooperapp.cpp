@@ -5,6 +5,11 @@ MidiLooperApp::MidiLooperApp()
 {
 }
 
+void MidiLooperApp::Tick()
+{
+    ticker.Tick();
+}
+
 void MidiLooperApp::ReadMidiIn(HardwareSerial &serial)
 {
     while (serial.available())

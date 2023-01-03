@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 
+#include "midilooperticker.h"
 #include "midiloopertrack.h"
 #include "midivoicemessage.h"
 #include "midinoteparser.h"
@@ -10,6 +11,7 @@ struct MidiLooperApp
 {
     static const int NumTracks = 8;
 
+    MidiLooperTicker ticker;
     SerialBuffer<100> serialBuffer;
     MidiLooperTrack track[NumTracks];
     MidiNoteParser midiNoteParser;
@@ -20,6 +22,8 @@ struct MidiLooperApp
     bool prevIsPlaying;
 
     MidiLooperApp();
+
+    void Tick();
 
     void ReadMidiIn(HardwareSerial &serial);
 
@@ -39,4 +43,7 @@ struct MidiLooperApp
     //    handle undo,
     //    handle toggle playmute,
     void HandleTrackBtnInput(int idxTrack, bool trackClicked, bool learnPressed, bool recordPressed, bool undoPressed, HardwareSerial &serial);
+
+    // TODO
+    // functions btn input : toggle play, reset?, load/save?
 };
