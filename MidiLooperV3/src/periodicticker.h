@@ -29,8 +29,8 @@ private:
         m_Flag = true;
     }
 
-    int m_Period;
-    int m_Cntr;
-    bool m_DoReset;
-    bool m_Flag;
+    volatile int m_Period;
+    volatile int m_Cntr;
+    volatile bool m_DoReset;
+    volatile bool m_Flag;
 };

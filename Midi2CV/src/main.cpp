@@ -10,7 +10,7 @@
 #include "midi2cvapp.h"
 #include "midi2pgcapp.h"
 
-#define DEBUGAPP 1
+//#define DEBUGAPP 1
 //#define DEBUGMIDI 1
 //#define CVAPP 1
 //#define GATEAPP 1
