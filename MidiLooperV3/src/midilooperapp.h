@@ -39,6 +39,8 @@ struct MidiLooperApp
 
     void PlayTracksClockOff(HardwareSerial &serial);
 
+    void HandleTick(HardwareSerial &serial);
+
     // TODO support manual advance for step-alike recording??
 
     void PlayMidiClock(HardwareSerial &serial);
@@ -51,5 +53,9 @@ struct MidiLooperApp
     void HandleTrackBtnInput(int idxTrack, bool trackClicked, bool learnPressed, bool recordPressed, bool undoPressed, HardwareSerial &serial);
 
     // TODO
-    // functions btn input : toggle play, reset?, load/save?
+    // functions btn input : toggle play/stop, reset, (manual advance??) load/save?
+    void HandleGlobalBtnInput(bool playStopClicked, bool resetClicked);
+
+    // POC using midi touchapd
+    bool HandleMidiTouchpad(HardwareSerial &serial);// return true if message is handled by touchpad
 };

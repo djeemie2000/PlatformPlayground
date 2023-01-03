@@ -31,10 +31,8 @@ void setup() {
   timerAlarmEnable(timer);//start timer
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-
-  // ---
+void loopHiFreq()
+{
   // the following needs to run as frequent as possible:
   bool tickerAdvanced = false;  
   portENTER_CRITICAL_ISR(&timerMux);
@@ -47,18 +45,28 @@ void loop() {
 
   if(tickerAdvanced)
   {
-    // tick midi looper ticker (24PPQ)
-    app.Tick();
-    
-    // send midi clock at 24PPQ
-    app.PlayMidiClock(devBoard.serialMidi);
-    
-    // TODO detect clock on<->off
-    // send midi notes upon clock off->on, upon clock on-> off
+    app.HandleTick(devBoard.serialMidi);
   }
 
+  // regardless of ticker advanced
   app.ReadMidiIn(devBoard.serialMidi);
-  // ---
+}
 
+void loop() {
+  // put your main code here, to run repeatedly:
 
+  loopHiFreq();
+  // the following can be handled at a slower pace
+  app.ProcessMidiIn(3, devBoard.serialMidi);
+  // TODO handling midi input for midi touchpad should be split into smaller parts?
+
+  loopHiFreq();
+  // TODO read buttons and handle, can be split per track?
+
+  loopHiFreq();
+  //TODO update ledMatrix to state -> can be split? ticker state? tracks state? 
+  // -> probably not usefull to split since most of the time goes into (SPI) update of the led matrix?
+  // TODO split write row per row!
+  // TODO optimize led matrix code for single matrix, without rotation?
+  //---
 }

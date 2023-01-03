@@ -7,31 +7,31 @@ MidiLooperApp::MidiLooperApp()
 
 void MidiLooperApp::Setup()
 {
-  midiTouchPad.ConfigureNote(0x09, 0x28, 0);
-  midiTouchPad.ConfigureNote(0x09, 0x29, 1);  
-  // FA FB
-  midiTouchPad.ConfigureNote(0x09, 0x2A, 2);
-  midiTouchPad.ConfigureNote(0x09, 0x2B, 3);
-  // F1-4
-  midiTouchPad.ConfigureNote(0x09, 0x30, 4);
-  midiTouchPad.ConfigureNote(0x09, 0x31, 5);
-  midiTouchPad.ConfigureNote(0x09, 0x32, 6);
-  midiTouchPad.ConfigureNote(0x09, 0x33, 7);
-  // btn1-8
-  midiTouchPad.ConfigureNote(0x09, 0x24, 8);
-  midiTouchPad.ConfigureNote(0x09, 0x25, 9);
-  midiTouchPad.ConfigureNote(0x09, 0x26, 10);
-  midiTouchPad.ConfigureNote(0x09, 0x27, 11);
-  midiTouchPad.ConfigureNote(0x09, 0x2C, 12);
-  midiTouchPad.ConfigureNote(0x09, 0x2D, 13);
-  midiTouchPad.ConfigureNote(0x09, 0x2E, 14);
-  midiTouchPad.ConfigureNote(0x09, 0x2F, 15);
-  // toggle play/stop
-  midiTouchPad.ConfigureController(0x0F, 0x73, 16);
-  // reset
-  midiTouchPad.ConfigureController(0x0F, 0x69, 17);
-  // advance
-  midiTouchPad.ConfigureController(0x0F, 0x68, 18);
+    // F1-F7
+    midiTouchPad.ConfigureNote(0x09, 0x28, 0); // learn
+    midiTouchPad.ConfigureNote(0x09, 0x29, 1); // record
+    midiTouchPad.ConfigureNote(0x09, 0x2A, 2); // undo
+    midiTouchPad.ConfigureNote(0x09, 0x2B, 3); //??
+    midiTouchPad.ConfigureNote(0x09, 0x30, 4); //??
+    midiTouchPad.ConfigureNote(0x09, 0x31, 5); // save?
+    midiTouchPad.ConfigureNote(0x09, 0x32, 6); // load?
+                                               //  metronome
+    midiTouchPad.ConfigureNote(0x09, 0x33, 7);
+    // track1-8
+    midiTouchPad.ConfigureNote(0x09, 0x24, 8);
+    midiTouchPad.ConfigureNote(0x09, 0x25, 9);
+    midiTouchPad.ConfigureNote(0x09, 0x26, 10);
+    midiTouchPad.ConfigureNote(0x09, 0x27, 11);
+    midiTouchPad.ConfigureNote(0x09, 0x2C, 12);
+    midiTouchPad.ConfigureNote(0x09, 0x2D, 13);
+    midiTouchPad.ConfigureNote(0x09, 0x2E, 14);
+    midiTouchPad.ConfigureNote(0x09, 0x2F, 15);
+    // toggle play/stop
+    midiTouchPad.ConfigureController(0x0F, 0x73, 16);
+    // reset
+    midiTouchPad.ConfigureController(0x0F, 0x69, 17);
+    // advance
+    midiTouchPad.ConfigureController(0x0F, 0x68, 18);
 }
 
 void MidiLooperApp::Tick()
@@ -46,7 +46,7 @@ void MidiLooperApp::ReadMidiIn(HardwareSerial &serial)
         uint8_t byte = serial.read();
         // filter out realtime clock messages for midi thru
         // also for parsing??
-        if (!(0xF8 <= byte && byte <= 0xFC))
+        if (!(0xF8 <= byte && byte <= 0xFC))//!ShouldIgnore(byte)
         {
             // midi thru:
             serial.write(byte);
@@ -59,9 +59,9 @@ void MidiLooperApp::ReadMidiIn(HardwareSerial &serial)
 
 void MidiLooperApp::ProcessMidiIn(int maxBytes, HardwareSerial &serial)
 {
-    int cntr = 0; 
+    int cntr = 0;
     uint8_t byte = 0x00;
-    while(serialBuffer.Read(byte) && cntr<maxBytes)
+    while (serialBuffer.Read(byte) && cntr < maxBytes)
     {
         ProcessMidiInByte(byte, serial);
         ++cntr;
@@ -74,11 +74,8 @@ void MidiLooperApp::ProcessMidiInByte(uint8_t byte, HardwareSerial &serial)
 
     if (midiNoteParser.Parse(byte, message))
     {
-        // dirty hack: channel == 0x09 => handle by touchpad
-        if(0x09 == Channel(message))
+        if (HandleMidiTouchpad(serial))
         {
-            midiTouchPad.Update(message);
-            //TODO handle any button clicks here!!
         }
         // only used when recording or learning track
         else if (0 <= learnIdx)
@@ -140,6 +137,34 @@ void MidiLooperApp::PlayMidiClock(HardwareSerial &serial)
     prevIsPlaying = isPlaying;
 }
 
+void MidiLooperApp::HandleTick(HardwareSerial &serial)
+{
+    bool prevClockOn = ticker.GetClockOn();
+
+    // tick midi looper ticker (24PPQ)
+    Tick();
+    
+    // send midi clock at 24PPQ
+    PlayMidiClock(serial);
+    
+    // detect clock on<->off !! 
+    bool currClockOn = ticker.GetClockOn();
+    if(currClockOn != prevClockOn)
+    {
+      // send midi notes upon clock off->on, upon clock on-> off
+      if(currClockOn)
+      {
+        PlayTracksClockOn(serial);
+      }
+      else
+      {
+        PlayTracksClockOff(serial);
+      }
+    }
+
+}
+
+
 //  per track:
 //    handle toggle/change learning
 //    handle toggle/change recording?
@@ -186,4 +211,41 @@ void MidiLooperApp::HandleTrackBtnInput(int idxTrack, bool trackClicked, bool le
             track[idxTrack].SetPlayMute(!currentPlayMute, serial);
         }
     }
+}
+
+void MidiLooperApp::HandleGlobalBtnInput(bool playStopClicked, bool resetClicked)
+{
+    if (playStopClicked)
+    {
+        isPlaying = !isPlaying;
+    }
+    // reset functionality while playing?
+    if(resetClicked)
+    {
+        ticker.Reset();
+    }
+}
+
+bool MidiLooperApp::HandleMidiTouchpad(HardwareSerial &serial)
+{
+    // dirty hack: channel == 0x09 <=> handle by touchpad
+    if (0x09 == Channel(message))
+    {
+        midiTouchPad.Update(message);
+        // TODO handle any button clicks here!!
+        bool learnPressed = midiTouchPad.Get(0);
+        bool recordPressed = midiTouchPad.Get(1);
+        bool undoPressed = midiTouchPad.Get(2);
+
+        for (int track = 0; track < NumTracks; ++track)
+        {
+            HandleTrackBtnInput(track, midiTouchPad.IsClicked(track + 8),
+                                learnPressed, recordPressed, undoPressed, serial);
+        }
+        HandleGlobalBtnInput(midiTouchPad.IsClicked(16), midiTouchPad.IsClicked(17));
+
+        return true;
+    }
+    // return true if message is handled by touchpad
+    return false;
 }
