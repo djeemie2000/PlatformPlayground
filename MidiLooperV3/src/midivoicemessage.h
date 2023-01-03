@@ -14,3 +14,4 @@ uint8_t MidiNote(MidiVoiceMessage& message);
 uint8_t Velocity(MidiVoiceMessage& message);
 bool IsNoteOn(MidiVoiceMessage& message);
 bool IsNoteOff(MidiVoiceMessage& message);
+bool IsController(MidiVoiceMessage& message);

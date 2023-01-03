@@ -6,6 +6,7 @@
 #include "midivoicemessage.h"
 #include "midinoteparser.h"
 #include "serialbuffer.h"
+#include "miditouchpad.h"
 
 struct MidiLooperApp
 {
@@ -16,6 +17,7 @@ struct MidiLooperApp
     MidiLooperTrack track[NumTracks];
     MidiNoteParser midiNoteParser;
     MidiVoiceMessage message;
+    MidiTouchPad midiTouchPad;//TODO replace by buttons on dvboard
     int learnIdx;
     int recordingIdx;
     bool isPlaying;
@@ -23,9 +25,13 @@ struct MidiLooperApp
 
     MidiLooperApp();
 
+    void Setup();
+
     void Tick();
 
     void ReadMidiIn(HardwareSerial &serial);
+
+    void ProcessMidiIn(int maxBytes, HardwareSerial &serial);
 
     void ProcessMidiInByte(uint8_t byte, HardwareSerial &serial);
 

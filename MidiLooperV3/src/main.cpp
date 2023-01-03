@@ -22,8 +22,8 @@ void setup() {
 
   devBoard.Begin();
 
-  // setup periodic ticker oninterrrupt
-  hiresTicker.SetPeriod(400);//40 mSec period for 24PPQ => 480 mSec per beat ~120BPM
+  // setup periodic ticker oninterrupt
+  hiresTicker.SetPeriod(400);// when tick every 100 uSec => 40 mSec period for 24PPQ => 480 mSec per beat ~120BPM
 
   timer = timerBegin(0, 80, true);// period 1 uSec (80 MHz / 80 = 1MHz)
   timerAttachInterrupt(timer, &onTimer, true);

@@ -33,3 +33,8 @@ bool IsNoteOff(MidiVoiceMessage& message)
     return (0x80 == Command(message)) 
     || (0x90 == Command(message) && 0x00 == Velocity(message));
 }
+
+bool IsController(MidiVoiceMessage& message)
+{
+     return (0xB0 == Command(message));
+}

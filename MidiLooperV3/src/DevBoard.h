@@ -12,8 +12,6 @@ struct DevBoard
   static const int LedPin = 2;
   static const int csPinLedMatrix = 5;
   static const int csPinSDCard = 15;
-  static const int irqPinTouchPadA = 34;
-  static const int irqPinTouchPadB = 35;
   static const int debugPin = 4;// TODO debugIn DIn
 
   // uart0 : usb + GPIO 1 & 3
@@ -23,12 +21,6 @@ struct DevBoard
   bool debugIsActive;
 
   HardwareSerial serialMidi;// uart 2
-  AnalogIn Pot1;//tempo
-  AnalogIn Pot2;//length
-  TouchInBank touchIn;
-  MPR121TouchPad MPR121A;
-  MPR121TouchPad MPR121B;
-  MultiTouchPad touchPad;
 
   Max7219Matrix ledMatrix;//(1,PA4);//cs pin
   
@@ -38,11 +30,6 @@ struct DevBoard
    : serialDebug(0)
    , debugIsActive(false)
    , serialMidi(2)
-   , Pot1()
-   , Pot2()
-   , touchIn(T4, T5, T6, T7, T8, T9)
-   , MPR121A()
-   , MPR121B()
    , ledMatrix(1, csPinLedMatrix)//cs pin
    , sdStorage()
    {}
@@ -54,20 +41,6 @@ struct DevBoard
 
      serialDebug.begin(115200);
      serialMidi.begin(31250);
-
-     //IOXP1.begin();
-     Pot1.begin(36);//tempo pot
-     Pot2.begin(39);//tempo pot
-     touchIn.begin(30, 45);//hysteresis min max
-
-     // setup I2C for MPR121 MPR121A
-     // Wire.begin() is called inside MPR121A.begin()
-     MPR121A.Begin(irqPinTouchPadA); //irq pin
-     MPR121B.Begin(irqPinTouchPadB, MPR121TouchPad::DefaultTouchThreshold, MPR121TouchPad::DefaultReleaseThreshold, 0x5B); //irq pin
-     touchPad.Add(&MPR121A);
-     touchPad.Add(&MPR121B);
-     touchPad.Begin();
-     //TODO autoDetect I2C : MPR121A MPR121B
       
       //SPI CS external
       ledMatrix.Configure();
@@ -81,11 +54,6 @@ struct DevBoard
     debugIsActive = true;//TODO!!!(0 == digitalRead(debugPin));
     //IOXP1.update();
     
-    Pot1.Read();
-    Pot2.Read();
-    // update led matrix, touchpad here??
-    touchPad.Read();
-    touchIn.update();
     ledMatrix.WriteAll();
    }
 
