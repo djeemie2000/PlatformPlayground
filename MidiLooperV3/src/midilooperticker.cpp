@@ -58,7 +58,7 @@ void MidiLooperTicker::Tick()
                 m_Tick = 0;
 
                 ++m_Beat;
-                if(m_Params.beatsPerBar)
+                if(m_Params.beatsPerBar<=m_Beat)
                 {
                     m_Beat = 0;
 

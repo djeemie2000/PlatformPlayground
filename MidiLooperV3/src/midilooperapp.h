@@ -7,6 +7,7 @@
 #include "midinoteparser.h"
 #include "serialbuffer.h"
 #include "miditouchpad.h"
+#include "DigitalOutMatrix.h"
 
 struct MidiLooperApp
 {
@@ -58,4 +59,6 @@ struct MidiLooperApp
 
     // POC using midi touchapd
     bool HandleMidiTouchpad(HardwareSerial &serial);// return true if message is handled by touchpad
+
+    void DisplayTicker(DigitalOutMatrix& matrix);
 };

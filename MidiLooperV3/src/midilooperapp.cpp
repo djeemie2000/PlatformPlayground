@@ -164,6 +164,25 @@ void MidiLooperApp::HandleTick(HardwareSerial &serial)
 
 }
 
+void MidiLooperApp::DisplayTicker(DigitalOutMatrix& matrix)
+{
+    uint8_t row0 = 1<<ticker.GetTick();
+    if(!ticker.GetClockOn())
+    {
+        row0 = 0x00;
+    }
+    uint8_t row1 = 1<<ticker.GetBeat();
+    uint8_t row2 = 1<<ticker.GetBar();
+
+    matrix.SetRow(row0, 5, 0);
+    matrix.SetRow(row1, 6, 0);
+    matrix.SetRow(row2, 7, 0);
+    matrix.WriteRow(5);
+    matrix.WriteRow(6);
+    matrix.WriteRow(7);
+}
+
+
 
 //  per track:
 //    handle toggle/change learning
