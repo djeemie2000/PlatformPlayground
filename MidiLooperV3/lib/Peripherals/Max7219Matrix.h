@@ -18,6 +18,8 @@ public:
     int Write();
     int WriteRow(int row);
     int WriteAll();
+
+    void SetRow(uint8_t bits, int row, int device);
     
 private:
     static const int Size = 8;//8x8 led matrix

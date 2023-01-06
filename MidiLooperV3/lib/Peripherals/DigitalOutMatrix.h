@@ -12,6 +12,7 @@ public:
     virtual int NumCols() const{return 1;}
     virtual bool Set(int row, int col) {return true;}
     virtual bool Clear(int row, int col) {return true;}
+    virtual void SetRow(uint8_t bits, int row, int device){}
     virtual int WriteAll(){return 0;}
     virtual int WriteRow(int row){return 0;}
     virtual int Write(){return 0;}

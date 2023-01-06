@@ -116,6 +116,11 @@ bool Max7219Matrix::Set(int row, int col)
     return false;
 }
 
+void Max7219Matrix::SetRow(uint8_t bits, int row, int device)
+{
+    m_Bits[row][device] = bits;
+}
+
 bool Max7219Matrix::Clear(int row, int col)
 {
     int device = col/Size;

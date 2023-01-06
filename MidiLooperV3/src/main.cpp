@@ -4,6 +4,8 @@
 #include "periodicticker.h"
 #include "midilooperapp.h"
 
+#include "TestDigitalOutMatrix.h"
+
 hw_timer_t* timer;
 portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 
@@ -21,6 +23,9 @@ void setup() {
   // put your setup code here, to run once:
 
   devBoard.Begin();
+
+  delay(1000);
+  devBoard.serialDebug.println("MidiLooperV3 v0.1...");
 
   // setup periodic ticker oninterrupt
   hiresTicker.SetPeriod(400);// when tick every 100 uSec => 40 mSec period for 24PPQ => 480 mSec per beat ~120BPM
@@ -54,6 +59,10 @@ void loopHiFreq()
 
 void loop() {
   // put your main code here, to run repeatedly:
+
+  devBoard.serialDebug.println("loop");
+  testDigitalOutMatrixRows(devBoard.ledMatrix, 1);
+  return;
 
   loopHiFreq();
   // the following can be handled at a slower pace

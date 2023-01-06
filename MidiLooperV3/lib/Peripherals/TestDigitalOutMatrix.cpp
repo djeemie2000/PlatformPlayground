@@ -19,3 +19,25 @@ void testDigitalOutMatrix(DigitalOutMatrix &matrix, int repeats)
         }
     }
 }
+
+void testDigitalOutMatrixRows(DigitalOutMatrix &matrix, int repeats)
+{
+    for (int repeat = 0; repeat < repeats || repeats < 0; ++repeat)
+    {
+        for (int row = 0; row < matrix.NumRows(); ++row)
+        {
+            matrix.SetRow(0xFF, row, 0);
+            matrix.WriteAll();
+            delay(100);
+
+            matrix.SetRow(1<<row, row, 0);
+            matrix.WriteAll();
+            delay(100);
+
+            matrix.SetRow(0x00, row, 0);
+            matrix.WriteAll();
+            delay(100);
+        }
+    }
+}
+
