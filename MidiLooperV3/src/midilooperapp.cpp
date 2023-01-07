@@ -15,7 +15,7 @@ void MidiLooperApp::Setup()
     midiTouchPad.ConfigureNote(0x09, 0x30, 4); //??
     midiTouchPad.ConfigureNote(0x09, 0x31, 5); // save?
     midiTouchPad.ConfigureNote(0x09, 0x32, 6); // load?
-                                               //  metronome
+    //  metronome
     midiTouchPad.ConfigureNote(0x09, 0x33, 7);
     // track1-8
     midiTouchPad.ConfigureNote(0x09, 0x24, 8);
@@ -34,12 +34,7 @@ void MidiLooperApp::Setup()
     midiTouchPad.ConfigureController(0x0F, 0x68, 18);
 }
 
-void MidiLooperApp::Tick()
-{
-    ticker.Tick();
-}
-
-void MidiLooperApp::ReadMidiIn(HardwareSerial &serial)
+void MidiLooperApp::ReadMidiIn(HardwareSerial &serial, HardwareSerial &serialDebug)
 {
     while (serial.available())
     {
@@ -53,27 +48,32 @@ void MidiLooperApp::ReadMidiIn(HardwareSerial &serial)
 
             // buffer for further processing
             serialBuffer.Write(byte);
+
+            // debug
+            serialDebug.println(byte, HEX);
         }
     }
 }
 
-void MidiLooperApp::ProcessMidiIn(int maxBytes, HardwareSerial &serial)
+void MidiLooperApp::ProcessMidiIn(int maxBytes, HardwareSerial &serial, HardwareSerial &serialDebug)
 {
     int cntr = 0;
     uint8_t byte = 0x00;
     while (serialBuffer.Read(byte) && cntr < maxBytes)
     {
-        ProcessMidiInByte(byte, serial);
+        ProcessMidiInByte(byte, serial, serialDebug);
         ++cntr;
     }
 }
 
-void MidiLooperApp::ProcessMidiInByte(uint8_t byte, HardwareSerial &serial)
+void MidiLooperApp::ProcessMidiInByte(uint8_t byte, HardwareSerial &serial, HardwareSerial &serialDebug)
 {
     // serialBuffer.Read(byte);
 
     if (midiNoteParser.Parse(byte, message))
     {
+        PrintVoiceMessage(message, serialDebug);
+
         if (HandleMidiTouchpad(serial))
         {
         }
@@ -90,29 +90,34 @@ void MidiLooperApp::ProcessMidiInByte(uint8_t byte, HardwareSerial &serial)
         {
             if (IsNoteOn(message))
             {
-                track[recordingIdx].RecordNoteOn(Channel(message), MidiNote(message), Velocity(message), serial);
+                // TODO 'quantization' for note on:
+                //  if clock on, record into current step 
+                //  if clock off, record into next step 
+                track[recordingIdx].RecordNoteOn(ticker.GetStep(), Channel(message), MidiNote(message), Velocity(message));
             }
             else if (IsNoteOff(message))
             {
-                track[recordingIdx].RecordNoteOff(Channel(message), MidiNote(message), Velocity(message), serial);
+                // 'quantization' for note off:
+                // always record into current step
+                track[recordingIdx].RecordNoteOff(ticker.GetStep(), Channel(message), MidiNote(message), Velocity(message));
             }
         }
     }
 }
 
-void MidiLooperApp::PlayTracksClockOn(HardwareSerial &serial)
+void MidiLooperApp::PlayTracksClockOn(int step, HardwareSerial &serial)
 {
     for (int idx = 0; idx < NumTracks; ++idx)
     {
-        track[idx].PlayClockOn(0, serial); // TODO step
+        track[idx].PlayClockOn(ticker.GetStep(), serial);
     }
 }
 
-void MidiLooperApp::PlayTracksClockOff(HardwareSerial &serial)
+void MidiLooperApp::PlayTracksClockOff(int step, HardwareSerial &serial)
 {
     for (int idx = 0; idx < NumTracks; ++idx)
     {
-        track[idx].PlayClockOff(0, serial); // TODO step
+        track[idx].PlayClockOff(step, serial);
     }
 }
 
@@ -141,24 +146,34 @@ void MidiLooperApp::HandleTick(HardwareSerial &serial)
 {
     bool prevClockOn = ticker.GetClockOn();
 
-    // tick midi looper ticker (24PPQ)
-    Tick();
+    // TODO handle playing -> !isPlaying
+    // => all notes off
+
+    if (isPlaying)
+    {
+        // tick midi looper ticker (24PPQ)
+        ticker.Tick();
+    }
 
     // send midi clock at 24PPQ
     PlayMidiClock(serial);
 
-    // detect clock on<->off !!
-    bool currClockOn = ticker.GetClockOn();
-    if (currClockOn != prevClockOn)
+    if (isPlaying)
     {
-        // send midi notes upon clock off->on, upon clock on-> off
-        if (currClockOn)
+        // detect clock on<->off !!
+        bool currClockOn = ticker.GetClockOn();
+        if (currClockOn != prevClockOn)
         {
-            PlayTracksClockOn(serial);
-        }
-        else
-        {
-            PlayTracksClockOff(serial);
+            // send midi notes upon clock off->on, upon clock on-> off
+            int step = ticker.GetStep();
+            if (currClockOn)
+            {
+                PlayTracksClockOn(step, serial);
+            }
+            else
+            {
+                PlayTracksClockOff(step, serial);
+            }
         }
     }
 }
@@ -244,6 +259,8 @@ void MidiLooperApp::HandleTrackBtnInput(int idxTrack, bool trackClicked, bool le
     {
         if (learnPressed)
         {
+            // we allow only one learn or recording track at a time
+            recordingIdx = -1;
             if (learnIdx == idxTrack)
             {
                 // toggle learn on -> off
@@ -257,10 +274,12 @@ void MidiLooperApp::HandleTrackBtnInput(int idxTrack, bool trackClicked, bool le
         }
         else if (recordPressed)
         {
+            // we allow only one learn or recording track at a time
+            learnIdx = -1;
             if (recordingIdx == idxTrack)
             {
-                // toggle learn on -> off
-                learnIdx = -1;
+                // toggle recording on -> off
+                recordingIdx = -1;
             }
             else
             {
@@ -297,7 +316,7 @@ void MidiLooperApp::HandleGlobalBtnInput(bool playStopClicked, bool resetClicked
 bool MidiLooperApp::HandleMidiTouchpad(HardwareSerial &serial)
 {
     // dirty hack: channel == 0x09 <=> handle by touchpad
-    if (0x09 == Channel(message))
+    if (0x09 == Channel(message) || IsController(message))
     {
         midiTouchPad.Update(message);
         // TODO handle any button clicks here!!

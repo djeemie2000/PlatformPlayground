@@ -38,3 +38,12 @@ bool IsController(MidiVoiceMessage& message)
 {
      return (0xB0 == Command(message));
 }
+
+void PrintVoiceMessage(MidiVoiceMessage &message, HardwareSerial& serialDebug)
+{
+  serialDebug.print(message.StatusByte, HEX);
+  serialDebug.print(' ');
+  serialDebug.print(message.Param1, HEX);
+  serialDebug.print(' ');
+  serialDebug.println(message.Param2, HEX);
+}

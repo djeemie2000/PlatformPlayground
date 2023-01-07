@@ -39,6 +39,9 @@ public:
     int GetBeat() const { return m_Beat;    }
     int GetBar() const { return m_Bar;  }
 
+    int GetStep() const { return m_Step;    }
+    // TODO next step
+
 private:
     bool m_DoReset;
     int m_Cntr24PPQ;// is this needed??
@@ -49,6 +52,9 @@ private:
     int m_Tick;
     int m_Beat;
     int m_Bar;
+
+    int m_Step;
+    int m_NumSteps;
 
     MidiLooperTickerParams m_Params;
 };

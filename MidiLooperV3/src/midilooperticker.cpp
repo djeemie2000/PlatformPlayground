@@ -8,13 +8,16 @@ MidiLooperTicker::MidiLooperTicker()
  , m_Tick(0)
  , m_Beat(0)
  , m_Bar(0)
+ , m_Step(0)
+ , m_NumSteps(1)
 {
-
 }
 
 void MidiLooperTicker::Begin(MidiLooperTickerParams params)
 {
     m_Params = params;
+
+    m_NumSteps = params.ticksPerBeat*params.beatsPerBar*params.numBars;
 
     m_DoReset = true;
 }
@@ -29,6 +32,7 @@ void MidiLooperTicker::Tick()
         m_Tick = 0;
         m_Beat = 0;
         m_Bar = 0;
+        m_Step = 0;
         m_DoReset = false;
     }
     else
@@ -52,6 +56,12 @@ void MidiLooperTicker::Tick()
 
         if(advanceTick)
         {
+            ++m_Step;
+            if(m_NumSteps<=m_Step)
+            {
+                m_Step = 0;
+            }
+
             ++m_Tick;
             if(m_Params.ticksPerBeat<=m_Tick)
             {

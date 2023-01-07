@@ -15,3 +15,5 @@ uint8_t Velocity(MidiVoiceMessage& message);
 bool IsNoteOn(MidiVoiceMessage& message);
 bool IsNoteOff(MidiVoiceMessage& message);
 bool IsController(MidiVoiceMessage& message);
+
+void PrintVoiceMessage(MidiVoiceMessage &message, HardwareSerial& serialDebug);

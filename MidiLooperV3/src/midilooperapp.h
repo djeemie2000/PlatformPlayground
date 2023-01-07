@@ -28,17 +28,15 @@ struct MidiLooperApp
 
     void Setup();
 
-    void Tick();
+    void ReadMidiIn(HardwareSerial &serial, HardwareSerial& serialDebug);
 
-    void ReadMidiIn(HardwareSerial &serial);
+    void ProcessMidiIn(int maxBytes, HardwareSerial &serial, HardwareSerial& serialDebug);
 
-    void ProcessMidiIn(int maxBytes, HardwareSerial &serial);
+    void ProcessMidiInByte(uint8_t byte, HardwareSerial &serial, HardwareSerial& serialDebug);
 
-    void ProcessMidiInByte(uint8_t byte, HardwareSerial &serial);
+    void PlayTracksClockOn(int step, HardwareSerial &serial);
 
-    void PlayTracksClockOn(HardwareSerial &serial);
-
-    void PlayTracksClockOff(HardwareSerial &serial);
+    void PlayTracksClockOff(int step, HardwareSerial &serial);
 
     void HandleTick(HardwareSerial &serial);
 

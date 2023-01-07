@@ -34,6 +34,8 @@ void setup() {
   timerAttachInterrupt(timer, &onTimer, true);
   timerAlarmWrite(timer, 100, true);// period 100 uSec
   timerAlarmEnable(timer);//start timer
+
+  app.Setup();
 }
 
 void loopHiFreq()
@@ -54,30 +56,30 @@ void loopHiFreq()
   }
 
   // regardless of ticker advanced
-  app.ReadMidiIn(devBoard.serialMidi);
+  app.ReadMidiIn(devBoard.serialMidi, devBoard.serialDebug);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
 
-  devBoard.serialDebug.println("loop");
-  testDigitalOutMatrixRows(devBoard.ledMatrix, 1);
+  // devBoard.serialDebug.println("loop");
+  // testDigitalOutMatrixRows(devBoard.ledMatrix, 1);
 
-  int cntr = 0;
-  while(cntr++<100000)
-  {
-    loopHiFreq();
+  // int cntr = 0;
+  // while(cntr++<100000)
+  // {
+  //   loopHiFreq();
 
-    app.DisplayTicker(devBoard.ledMatrix);
+  //   app.DisplayTicker(devBoard.ledMatrix);
 
-    delay(1);
-  }
+  //   delay(1);
+  // }
 
-  return;
+  // return;
 
   loopHiFreq();
   // the following can be handled at a slower pace
-  app.ProcessMidiIn(3, devBoard.serialMidi);
+  app.ProcessMidiIn(3, devBoard.serialMidi, devBoard.serialDebug);
   // TODO handling midi input for midi touchpad should be split into smaller parts?
 
   loopHiFreq();
