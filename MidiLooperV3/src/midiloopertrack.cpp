@@ -40,7 +40,7 @@ bool MidiLooperTrack::RecordNoteOn(int step, uint8_t channel, uint8_t midinote, 
 {
     if(m_Channel == channel)
     {
-        auto item = m_Items[m_Size];
+        auto& item = m_Items[m_Size];
         item.midiNote = midinote;
         item.velocity = velocity;
         item.stepOn = step;
@@ -61,11 +61,13 @@ bool MidiLooperTrack::RecordNoteOff(int step, uint8_t channel, uint8_t midinote,
         {
             if(midinote == m_Items[idx].midiNote)
             {
-                auto item = m_Items[idx];
+                auto& item = m_Items[idx];
                 item.stepOff = step;
                 // add to item refs
                 m_ItemRefs[item.stepOn].AddReference(idx);
                 m_ItemRefs[item.stepOff].AddReference(idx);
+
+                break;
             }
         }
     }
@@ -102,7 +104,7 @@ bool MidiLooperTrack::PlayClockOn(int step, HardwareSerial& serial)
         return false;
     }
 
-    auto itemRefs = m_ItemRefs[step];
+    auto& itemRefs = m_ItemRefs[step];
     for(int idx = 0; idx<itemRefs.size; ++idx)
     {
         auto item = m_Items[itemRefs.refs[idx]];
@@ -135,10 +137,10 @@ bool MidiLooperTrack::PlayClockOff(int step, HardwareSerial& serial)
         return false;
     }
 
-    auto itemRefs = m_ItemRefs[step];
+    auto& itemRefs = m_ItemRefs[step];
     for(int idx = 0; idx<itemRefs.size; ++idx)
     {
-        auto item = m_Items[itemRefs.refs[idx]];
+        auto& item = m_Items[itemRefs.refs[idx]];
         // check if item is complete to be sure
         // special case (stepOn == stepOff) => note on upon clockOn and note off upon clockOff
         if(0<=item.stepOff && step == item.stepOff && item.stepOff == item.stepOn)
@@ -163,3 +165,27 @@ bool MidiLooperTrack::SetPlayMute(bool playMute, HardwareSerial& serial)
     }
     return false;
 }
+
+void MidiLooperTrack::PrintDebug(HardwareSerial& serialDebug)
+{
+    serialDebug.print("Ch ");
+    serialDebug.print(m_Channel, HEX);
+    serialDebug.print(" S ");
+    serialDebug.print(m_Size);
+    serialDebug.print(" P ");
+    serialDebug.println(m_PlayMute);
+
+    // // print contents of items
+    // for(int idx = 0; idx<m_Size; ++idx)
+    // {
+    //     auto& item = m_Items[idx];
+    //     serialDebug.print(item.midiNote, HEX);
+    //     serialDebug.print(" ");
+    //     serialDebug.print(item.velocity, HEX);
+    //     serialDebug.print(" ");
+    //     serialDebug.print(item.stepOn, HEX);
+    //     serialDebug.print(" ");
+    //     serialDebug.println(item.stepOff, HEX);
+    // }
+}
+

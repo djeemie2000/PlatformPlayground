@@ -13,6 +13,8 @@ DevBoard devBoard;
 PeriodicTicker hiresTicker;
 MidiLooperApp app;
 
+int debugCntr;
+
 void IRAM_ATTR onTimer() {
   portENTER_CRITICAL_ISR(&timerMux);
   hiresTicker.Tick();
@@ -36,6 +38,8 @@ void setup() {
   timerAlarmEnable(timer);//start timer
 
   app.Setup();
+
+  debugCntr = 0;
 }
 
 void loopHiFreq()
@@ -98,4 +102,14 @@ void loop() {
   loopHiFreq();
   app.DiplayTrackState(devBoard.ledMatrix);
   //---
+
+  // ++debugCntr;
+  // if(3000<debugCntr)
+  // {
+  //   devBoard.serialDebug.println(app.ticker.GetStep());
+  //   devBoard.serialDebug.println(app.ticker.GetNumSteps());
+
+  //   app.track[0].PrintDebug(devBoard.serialDebug);
+  //   debugCntr = 0;
+  // }
 }

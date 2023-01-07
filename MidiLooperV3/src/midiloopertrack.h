@@ -25,6 +25,8 @@ public:
 
     bool AllNotesOff(HardwareSerial& serial);
 
+    void PrintDebug(HardwareSerial& serialDebug);
+
 private:
     uint8_t m_Channel;
     MidiLooperItem m_Items[Capacity];

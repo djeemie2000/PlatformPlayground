@@ -32,6 +32,10 @@ void MidiLooperApp::Setup()
     midiTouchPad.ConfigureController(0x0F, 0x69, 17);
     // advance
     midiTouchPad.ConfigureController(0x0F, 0x68, 18);
+
+    // TODO 
+    MidiLooperTickerParams tickerParams;//TODO load from storage?
+    ticker.Begin(tickerParams);
 }
 
 void MidiLooperApp::ReadMidiIn(HardwareSerial &serial, HardwareSerial &serialDebug)
@@ -102,12 +106,18 @@ void MidiLooperApp::ProcessMidiInByte(uint8_t byte, HardwareSerial &serial, Hard
                 //  if clock on, record into current step
                 //  if clock off, record into next step
                 track[recordingIdx].RecordNoteOn(ticker.GetStep(), Channel(message), MidiNote(message), Velocity(message));
+
+                // serialDebug.println("ROn");
+                // serialDebug.println(ticker.GetStep());
             }
             else if (IsNoteOff(message))
             {
                 // 'quantization' for note off:
                 // always record into current step
                 track[recordingIdx].RecordNoteOff(ticker.GetStep(), Channel(message), MidiNote(message), Velocity(message));
+
+                // serialDebug.println("ROff");
+                // serialDebug.println(ticker.GetStep());
             }
         }
     }
@@ -118,7 +128,7 @@ void MidiLooperApp::PlayTracksClockOn(int step, HardwareSerial &serial)
     metronome.PlayClockOn(ticker.GetTick(), ticker.GetBeat(), ticker.GetBar(), serial);
     for (int idx = 0; idx < NumTracks; ++idx)
     {
-        track[idx].PlayClockOn(ticker.GetStep(), serial);
+        track[idx].PlayClockOn(step, serial);
     }
 }
 
