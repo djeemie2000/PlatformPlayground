@@ -78,6 +78,14 @@ void MidiLooperApp::ProcessMidiInByte(uint8_t byte, HardwareSerial &serial, Hard
         {
         }
         // only used when recording or learning track
+        else if (NumTracks == learnIdx)
+        {
+            if (IsNoteOn(message))
+            {
+                metronome.LearnNoteOn(Channel(message), MidiNote(message), serial);   
+                learnIdx = -1; // stop learning
+            }
+        }
         else if (0 <= learnIdx)
         {
             if (IsNoteOn(message))
