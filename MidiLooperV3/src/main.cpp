@@ -83,10 +83,14 @@ void loop() {
   loopHiFreq();
   // TODO read buttons and handle, can be split per track?
 
-  loopHiFreq();
   //TODO update ledMatrix to state -> can be split? ticker state? tracks state? 
   // -> probably not usefull to split since most of the time goes into (SPI) update of the led matrix?
   // TODO split write row per row!
   // TODO optimize led matrix code for single matrix, without rotation?
+  loopHiFreq();
+  app.DisplayTicker(devBoard.ledMatrix);
+
+  loopHiFreq();
+  app.DiplayTrackState(devBoard.ledMatrix);
   //---
 }

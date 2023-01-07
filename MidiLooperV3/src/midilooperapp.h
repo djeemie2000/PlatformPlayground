@@ -61,4 +61,6 @@ struct MidiLooperApp
     bool HandleMidiTouchpad(HardwareSerial &serial);// return true if message is handled by touchpad
 
     void DisplayTicker(DigitalOutMatrix& matrix);
+
+    void DiplayTrackState(DigitalOutMatrix& matrix);
 };

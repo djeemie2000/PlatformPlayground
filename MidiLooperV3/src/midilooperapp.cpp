@@ -46,7 +46,7 @@ void MidiLooperApp::ReadMidiIn(HardwareSerial &serial)
         uint8_t byte = serial.read();
         // filter out realtime clock messages for midi thru
         // also for parsing??
-        if (!(0xF8 <= byte && byte <= 0xFC))//!ShouldIgnore(byte)
+        if (!(0xF8 <= byte && byte <= 0xFC)) //! ShouldIgnore(byte)
         {
             // midi thru:
             serial.write(byte);
@@ -143,36 +143,35 @@ void MidiLooperApp::HandleTick(HardwareSerial &serial)
 
     // tick midi looper ticker (24PPQ)
     Tick();
-    
+
     // send midi clock at 24PPQ
     PlayMidiClock(serial);
-    
-    // detect clock on<->off !! 
-    bool currClockOn = ticker.GetClockOn();
-    if(currClockOn != prevClockOn)
-    {
-      // send midi notes upon clock off->on, upon clock on-> off
-      if(currClockOn)
-      {
-        PlayTracksClockOn(serial);
-      }
-      else
-      {
-        PlayTracksClockOff(serial);
-      }
-    }
 
+    // detect clock on<->off !!
+    bool currClockOn = ticker.GetClockOn();
+    if (currClockOn != prevClockOn)
+    {
+        // send midi notes upon clock off->on, upon clock on-> off
+        if (currClockOn)
+        {
+            PlayTracksClockOn(serial);
+        }
+        else
+        {
+            PlayTracksClockOff(serial);
+        }
+    }
 }
 
-void MidiLooperApp::DisplayTicker(DigitalOutMatrix& matrix)
+void MidiLooperApp::DisplayTicker(DigitalOutMatrix &matrix)
 {
-    uint8_t row0 = 1<<ticker.GetTick();
-    if(!ticker.GetClockOn())
+    uint8_t row0 = 1 << ticker.GetTick();
+    if (!ticker.GetClockOn())
     {
         row0 = 0x00;
     }
-    uint8_t row1 = 1<<ticker.GetBeat();
-    uint8_t row2 = 1<<ticker.GetBar();
+    uint8_t row1 = 1 << ticker.GetBeat();
+    uint8_t row2 = 1 << ticker.GetBar();
 
     matrix.SetRow(row0, 5, 0);
     matrix.SetRow(row1, 6, 0);
@@ -182,7 +181,57 @@ void MidiLooperApp::DisplayTicker(DigitalOutMatrix& matrix)
     matrix.WriteRow(7);
 }
 
+void MidiLooperApp::DiplayTrackState(DigitalOutMatrix &matrix)
+{
+    // for now, only 8 tracks -> single row
+    // TODO handle multiple rows
+    uint8_t trackStateRow2 = 0x00;
 
+    // learn / record ~ blink fast/slow
+    // blink based on millis
+    // fast blink mask 0x10 blink 0x40 slow blink 0x80
+    unsigned long millies = millis();
+    uint8_t counter = millies >> 2;
+    bool blinkFast = counter & 0x10;
+    bool blinkNormal = counter & 0x40;
+
+    for (int tr = 0; tr < 8; ++tr)
+    {
+        if (tr == learnIdx)
+        {
+            if (blinkFast)
+            {
+                bitSet(trackStateRow2, tr);
+            }
+            else
+            {
+                bitClear(trackStateRow2, tr);
+            }
+        }
+        else if (tr == recordingIdx)
+        {
+            if (blinkNormal)
+            {
+                bitSet(trackStateRow2, tr);
+            }
+            else
+            {
+                bitClear(trackStateRow2, tr);
+            }
+        }
+        else if (track[tr].GetPlayMute())
+        {
+            bitSet(trackStateRow2, tr);
+        }
+        else
+        {
+            bitClear(trackStateRow2, tr);
+        }
+    }
+
+    matrix.SetRow(trackStateRow2, 2, 0);
+    matrix.WriteRow(2);
+}
 
 //  per track:
 //    handle toggle/change learning
@@ -239,7 +288,7 @@ void MidiLooperApp::HandleGlobalBtnInput(bool playStopClicked, bool resetClicked
         isPlaying = !isPlaying;
     }
     // reset functionality while playing?
-    if(resetClicked)
+    if (resetClicked)
     {
         ticker.Reset();
     }
