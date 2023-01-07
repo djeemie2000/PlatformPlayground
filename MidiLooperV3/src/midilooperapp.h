@@ -7,6 +7,7 @@
 #include "midinoteparser.h"
 #include "serialbuffer.h"
 #include "miditouchpad.h"
+#include "midiloopermetronome.h"
 #include "DigitalOutMatrix.h"
 
 struct MidiLooperApp
@@ -16,6 +17,7 @@ struct MidiLooperApp
     MidiLooperTicker ticker;
     SerialBuffer<100> serialBuffer;
     MidiLooperTrack track[NumTracks];
+    MidiLooperMetronome metronome;
     MidiNoteParser midiNoteParser;
     MidiVoiceMessage message;
     MidiTouchPad midiTouchPad;//TODO replace by buttons on dvboard
@@ -51,6 +53,9 @@ struct MidiLooperApp
     //    handle toggle playmute,
     void HandleTrackBtnInput(int idxTrack, bool trackClicked, bool learnPressed, bool recordPressed, bool undoPressed, HardwareSerial &serial);
 
+    void HandleMetronomeBtnInput(bool trackClicked, bool learnPressed, bool recordPressed, bool undoPressed, HardwareSerial &serial);
+
+
     // TODO
     // functions btn input : toggle play/stop, reset, (manual advance??) load/save?
     void HandleGlobalBtnInput(bool playStopClicked, bool resetClicked);
@@ -61,4 +66,7 @@ struct MidiLooperApp
     void DisplayTicker(DigitalOutMatrix& matrix);
 
     void DiplayTrackState(DigitalOutMatrix& matrix);
+
+    void DiplayMetronomeState(DigitalOutMatrix& matrix);
+
 };

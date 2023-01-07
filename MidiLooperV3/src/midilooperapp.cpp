@@ -91,8 +91,8 @@ void MidiLooperApp::ProcessMidiInByte(uint8_t byte, HardwareSerial &serial, Hard
             if (IsNoteOn(message))
             {
                 // TODO 'quantization' for note on:
-                //  if clock on, record into current step 
-                //  if clock off, record into next step 
+                //  if clock on, record into current step
+                //  if clock off, record into next step
                 track[recordingIdx].RecordNoteOn(ticker.GetStep(), Channel(message), MidiNote(message), Velocity(message));
             }
             else if (IsNoteOff(message))
@@ -107,6 +107,7 @@ void MidiLooperApp::ProcessMidiInByte(uint8_t byte, HardwareSerial &serial, Hard
 
 void MidiLooperApp::PlayTracksClockOn(int step, HardwareSerial &serial)
 {
+    metronome.PlayClockOn(ticker.GetTick(), ticker.GetBeat(), ticker.GetBar(), serial);
     for (int idx = 0; idx < NumTracks; ++idx)
     {
         track[idx].PlayClockOn(ticker.GetStep(), serial);
@@ -115,6 +116,7 @@ void MidiLooperApp::PlayTracksClockOn(int step, HardwareSerial &serial)
 
 void MidiLooperApp::PlayTracksClockOff(int step, HardwareSerial &serial)
 {
+    metronome.PlayClockOff(serial);
     for (int idx = 0; idx < NumTracks; ++idx)
     {
         track[idx].PlayClockOff(step, serial);
@@ -248,6 +250,33 @@ void MidiLooperApp::DiplayTrackState(DigitalOutMatrix &matrix)
     matrix.WriteRow(2);
 }
 
+void MidiLooperApp::DiplayMetronomeState(DigitalOutMatrix &matrix)
+{
+    uint8_t trackStateRow3 = 0x00;
+
+    // learn / record ~ blink fast/slow
+    // blink based on millis
+    // fast blink mask 0x10 blink 0x40 slow blink 0x80
+    unsigned long millies = millis();
+    uint8_t counter = millies >> 2;
+    bool blinkFast = counter & 0x10;
+
+    if (NumTracks == learnIdx)
+    {
+        if (blinkFast)
+        {
+            bitSet(trackStateRow3, 7);
+        }
+    }
+    else if (metronome.GetPlayMute())
+    {
+        bitSet(trackStateRow3, 7);
+    }
+
+    matrix.SetRow(trackStateRow3, 3, 0);
+    matrix.WriteRow(3);
+}
+
 //  per track:
 //    handle toggle/change learning
 //    handle toggle/change recording?
@@ -300,6 +329,43 @@ void MidiLooperApp::HandleTrackBtnInput(int idxTrack, bool trackClicked, bool le
     }
 }
 
+void MidiLooperApp::HandleMetronomeBtnInput(bool trackClicked, bool learnPressed, bool recordPressed, bool undoPressed, HardwareSerial &serial)
+{
+    if (trackClicked)
+    {
+        if (learnPressed)
+        {
+            // we allow only one learn or recording track at a time
+            recordingIdx = -1;
+            const int idxTrack = NumTracks; // 1 above highest track index
+            if (learnIdx == idxTrack)
+            {
+                // toggle learn on -> off
+                learnIdx = -1;
+            }
+            else
+            {
+                // no need to check if previously -1 or some other track
+                learnIdx = idxTrack;
+            }
+        }
+        else if(recordPressed)
+        {
+            // ignore recording
+        }
+        else if(undoPressed)
+        {
+            // ignore undo
+        }
+        else
+        {
+            // toggle play/mute
+            bool currentPlayMute = metronome.GetPlayMute();
+            metronome.SetPlayMute(!currentPlayMute, serial);
+        }
+    }
+}
+
 void MidiLooperApp::HandleGlobalBtnInput(bool playStopClicked, bool resetClicked)
 {
     if (playStopClicked)
@@ -324,11 +390,15 @@ bool MidiLooperApp::HandleMidiTouchpad(HardwareSerial &serial)
         bool recordPressed = midiTouchPad.Get(1);
         bool undoPressed = midiTouchPad.Get(2);
 
+        HandleMetronomeBtnInput(midiTouchPad.IsClicked(7),
+                                learnPressed, recordPressed, undoPressed, serial);
+
         for (int track = 0; track < NumTracks; ++track)
         {
             HandleTrackBtnInput(track, midiTouchPad.IsClicked(track + 8),
                                 learnPressed, recordPressed, undoPressed, serial);
         }
+
         HandleGlobalBtnInput(midiTouchPad.IsClicked(16), midiTouchPad.IsClicked(17));
 
         return true;

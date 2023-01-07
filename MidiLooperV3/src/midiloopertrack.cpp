@@ -23,7 +23,7 @@ bool MidiLooperTrack::AllNotesOff(HardwareSerial& serial)
 
 bool MidiLooperTrack::LearnNoteOn(uint8_t channel, HardwareSerial& serial)
 {
-    //TODO all note of for active notes on current channel
+    // all note off for active notes on current channel
     if(channel != m_Channel)
     {
         AllNotesOff(serial);

@@ -93,6 +93,9 @@ void loop() {
   app.DisplayTicker(devBoard.ledMatrix);
 
   loopHiFreq();
+  app.DiplayMetronomeState(devBoard.ledMatrix);
+
+  loopHiFreq();
   app.DiplayTrackState(devBoard.ledMatrix);
   //---
 }
