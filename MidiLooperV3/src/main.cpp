@@ -30,7 +30,10 @@ void setup() {
   devBoard.serialDebug.println("MidiLooperV3 v0.1...");
 
   // setup periodic ticker oninterrupt
-  hiresTicker.SetPeriod(200);// when tick every 100 uSec => 20 mSec period for 24PPQ => 480 mSec per beat ~120BPM
+  hiresTicker.SetPeriod(300);
+  // when tick every 100 uSec
+  // => 20 mSec period for 24PPQ => 480 mSec per beat ~120BPM
+  // 30 mSec period for 24PPQ => 720 mSec per beat ~80BPM
 
   timer = timerBegin(0, 80, true);// period 1 uSec (80 MHz / 80 = 1MHz)
   timerAttachInterrupt(timer, &onTimer, true);
@@ -40,6 +43,8 @@ void setup() {
   app.Setup();
 
   debugCntr = 0;
+
+  devBoard.ledMatrix.WriteAll();//clear all
 }
 
 void loopHiFreq()
@@ -61,30 +66,20 @@ void loopHiFreq()
 
   // regardless of ticker advanced
   app.ReadMidiIn(devBoard.serialMidi, devBoard.serialDebug);
+
+  // experiment?
+  app.ProcessMidiIn(3, devBoard.serialMidi, devBoard.serialDebug);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
 
-  // devBoard.serialDebug.println("loop");
-  // testDigitalOutMatrixRows(devBoard.ledMatrix, 1);
-
-  // int cntr = 0;
-  // while(cntr++<100000)
-  // {
-  //   loopHiFreq();
-
-  //   app.DisplayTicker(devBoard.ledMatrix);
-
-  //   delay(1);
-  // }
-
-  // return;
-
   loopHiFreq();
   // the following can be handled at a slower pace
-  app.ProcessMidiIn(3, devBoard.serialMidi, devBoard.serialDebug);
+  // app.ProcessMidiIn(3, devBoard.serialMidi, devBoard.serialDebug);
   // TODO handling midi input for midi touchpad should be split into smaller parts?
+  // app.ProcessMidiIn(3, devBoard.serialMidi, devBoard.serialDebug);
+  
 
   loopHiFreq();
   // TODO read buttons and handle, can be split per track?
@@ -109,7 +104,7 @@ void loop() {
   //   devBoard.serialDebug.println(app.ticker.GetStep());
   //   devBoard.serialDebug.println(app.ticker.GetNumSteps());
 
-  //   app.track[0].PrintDebug(devBoard.serialDebug);
+  //   app.track[0].PrintItems(devBoard.serialDebug);
   //   debugCntr = 0;
   // }
 }

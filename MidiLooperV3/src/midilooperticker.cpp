@@ -87,3 +87,19 @@ void MidiLooperTicker::Reset()
 {
     m_DoReset = true;
 }
+
+int MidiLooperTicker::GetRecordingStep() const
+{
+    if(m_ClockOn)
+    {
+        return m_Step;
+    }
+    // next step
+    int nextStep = m_Step+1;
+    if(m_NumSteps<=nextStep)
+    {
+        nextStep = 0;
+    }
+    return nextStep;
+}
+

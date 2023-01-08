@@ -40,8 +40,9 @@ public:
     int GetBar() const { return m_Bar;  }
 
     int GetStep() const { return m_Step;    }
-    // TODO next step
     int GetNumSteps() const { return m_NumSteps; }
+
+    int GetRecordingStep() const;
 
 private:
     bool m_DoReset;

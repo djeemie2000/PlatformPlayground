@@ -174,18 +174,21 @@ void MidiLooperTrack::PrintDebug(HardwareSerial& serialDebug)
     serialDebug.print(m_Size);
     serialDebug.print(" P ");
     serialDebug.println(m_PlayMute);
+}
 
-    // // print contents of items
-    // for(int idx = 0; idx<m_Size; ++idx)
-    // {
-    //     auto& item = m_Items[idx];
-    //     serialDebug.print(item.midiNote, HEX);
-    //     serialDebug.print(" ");
-    //     serialDebug.print(item.velocity, HEX);
-    //     serialDebug.print(" ");
-    //     serialDebug.print(item.stepOn, HEX);
-    //     serialDebug.print(" ");
-    //     serialDebug.println(item.stepOff, HEX);
-    // }
+void MidiLooperTrack::PrintItems(HardwareSerial& serialDebug)
+{
+    // print contents of items
+    for(int idx = 0; idx<m_Size; ++idx)
+    {
+        auto& item = m_Items[idx];
+        serialDebug.print(item.midiNote, HEX);
+        serialDebug.print(" ");
+        serialDebug.print(item.velocity, HEX);
+        serialDebug.print(" ");
+        serialDebug.print(item.stepOn, HEX);
+        serialDebug.print(" ");
+        serialDebug.println(item.stepOff, HEX);
+    }
 }
 

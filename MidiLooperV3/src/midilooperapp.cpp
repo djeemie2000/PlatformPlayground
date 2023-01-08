@@ -74,6 +74,8 @@ void MidiLooperApp::ProcessMidiInByte(uint8_t byte, HardwareSerial &serial, Hard
 {
     // serialBuffer.Read(byte);
 
+    int recStep = ticker.GetRecordingStep();
+
     if (midiNoteParser.Parse(byte, message))
     {
         PrintVoiceMessage(message, serialDebug);
@@ -105,19 +107,21 @@ void MidiLooperApp::ProcessMidiInByte(uint8_t byte, HardwareSerial &serial, Hard
                 // TODO 'quantization' for note on:
                 //  if clock on, record into current step
                 //  if clock off, record into next step
-                track[recordingIdx].RecordNoteOn(ticker.GetStep(), Channel(message), MidiNote(message), Velocity(message));
+                track[recordingIdx].RecordNoteOn(recStep, Channel(message), MidiNote(message), Velocity(message));
 
-                // serialDebug.println("ROn");
-                // serialDebug.println(ticker.GetStep());
+                serialDebug.println("ROn");
+                serialDebug.println(recStep);
+                serialDebug.println(ticker.GetStep());
             }
             else if (IsNoteOff(message))
             {
                 // 'quantization' for note off:
                 // always record into current step
-                track[recordingIdx].RecordNoteOff(ticker.GetStep(), Channel(message), MidiNote(message), Velocity(message));
+                track[recordingIdx].RecordNoteOff(recStep, Channel(message), MidiNote(message), Velocity(message));
 
-                // serialDebug.println("ROff");
-                // serialDebug.println(ticker.GetStep());
+                serialDebug.println("ROff");
+                serialDebug.println(recStep);
+                serialDebug.println(ticker.GetStep());
             }
         }
     }
