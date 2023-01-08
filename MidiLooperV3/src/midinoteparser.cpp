@@ -44,6 +44,14 @@ bool MidiNoteParser::Parse(uint8_t byte, MidiVoiceMessage &message)
         // ignore content
         m_ValueWriteIndex = 0;
     }
+    else if(0xB0 == (byte & 0xF0))
+    {
+        // handle cc!!
+         // => affects current run status / statusByte
+        m_StatusByte = byte;
+        // do not ignore content !
+        m_ValueWriteIndex = 1;
+    }
     else if (0xA0 <= byte)
     {
         // voice message, not a note on/off

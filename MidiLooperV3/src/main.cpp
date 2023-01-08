@@ -44,7 +44,16 @@ void setup() {
 
   debugCntr = 0;
 
-  devBoard.ledMatrix.WriteAll();//clear all
+  //clear all
+  devBoard.ledMatrix.SetRow(0x00, 0, 0);
+  devBoard.ledMatrix.SetRow(0x00, 1, 0);
+  devBoard.ledMatrix.SetRow(0x00, 2, 0);
+  devBoard.ledMatrix.SetRow(0x00, 3, 0);
+  devBoard.ledMatrix.SetRow(0x00, 4, 0);
+  devBoard.ledMatrix.SetRow(0x00, 5, 0);
+  devBoard.ledMatrix.SetRow(0x00, 6, 0);
+  devBoard.ledMatrix.SetRow(0x00, 7, 0);
+  devBoard.ledMatrix.WriteAll();
 }
 
 void loopHiFreq()
