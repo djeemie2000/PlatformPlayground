@@ -388,16 +388,31 @@ void MidiLooperApp::HandleMetronomeBtnInput(bool trackClicked, bool learnPressed
     }
 }
 
-void MidiLooperApp::HandleGlobalBtnInput(bool playStopClicked, bool resetClicked)
+void MidiLooperApp::HandleGlobalBtnInput(bool playStopClicked, bool resetClicked, HardwareSerial &serial)
 {
+    bool doAllNotesOff = false;
+
     if (playStopClicked)
     {
+        // playing -> not playing => all notes off
+        if(isPlaying)
+        {
+            doAllNotesOff = true;
+        }
         isPlaying = !isPlaying;
     }
+
     // reset functionality while playing?
     if (resetClicked)
     {
+        // reset => all note off
+        doAllNotesOff = true;
         ticker.Reset();
+    }
+
+    if(doAllNotesOff)
+    {
+        AllNotesOff(serial);
     }
 }
 
@@ -421,10 +436,19 @@ bool MidiLooperApp::HandleMidiTouchpad(HardwareSerial &serial)
                                 learnPressed, recordPressed, undoPressed, serial);
         }
 
-        HandleGlobalBtnInput(midiTouchPad.IsClicked(16), midiTouchPad.IsClicked(17));
+        HandleGlobalBtnInput(midiTouchPad.IsClicked(16), midiTouchPad.IsClicked(17), serial);
 
         return true;
     }
     // return true if message is handled by touchpad
     return false;
+}
+
+void MidiLooperApp::AllNotesOff(HardwareSerial &serial)
+{
+    metronome.AllNotesOff(serial);
+    for(int tr = 0; tr<NumTracks; ++tr)
+    {
+        track[tr].AllNotesOff(serial);
+    }
 }

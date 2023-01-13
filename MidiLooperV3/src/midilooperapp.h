@@ -58,7 +58,7 @@ struct MidiLooperApp
 
     // TODO
     // functions btn input : toggle play/stop, reset, (manual advance??) load/save?
-    void HandleGlobalBtnInput(bool playStopClicked, bool resetClicked);
+    void HandleGlobalBtnInput(bool playStopClicked, bool resetClicked, HardwareSerial &serial);
 
     // POC using midi touchapd
     bool HandleMidiTouchpad(HardwareSerial &serial);// return true if message is handled by touchpad
@@ -68,5 +68,7 @@ struct MidiLooperApp
     void DiplayTrackState(DigitalOutMatrix& matrix);
 
     void DiplayMetronomeState(DigitalOutMatrix& matrix);
+
+    void AllNotesOff(HardwareSerial &serial);
 
 };
