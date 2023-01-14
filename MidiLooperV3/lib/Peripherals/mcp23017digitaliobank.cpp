@@ -46,7 +46,7 @@ void MCP23017DigitalIOBank::Begin(uint8_t address)
     m_PullupMask= 0xFFFF;
     m_IoInvertMask = 0;
 
-    	//BANK = 	0 : sequential register addresses
+    //BANK = 	0 : sequential register addresses
 	//MIRROR = 	0 : use configureInterrupt 
 	//SEQOP = 	1 : sequential operation disabled, address pointer does not increment
 	//DISSLW = 	0 : slew rate enabled
@@ -144,4 +144,21 @@ void MCP23017DigitalIOBank::ReadRegister16(uint8_t reg, uint16_t& value)
 	uint8_t byte2 = Wire.read();
 
     value = byte1 << 8 | byte2;
+}
+
+void testDigitalOutBank(MCP23017DigitalIOBank &bank, int repeats)
+{
+    for (int repeat = 0; repeat < repeats || repeats < 0; ++repeat)
+    {
+        for (int idx = 0; idx < 16; ++idx)
+        {
+            bank.SetPin(idx, 1);
+            bank.WritePins();
+            delay(200);
+            bank.SetPin(idx, 0);
+            bank.WritePins();
+            delay(200);
+            bank.SetPin(idx, 1);
+        }
+    }
 }

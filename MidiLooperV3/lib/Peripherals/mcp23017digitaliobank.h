@@ -35,3 +35,6 @@ private:
     uint16_t m_OutputValues;
     uint16_t m_InputValues;
 };
+
+
+void testDigitalOutBank(MCP23017DigitalIOBank &bank, int repeats = -1);

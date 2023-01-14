@@ -6,6 +6,7 @@
 #include "AnalogIn.h"
 #include "TouchInBank.h"
 #include "sdstorage.h"
+#include "mcp23017digitaliobank.h"
 
 struct DevBoard
 {
@@ -24,6 +25,8 @@ struct DevBoard
 
   Max7219Matrix ledMatrix;//(1,PA4);//cs pin
   
+  MCP23017DigitalIOBank ioBank;
+
   SDStorage sdStorage;
 
   DevBoard()
@@ -44,6 +47,15 @@ struct DevBoard
       
       //SPI CS external
       ledMatrix.Configure();
+
+      ioBank.Begin(0x20);
+      //TODO setup all GPIO as input pullup
+      // for now, for testing, set all as outputs
+      for(int pin = 0; pin<16; ++pin)
+      {
+        ioBank.SetPinMode(pin, OUTPUT);
+      }
+      ioBank.WritePinModes();
 
       sdStorage.Open(csPinSDCard);     
    }

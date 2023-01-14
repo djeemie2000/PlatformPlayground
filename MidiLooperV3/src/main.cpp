@@ -54,6 +54,10 @@ void setup() {
   devBoard.ledMatrix.SetRow(0x00, 6, 0);
   devBoard.ledMatrix.SetRow(0x00, 7, 0);
   devBoard.ledMatrix.WriteAll();
+
+  // TODO remove this!
+  testDigitalOutBank(devBoard.ioBank, -1);
+
 }
 
 void loopHiFreq()
