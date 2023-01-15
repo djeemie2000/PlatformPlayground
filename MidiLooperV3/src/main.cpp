@@ -6,7 +6,7 @@
 
 #include "TestDigitalOutMatrix.h"
 
-//#define USEBUTTONS 1
+#define USEBUTTONS 1
 //#define APPDEBUG 1
 
 hw_timer_t *timer;
@@ -104,6 +104,13 @@ void loop()
   // handle buttons, can be split per track/global
   loopHiFreq();
   app.HandleGlobalBtnInput(devBoard.ioBank.IsClicked(3), false, devBoard.serialMidi);
+
+  loopHiFreq();
+  app.HandleMetronomeBtnInput(devBoard.ioBank.IsClicked(7), 
+                              devBoard.ioBank.GetPin(0),
+                              devBoard.ioBank.GetPin(1),
+                              devBoard.ioBank.GetPin(2),
+                              devBoard.serialMidi);
 
   for (int tr = 0; tr < MidiLooperApp::NumTracks; ++tr)
   {
