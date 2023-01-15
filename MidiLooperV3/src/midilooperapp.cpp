@@ -215,9 +215,9 @@ void MidiLooperApp::DisplayTicker(DigitalOutMatrix &matrix)
     matrix.SetRow(row0, 4, 0);
     matrix.SetRow(row1, 5, 0);
     matrix.SetRow(row2, 6, 0);
+    matrix.WriteRow(4);
     matrix.WriteRow(5);
     matrix.WriteRow(6);
-    matrix.WriteRow(7);
 }
 
 void MidiLooperApp::DiplayTrackState(DigitalOutMatrix &matrix)
