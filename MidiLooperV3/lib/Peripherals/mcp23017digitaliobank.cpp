@@ -42,6 +42,10 @@ void MCP23017DigitalIOBank::Begin(uint8_t address)
     //TODO settings with defaults?
     m_Address = address;
 
+    m_OutputValues = 0;
+    m_InputValues = 0;
+    m_PrevInputValues = 0;
+
     m_IoDirMask = 0;
     m_PullupMask= 0xFFFF;
     m_IoInvertMask = 0;
@@ -66,7 +70,7 @@ void MCP23017DigitalIOBank::Begin(uint8_t address)
     // pinmode
 void MCP23017DigitalIOBank::SetPinMode(int pin, int mode)
 {
-    // OUTPUT, INPUT, INPUT_PULLU 
+    // OUTPUT, INPUT, INPUT_PULLUP 
     if(mode == OUTPUT)
     {
         bitClear(m_IoDirMask, pin);
@@ -83,7 +87,7 @@ void MCP23017DigitalIOBank::SetPinMode(int pin, int mode)
     {
         bitSet(m_IoDirMask, pin);
         bitSet(m_PullupMask, pin);
-        bitClear(m_IoInvertMask, pin);
+        bitSet(m_IoInvertMask, pin);
     }
 }
 
@@ -109,8 +113,19 @@ int MCP23017DigitalIOBank::GetPin(int pin) const
     return bitRead(m_InputValues, pin);
 }
 
+int MCP23017DigitalIOBank::GetPinPrev(int pin) const
+{
+    return bitRead(m_PrevInputValues, pin);
+}
+
+int MCP23017DigitalIOBank::IsClicked(int pin) const
+{
+    return GetPin(pin) && !GetPinPrev(pin);
+}
+
 void MCP23017DigitalIOBank::ReadPins()
 {
+    m_PrevInputValues = m_InputValues;
     ReadRegister16(static_cast<uint8_t>(MCP23017Register::GPIO_A), m_InputValues);
 }
 
@@ -143,14 +158,15 @@ void MCP23017DigitalIOBank::ReadRegister16(uint8_t reg, uint16_t& value)
 	uint8_t byte1 = Wire.read();
 	uint8_t byte2 = Wire.read();
 
-    value = byte1 << 8 | byte2;
+    value = byte2 << 8 | byte1;
 }
+
 
 void testDigitalOutBank(MCP23017DigitalIOBank &bank, int repeats)
 {
     for (int repeat = 0; repeat < repeats || repeats < 0; ++repeat)
     {
-        for (int idx = 0; idx < 16; ++idx)
+        for (int idx = 0; idx < MCP23017DigitalIOBank::Capacity; ++idx)
         {
             bank.SetPin(idx, 1);
             bank.WritePins();
@@ -160,5 +176,19 @@ void testDigitalOutBank(MCP23017DigitalIOBank &bank, int repeats)
             delay(200);
             bank.SetPin(idx, 1);
         }
+    }
+}
+
+void testDigitalInBank(MCP23017DigitalIOBank &bank, HardwareSerial& serialDebug, int repeats)
+{
+	for (int repeat = 0; repeat < repeats || repeats < 0; ++repeat)
+    {		
+		bank.ReadPins();
+        for (int idx = 0; idx < MCP23017DigitalIOBank::Capacity; ++idx)
+        {            
+			serialDebug.print(bank.GetPin(idx));
+        }
+		serialDebug.println();
+		delay(500);            
     }
 }

@@ -6,7 +6,10 @@
 
 #include "TestDigitalOutMatrix.h"
 
-hw_timer_t* timer;
+//#define USEBUTTONS 1
+//#define APPDEBUG 1
+
+hw_timer_t *timer;
 portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 
 DevBoard devBoard;
@@ -15,13 +18,15 @@ MidiLooperApp app;
 
 int debugCntr;
 
-void IRAM_ATTR onTimer() {
+void IRAM_ATTR onTimer()
+{
   portENTER_CRITICAL_ISR(&timerMux);
   hiresTicker.Tick();
-  portEXIT_CRITICAL_ISR(&timerMux); 
+  portEXIT_CRITICAL_ISR(&timerMux);
 }
 
-void setup() {
+void setup()
+{
   // put your setup code here, to run once:
 
   devBoard.Begin();
@@ -35,16 +40,16 @@ void setup() {
   // => 20 mSec period for 24PPQ => 480 mSec per beat ~120BPM
   // 30 mSec period for 24PPQ => 720 mSec per beat ~80BPM
 
-  timer = timerBegin(0, 80, true);// period 1 uSec (80 MHz / 80 = 1MHz)
+  timer = timerBegin(0, 80, true); // period 1 uSec (80 MHz / 80 = 1MHz)
   timerAttachInterrupt(timer, &onTimer, true);
-  timerAlarmWrite(timer, 100, true);// period 100 uSec
-  timerAlarmEnable(timer);//start timer
+  timerAlarmWrite(timer, 100, true); // period 100 uSec
+  timerAlarmEnable(timer);           // start timer
 
   app.Setup();
 
   debugCntr = 0;
 
-  //clear all
+  // clear all
   devBoard.ledMatrix.SetRow(0x00, 0, 0);
   devBoard.ledMatrix.SetRow(0x00, 1, 0);
   devBoard.ledMatrix.SetRow(0x00, 2, 0);
@@ -56,23 +61,22 @@ void setup() {
   devBoard.ledMatrix.WriteAll();
 
   // TODO remove this!
-  testDigitalOutBank(devBoard.ioBank, -1);
-
+//  testDigitalInBank(devBoard.ioBank, devBoard.serialDebug, -1);
 }
 
 void loopHiFreq()
 {
   // the following needs to run as frequent as possible:
-  bool tickerAdvanced = false;  
+  bool tickerAdvanced = false;
   portENTER_CRITICAL_ISR(&timerMux);
-  if(hiresTicker.Peek())
+  if (hiresTicker.Peek())
   {
     hiresTicker.Clear();
     tickerAdvanced = true;
   }
-  portEXIT_CRITICAL_ISR(&timerMux); 
+  portEXIT_CRITICAL_ISR(&timerMux);
 
-  if(tickerAdvanced)
+  if (tickerAdvanced)
   {
     app.HandleTick(devBoard.serialMidi);
   }
@@ -84,23 +88,39 @@ void loopHiFreq()
   app.ProcessMidiIn(3, devBoard.serialMidi, devBoard.serialDebug);
 }
 
-void loop() {
+void loop()
+{
   // put your main code here, to run repeatedly:
 
-  loopHiFreq();
-  // the following can be handled at a slower pace
-  // app.ProcessMidiIn(3, devBoard.serialMidi, devBoard.serialDebug);
+//  loopHiFreq();
   // TODO handling midi input for midi touchpad should be split into smaller parts?
-  // app.ProcessMidiIn(3, devBoard.serialMidi, devBoard.serialDebug);
-  
 
   loopHiFreq();
-  // TODO read buttons and handle, can be split per track?
 
-  //TODO update ledMatrix to state -> can be split? ticker state? tracks state? 
-  // -> probably not usefull to split since most of the time goes into (SPI) update of the led matrix?
-  // TODO split write row per row!
-  // TODO optimize led matrix code for single matrix, without rotation?
+#ifdef USEBUTTONS
+  // read buttons
+  devBoard.ioBank.ReadPins();
+
+  // handle buttons, can be split per track/global
+  loopHiFreq();
+  app.HandleGlobalBtnInput(devBoard.ioBank.IsClicked(3), false, devBoard.serialMidi);
+
+  for (int tr = 0; tr < MidiLooperApp::NumTracks; ++tr)
+  {
+    loopHiFreq();
+    app.HandleTrackBtnInput(tr,
+                            devBoard.ioBank.IsClicked(8 + tr),
+                            devBoard.ioBank.GetPin(0),
+                            devBoard.ioBank.GetPin(1),
+                            devBoard.ioBank.GetPin(2),
+                            devBoard.serialMidi);
+  }
+#endif
+
+  // TODO update ledMatrix to state -> can be split? ticker state? tracks state?
+  //  -> probably not usefull to split since most of the time goes into (SPI) update of the led matrix?
+  //  TODO split write row per row!
+  //  TODO optimize led matrix code for single matrix, without rotation?
   loopHiFreq();
   app.DisplayTicker(devBoard.ledMatrix);
 
@@ -111,13 +131,15 @@ void loop() {
   app.DiplayTrackState(devBoard.ledMatrix);
   //---
 
-  // ++debugCntr;
-  // if(3000<debugCntr)
-  // {
-  //   devBoard.serialDebug.println(app.ticker.GetStep());
-  //   devBoard.serialDebug.println(app.ticker.GetNumSteps());
+#ifdef APPDEBUG
+  ++debugCntr;
+  if(3000<debugCntr)
+  {
+    devBoard.serialDebug.println(app.ticker.GetStep());
+    devBoard.serialDebug.println(app.ticker.GetNumSteps());
 
-  //   app.track[0].PrintItems(devBoard.serialDebug);
-  //   debugCntr = 0;
-  // }
+    app.track[0].PrintItems(devBoard.serialDebug);
+    debugCntr = 0;
+  }
+#endif
 }

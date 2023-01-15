@@ -4,6 +4,8 @@
 class MCP23017DigitalIOBank
 {
 public :
+    static const int Capacity = 16;
+
     MCP23017DigitalIOBank();
 
     void Begin(uint8_t address);//TODO settings with defaults?
@@ -18,6 +20,8 @@ public :
 
     // digital in
     int GetPin(int pin) const;
+    int GetPinPrev(int pin) const;
+    int IsClicked(int pin) const;
     void ReadPins();
 
 private:
@@ -34,7 +38,9 @@ private:
 
     uint16_t m_OutputValues;
     uint16_t m_InputValues;
+    uint16_t m_PrevInputValues;
 };
 
 
 void testDigitalOutBank(MCP23017DigitalIOBank &bank, int repeats = -1);
+void testDigitalInBank(MCP23017DigitalIOBank &bank, HardwareSerial& serialDebug, int repeats = -1);

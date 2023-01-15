@@ -51,9 +51,9 @@ struct DevBoard
       ioBank.Begin(0x20);
       //TODO setup all GPIO as input pullup
       // for now, for testing, set all as outputs
-      for(int pin = 0; pin<16; ++pin)
+      for(int pin = 0; pin<MCP23017DigitalIOBank::Capacity; ++pin)
       {
-        ioBank.SetPinMode(pin, OUTPUT);
+        ioBank.SetPinMode(pin, INPUT_PULLUP);
       }
       ioBank.WritePinModes();
 
