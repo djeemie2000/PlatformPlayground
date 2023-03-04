@@ -3,8 +3,10 @@
 #include "digitaloutbank.h"
 #include "ledoutbank.h"
 #include "buttoninbank.h"
+#include "digitalinbank.h"
 #include "bitbeattrack.h"
 
+#define FAKECLOCK 1
 
 const int ClockInPin = 2;
 const int ResetInPin = 3;
@@ -30,29 +32,23 @@ const int Gate4Pin = A3;
 const int Led4Pin = A4;
 const int Btn4Pin = A5;
 
-// TODO led out bank(s), on/off/blink
-// TODO gateInBank
-// TODO BtnInBank, incl debounce
-
-// TODO test leds out
-// TODO test gate in (rising, falling)
-// TODO test Btn in (pressed, released)
-
 struct BitBeatApp
 {
   DigitalOutBank m_GateOut;
   LedOutBank m_LedOut;
   ButtonInBank m_ButtonIn;
   ButtonInBank m_FunctionButtonIn;
-  // TODO digitalinbank clock reset
+  DigitalInBank m_GateIn;// clock reset
 
   static const int NumTracks = 4;
   BitBeatTrack m_Track[NumTracks];
   int m_RecordingTrack;
 
+#ifdef FAKECLOCK
   // fake clock
   unsigned long m_Millies;
   bool m_Clock;
+#endif
 
   BitBeatApp() : m_RecordingTrack(-1), m_Millies(0), m_Clock(false)
   {}
@@ -61,8 +57,9 @@ struct BitBeatApp
   {
     m_GateOut.Begin(Gate1Pin, Gate2Pin, Gate3Pin, Gate4Pin);
     m_LedOut.Begin(Led1Pin, Led2Pin, Led3Pin, Led4Pin);
-    m_ButtonIn.Begin(Btn1Pin, Btn2Pin, Btn3Pin, Btn4Pin);//hack to avoid led pin as input
+    m_ButtonIn.Begin(Btn1Pin, Btn2Pin, Btn3Pin, Btn4Pin);
     m_FunctionButtonIn.Begin(Btn0Pin, Btn50Pin, Btn100Pin, BtnResetPin);
+    m_GateIn.Begin(ClockInPin, ResetInPin);
   }
 
   void Update()
@@ -70,10 +67,12 @@ struct BitBeatApp
     unsigned long millies = millis();
     m_ButtonIn.Update(millies);
     m_FunctionButtonIn.Update(millies);
+    m_GateIn.Update();
 
-    //TODO fake clock
     bool clockRising = false;
     bool clockFalling = false;
+#ifdef FAKECLOCK
+    // fake clock
     unsigned long elapsed = millies - m_Millies;
     if(125<elapsed)
     {
@@ -88,12 +87,18 @@ struct BitBeatApp
         clockFalling = true;
       }
     }
+#endif
+
+#ifndef FAKECLOCK
+  clockRising = m_GateIn.IsClicked(0);
+  clockFalling = m_GateIn.IsReleased(0);
+#endif
 
     for(int tr = 0; tr<NumTracks; ++ tr)
     {
       if(tr==1)
       {
-        continue;//dirty hack!
+        continue;//dirty hack beacuse pin 13 is led pin so no input is possible!
       }
 
       if(m_ButtonIn.IsClicked(tr))
@@ -103,9 +108,8 @@ struct BitBeatApp
         {
           m_Track[tr].StopRecording(m_GateOut, m_LedOut, tr);
           m_RecordingTrack = -1;
-
-          Serial.print(tr);
-          Serial.println(" stop rec");
+          // Serial.print(tr);
+          // Serial.println(" stop rec");
         }
         else
         {
@@ -113,15 +117,13 @@ struct BitBeatApp
           if(0<=m_RecordingTrack)
           {
             m_Track[m_RecordingTrack].StopRecording(m_GateOut, m_LedOut, m_RecordingTrack);
-
-            Serial.print(m_RecordingTrack);
-            Serial.println(" stop rec");
+            // Serial.print(m_RecordingTrack);
+            // Serial.println(" stop rec");
           }
           m_RecordingTrack = tr;
           m_Track[tr].StartRecording(m_GateOut, m_LedOut, tr);
-
-          Serial.print(tr);
-          Serial.println(" start rec");
+          // Serial.print(tr);
+          // Serial.println(" start rec");
         }
       }
 
@@ -131,7 +133,7 @@ struct BitBeatApp
       }
       else
       {
-        m_Track[tr].Play(clockRising, clockFalling, false, m_FunctionButtonIn.IsClicked(3), m_GateOut, m_LedOut, tr);
+        m_Track[tr].Play(clockRising, clockFalling, m_GateIn.IsClicked(1), m_FunctionButtonIn.IsClicked(3), m_GateOut, m_LedOut, tr);
       }
     }
 
