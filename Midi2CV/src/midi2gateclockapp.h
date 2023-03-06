@@ -19,7 +19,7 @@ struct Midi2GateClockApp
 
   GateOutBank<8> gatesOut_midi2Gate;
   LedOut ledOut_midi2Gate;
-  Midi2Gate midi2Gate;
+  Midi2Gate<8> midi2Gate;
   
   GateOutBank<8> gatesOut_midi2Clock;
   LedOut ledOut_midi2clock;

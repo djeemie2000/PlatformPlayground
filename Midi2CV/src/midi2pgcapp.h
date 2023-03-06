@@ -28,7 +28,7 @@ struct Midi2PGCApp
 
     GateOutBank<8> gatesOut_midi2Gate;
     LedOut ledOut_midi2Gate;
-    Midi2Gate midi2Gate;
+    Midi2Gate<8> midi2Gate;
 
     // no mode (yet)
     
