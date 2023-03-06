@@ -136,6 +136,10 @@ void loop()
     app2.OnMidiMessage(byte);
 #endif
 
+#ifdef PGCAPP
+      app4.OnMidiMessage(byte);
+#endif
+
 #ifdef DEBUGMIDI
     if(byte != 0xF8)
     {

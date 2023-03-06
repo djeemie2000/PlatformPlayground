@@ -3,7 +3,7 @@
 
 #include "midi2pg.h"
 #include "midi2gate.h"
-#include "midi2clock.h"
+#include "midi2clocktick.h"
 #include "analogbuttonin2.h"
 #include "digitaloutbank.h"
 #include "gateoutbank.h"
@@ -26,9 +26,12 @@ struct Midi2PGCApp
     LedOut ledOut_Midi2PG;
     Midi2PG<4> midi2PG;
 
-    GateOutBank<8> gatesOut_midi2Gate;
+    GateOutBank<6> gatesOut_midi2Gate;
     LedOut ledOut_midi2Gate;
-    Midi2Gate<8> midi2Gate;
+    Midi2Gate<6> midi2Gate;
+
+    GateOutBank<2> gatesOut_midi2Clock;
+    Midi2ClockTick<2> midi2Clock; 
 
     // no mode (yet)
     
@@ -61,11 +64,15 @@ struct Midi2PGCApp
         ledOut_midi2Gate.Begin();
         midi2Gate.Begin(&gatesOut_midi2Gate, &ledOut_midi2Gate);
 
+        gatesOut_midi2Clock.Begin();
+        midi2Clock.Begin(&gatesOut_midi2Clock, 3, 6);// 3/6 => 24PPQ becomes 4PPQ (1/16th notes)  
+
         prevIsLearning = false;
     }
 
     void OnMidiMessage(uint8_t byte)
     {
+        midi2Clock.OnMessage(byte);
     }
 
     void OnMidiMessage(MidiVoiceMessage& message)
@@ -100,6 +107,8 @@ struct Midi2PGCApp
 
         gatesOut_midi2Gate.Apply(4, digitalOutBank, dacBank);
         ledOut_midi2Gate.Apply(counter, statusLed2Pin);
+
+        gatesOut_midi2Clock.Apply(7, digitalOutBank, dacBank);
     }
 
     void CheckSaveParams(int offset)

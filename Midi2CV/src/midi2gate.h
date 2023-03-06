@@ -10,8 +10,6 @@ template<int NumGates>
 class Midi2Gate
 {
 public:
-//    static const int NumGates = 8;
-
     Midi2Gate();
 
     void Begin(GateOutBank<NumGates>* gates, LedOut* ledOut);
