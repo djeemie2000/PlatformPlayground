@@ -7,9 +7,14 @@ BitBeatApp app;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  Serial.println("BitBeat v0.1...");
+  Serial.println("BitBeat v0.2...");
 
   app.Begin();
+
+  Serial.println("Loading params...");
+  app.LoadParams(0);
+
+  Serial.println("Start running");
 }
 
 void loop() {

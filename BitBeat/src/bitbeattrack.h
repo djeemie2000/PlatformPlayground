@@ -19,6 +19,9 @@ public:
     void Record(bool btn0Clicked, bool btn50Clicked, bool btn100Clicked);
 
     //TODO EEPROM : save upon StopRecording, loadupon start
+    void SaveParams(int offset);
+    void LoadParams(int offset);
+    int ParamSize() const;
 
 private:
     int GetBitOn(uint8_t step) const;

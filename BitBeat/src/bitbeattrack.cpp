@@ -1,6 +1,7 @@
 #include "bitbeattrack.h"
 #include "digitaloutbank.h"
 #include "ledoutbank.h"
+#include "EEPROM.h"
 
 BitBeatTrack::BitBeatTrack() : m_NumSteps(0x00), m_DoReset(false), m_Step(0x00)
 {
@@ -142,3 +143,42 @@ void BitBeatTrack::Record(bool btn0Clicked, bool btn50Clicked, bool btn100Clicke
         }
     }
 }
+
+int BitBeatTrack::ParamSize() const
+{
+    return 3 + 2*ByteCapacity;
+}
+
+void BitBeatTrack::SaveParams(int offset)
+{
+    int off = offset;
+    EEPROM.update(off++, 'B');
+    EEPROM.update(off++, 'T');
+    EEPROM.update(off++, m_NumSteps);
+    for(int idx = 0; idx<ByteCapacity; ++idx)
+    {
+        EEPROM.update(off++, m_BitOn[idx]);
+    }
+    for(int idx = 0; idx<ByteCapacity; ++idx)
+    {
+        EEPROM.update(off++, m_BitOff[idx]);
+    }
+}
+
+void BitBeatTrack::LoadParams(int offset)
+{
+    int off = offset;
+    if ('B' == EEPROM.read(off++) && 'T' == EEPROM.read(off++))
+    {
+        m_NumSteps = EEPROM.read(off++);
+        for(int idx = 0; idx<ByteCapacity; ++idx)
+        {
+            m_BitOn[idx] = EEPROM.read(off++);
+        }
+        for(int idx = 0; idx<ByteCapacity; ++idx)
+        {
+            m_BitOff[idx] = EEPROM.read(off++);
+        }
+    }
+}
+

@@ -1,13 +1,14 @@
 #pragma once
 #include <Arduino.h>
 
-#define FAKECLOCK 1
+//#define FAKECLOCK 1
 
 #include "digitaloutbank.h"
 #include "ledoutbank.h"
 #include "buttoninbank.h"
 #include "digitalinbank.h"
 #include "bitbeattrack.h"
+#include "EEPROM.h"
 
 const int ClockInPin = 2;
 const int ResetInPin = 3;
@@ -51,7 +52,10 @@ struct BitBeatApp
     bool m_Clock;
 #endif
 
-    BitBeatApp() : m_RecordingTrack(-1), m_Millies(0), m_Clock(false)
+    BitBeatApp() : m_RecordingTrack(-1)
+#ifdef FAKECLOCK
+    , m_Millies(0), m_Clock(false)
+#endif
     {
     }
 
@@ -113,6 +117,7 @@ struct BitBeatApp
                 if (tr == m_RecordingTrack)
                 {
                     m_Track[tr].StopRecording(m_GateOut, m_LedOut, tr);
+                    m_Track[tr].SaveParams(TrackParamOffset(tr));
                     m_RecordingTrack = -1;
                     // Serial.print(tr);
                     // Serial.println(" stop rec");
@@ -123,6 +128,7 @@ struct BitBeatApp
                     if (0 <= m_RecordingTrack)
                     {
                         m_Track[m_RecordingTrack].StopRecording(m_GateOut, m_LedOut, m_RecordingTrack);
+                        m_Track[m_RecordingTrack].SaveParams(TrackParamOffset(m_RecordingTrack));
                         // Serial.print(m_RecordingTrack);
                         // Serial.println(" stop rec");
                     }
@@ -148,4 +154,44 @@ struct BitBeatApp
         uint8_t counter = millies >> 2;
         m_LedOut.Update(counter);
     }
+
+    int TrackParamOffset(int tr)
+    {
+        return 4+tr*m_Track[tr].ParamSize();
+    }
+
+    void SaveParams(int offset)
+    {
+        int off = offset;
+        // header BitBeat BB
+        EEPROM.update(off++, 'B');
+        EEPROM.update(off++, 'B');
+        // version V0.1
+        EEPROM.update(off++, 0x00);
+        EEPROM.update(off++, 0x01);
+        // tracks
+        for(int tr = 0; tr<NumTracks; ++ tr)
+        {
+            m_Track[tr].SaveParams(off);
+            off += m_Track[tr].ParamSize();
+        }
+    }
+
+    void LoadParams(int offset)
+    {
+        int off = offset;
+        if ('B' == EEPROM.read(off++) && 'B' == EEPROM.read(off++))
+        {
+            if(0x00 == EEPROM.read(off++) && 0x01 == EEPROM.read(off++))
+            {
+                // tracks
+                for(int tr = 0; tr<NumTracks; ++ tr)
+                {
+                    m_Track[tr].LoadParams(off);
+                    off += m_Track[tr].ParamSize();
+                }
+            }
+        }
+    }
+
 };
