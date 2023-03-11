@@ -4,6 +4,21 @@
 
 BitBeatApp app;
 
+void PrintEEPROM(int offset, int length)
+{
+  Serial.println("EEPROM...");
+  for(int off = offset; off<offset+length; ++off)
+  {
+    Serial.print(off);
+    Serial.print(" 0x");
+    Serial.print(EEPROM.read(off), HEX);
+    Serial.print(' ');
+    char c = EEPROM.read(off);
+    Serial.println(c);
+  }
+  Serial.println("EEPROM");
+}
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -13,6 +28,8 @@ void setup() {
 
   Serial.println("Loading params...");
   app.LoadParams(0);
+
+  //PrintEEPROM(0, 90);
 
   Serial.println("Start running");
 }

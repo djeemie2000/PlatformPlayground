@@ -117,7 +117,7 @@ struct BitBeatApp
                 if (tr == m_RecordingTrack)
                 {
                     m_Track[tr].StopRecording(m_GateOut, m_LedOut, tr);
-                    m_Track[tr].SaveParams(TrackParamOffset(tr));
+                    SaveTrackParams(tr);
                     m_RecordingTrack = -1;
                     // Serial.print(tr);
                     // Serial.println(" stop rec");
@@ -128,7 +128,7 @@ struct BitBeatApp
                     if (0 <= m_RecordingTrack)
                     {
                         m_Track[m_RecordingTrack].StopRecording(m_GateOut, m_LedOut, m_RecordingTrack);
-                        m_Track[m_RecordingTrack].SaveParams(TrackParamOffset(m_RecordingTrack));
+                        SaveTrackParams(m_RecordingTrack);
                         // Serial.print(m_RecordingTrack);
                         // Serial.println(" stop rec");
                     }
@@ -158,6 +158,19 @@ struct BitBeatApp
     int TrackParamOffset(int tr)
     {
         return 4+tr*m_Track[tr].ParamSize();
+    }
+
+    void SaveTrackParams(int tr)
+    {
+        int off = 0;
+        // header BitBeat BB
+        EEPROM.update(off++, 'B');
+        EEPROM.update(off++, 'B');
+        // version V0.1
+        EEPROM.update(off++, 0x00);
+        EEPROM.update(off++, 0x01);
+        // track
+        m_Track[tr].SaveParams(TrackParamOffset(tr));
     }
 
     void SaveParams(int offset)
