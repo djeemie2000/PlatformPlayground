@@ -13,8 +13,12 @@ struct Step8App
   int m_APin;
   int m_BPin;
   int m_CPin;
+  int m_DividePin;
+  int m_LengthPin;
+  int m_StepSizePin;
 
   // parameters
+  int m_Dividers[8];
   int m_Divide;   // 1, 2, 4, 8, 16, 3, 6, 12
   int m_Length;   // 1, 2, 3, 4, 5, 6, 7, 8
   int m_StepSize; // 0, 1, 2, 3, 4, 5, 6, 7
@@ -30,6 +34,14 @@ struct Step8App
   Step8App()
       : m_Divide(1), m_Length(MaxNumSteps), m_StepSize(1), m_DoReset(false), m_Step(0), m_Clock(0), m_PrevClock(0), m_ClockCounter(0)
   {
+    m_Dividers[0] = 1;
+    m_Dividers[1] = 2;
+    m_Dividers[2] = 4;
+    m_Dividers[3] = 8;
+    m_Dividers[4] = 16;
+    m_Dividers[5] = 3;
+    m_Dividers[6] = 6;
+    m_Dividers[7] = 12;    
   }
 
   void Begin(int clockInPin,
@@ -38,10 +50,14 @@ struct Step8App
              int resetOutPin,
              int aPin,
              int bPin,
-             int cPin)
+             int cPin,
+             int dividePin,
+             int lengthPin,
+             int stepSizePin)
   {
     m_ClockIn.begin(clockInPin, false);
     m_ResetIn.begin(resetInPin, false);
+    
     m_ClockOutPin = clockOutPin;
     pinMode(m_ClockOutPin, OUTPUT);
     m_ResetOutPin = resetOutPin;
@@ -52,6 +68,10 @@ struct Step8App
     pinMode(m_BPin, OUTPUT);
     m_CPin = cPin;
     pinMode(m_CPin, OUTPUT);
+
+    m_DividePin = dividePin;
+    m_LengthPin = lengthPin;
+    m_StepSizePin = stepSizePin;
 
     m_Step = 0;
   }
@@ -67,7 +87,7 @@ struct Step8App
     }
 
     // read CV for divide, length, stepsize
-    // TODO analogRead
+    ReadCV();
 
     // TODO clock divider!
     m_ClockIn.Read();
@@ -86,6 +106,18 @@ struct Step8App
     WriteReset();
     // set clock out
     digitalWrite(m_ClockOutPin, m_Clock);
+  }
+
+  void ReadCV()
+  {
+    // [0, 1013] -> [0,7] -> 1, 2,4,8,16, 3, 6, 12 
+    int divideIdx = analogRead(m_DividePin)>>7;
+    m_Divide = m_Dividers[divideIdx];
+
+    int lengthIdx = analogRead(m_DividePin)>>7;
+    m_Length = 1+lengthIdx;
+
+    m_StepSize = analogRead(m_DividePin)>>7;    
   }
 
   void UpdateClock()
@@ -206,6 +238,13 @@ struct Step8App
   {
     Serial.println("TestAnalogIn");
     // TODO read + println
+    for(int repeat = 0; repeat<10; ++repeat)
+    {
+      int val = analogRead(m_DividePin);
+      Serial.print('D');
+      Serial.println(val);
+      delay(300);
+    }
   }
 };
 
@@ -218,8 +257,8 @@ void setup()
   Serial.begin(115200);
   Serial.println("Step8x2 V0.1...");
 
-  app1.Begin(2, 3, 4, 5, 6, 7, 8);
-  app2.Begin(9, 10, 11, 12, 13, 14, 15);
+  app1.Begin(2, 3, 4, 5, 6, 7, 8, A2, A3, A4);
+  app2.Begin(9, 10, 11, 12, 13, 14, 15, A5, A6, A7);
 
   delay(1000);
 }
@@ -232,4 +271,7 @@ void loop()
 
   app1.TestInputs();
   app2.TestInputs();
+
+  app1.TestAnalogIn();
+  app2.TestAnalogIn();
 }
