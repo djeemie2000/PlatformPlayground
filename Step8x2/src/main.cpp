@@ -110,14 +110,21 @@ struct Step8App
 
   void ReadCV()
   {
-    // [0, 1013] -> [0,7] -> 1, 2,4,8,16, 3, 6, 12 
-    int divideIdx = analogRead(m_DividePin)>>7;
-    m_Divide = m_Dividers[divideIdx];
-
-    int lengthIdx = analogRead(m_DividePin)>>7;
-    m_Length = 1+lengthIdx;
-
-    m_StepSize = analogRead(m_DividePin)>>7;    
+    if(0<m_DividePin)
+    {
+      // [0, 1013] -> [0,7] -> 1, 2,4,8,16, 3, 6, 12 
+      int divideIdx = analogRead(m_DividePin)>>7;
+      m_Divide = m_Dividers[divideIdx];
+    }
+    if(0<m_LengthPin)
+    {
+      int lengthIdx = analogRead(m_LengthPin)>>7;
+      m_Length = 1+lengthIdx;
+    }
+    if(0<m_StepSizePin)
+    {
+      m_StepSize = analogRead(m_StepSizePin)>>7;
+    }
   }
 
   void UpdateClock()
@@ -127,6 +134,7 @@ struct Step8App
     if (m_DoReset && m_ClockIn.IsRising())
     {
       m_Clock = 1;
+      m_PrevClock = 0;
       m_ClockCounter = 0;
     }
     else if (m_ClockIn.IsRising() || m_ClockIn.IsFalling())
@@ -240,9 +248,14 @@ struct Step8App
     // TODO read + println
     for(int repeat = 0; repeat<10; ++repeat)
     {
-      int val = analogRead(m_DividePin);
-      Serial.print('D');
-      Serial.println(val);
+      int val1 = analogRead(m_DividePin);
+      int val2 = analogRead(m_LengthPin);
+      int val3 = analogRead(m_StepSizePin);
+      Serial.print(val1);
+      Serial.print(' ');
+      Serial.print(val2);
+      Serial.print(' ');
+      Serial.println(val3);
       delay(300);
     }
   }
@@ -269,9 +282,15 @@ void loop()
   app1.TestOutputs();
   app2.TestOutputs();
 
-  app1.TestInputs();
-  app2.TestInputs();
+  // app1.TestInputs();
+  // app2.TestInputs();
 
   app1.TestAnalogIn();
   app2.TestAnalogIn();
+
+  while(true)
+  {
+    app1.Update();
+    app2.Update();
+  }
 }
