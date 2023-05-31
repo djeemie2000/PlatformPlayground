@@ -24,15 +24,23 @@ struct Step8App
   int m_StepSize; // 0, 1, 2, 3, 4, 5, 6, 7
 
   // state
-  bool m_DoReset;
+//  bool m_DoReset;
   int m_Step;
   // clock divider state
-  int m_Clock;
-  int m_PrevClock;
-  int m_ClockCounter;
+  // int m_Clock;
+  // int m_PrevClock;
+  // int m_ClockCounter;
+
+  int m_InClockState;
+  int m_DividedClockState;
+  int m_InClockCounter;
 
   Step8App()
-      : m_Divide(1), m_Length(MaxNumSteps), m_StepSize(1), m_DoReset(false), m_Step(0), m_Clock(0), m_PrevClock(0), m_ClockCounter(0)
+      : m_Divide(1), m_Length(MaxNumSteps), m_StepSize(1)
+      //, m_DoReset(false)
+      , m_Step(0)
+      //, m_Clock(0), m_PrevClock(0), m_ClockCounter(0)
+      , m_InClockState(0),m_DividedClockState(0), m_InClockCounter(0)
   {
     m_Dividers[0] = 1;
     m_Dividers[1] = 2;
@@ -74,6 +82,10 @@ struct Step8App
     m_StepSizePin = stepSizePin;
 
     m_Step = 0;
+
+    m_InClockState = 0;
+    m_DividedClockState = 0;
+    m_InClockCounter = 0;
   }
 
   void Update()
@@ -83,7 +95,8 @@ struct Step8App
     m_ResetIn.Read();
     if (m_ResetIn.IsRising())
     {
-      m_DoReset = true;
+      Reset();
+      //m_DoReset = true;
     }
 
     // read CV for divide, length, stepsize
@@ -91,28 +104,88 @@ struct Step8App
 
     // TODO clock divider!
     m_ClockIn.Read();
-    UpdateClock();
+    //UpdateClock();
 
+    UpdateClockStep();
 
-    if (m_Clock && !m_PrevClock)
-    {
-      // divided clock is rising => advance step
-      AdvanceStep();
-    }
+    // if (m_Clock && !m_PrevClock)
+    // {
+    //   // divided clock is rising => advance step
+    //   AdvanceStep();
+    // }
 
     // set step
     WriteStep(m_Step);
     // set reset out
     WriteReset();
     // set clock out
-    digitalWrite(m_ClockOutPin, m_Clock);
+    digitalWrite(m_ClockOutPin, m_DividedClockState);
+  }
+
+  void Reset()
+  {
+    m_Step = 0;
+    m_InClockState = 1;
+    m_DividedClockState = 1;
+    m_InClockCounter = 0;
+  }
+
+  void UpdateClockStep()
+  {
+    // after reset occured, keep m_InClockState high untill clock in is low
+    // divider == 1 => divided clock out = clock in
+    // divider == 2 => 
+    if(!m_InClockState && m_ClockIn.Get())
+    {
+      // clock in rising  => update clock out
+      bool advanceStep =false;
+
+      if(m_Divide == 1)
+      {
+        m_DividedClockState = 1;
+        advanceStep = true;
+      }
+      else 
+      {
+        ++m_InClockCounter;
+        if (m_Divide <= m_InClockCounter)
+        {
+          m_InClockCounter = 0;
+          // toggle divided clock
+          m_DividedClockState = 1 - m_DividedClockState;
+
+          advanceStep = true;
+        }
+      }      
+
+      if(advanceStep)
+      {
+        // use parameters (length and step size) to advance the step
+        // no good alternative to avoid division that works in all cases
+        // assumes length>=1
+        // step size can be zero
+        m_Step = (m_Step + m_StepSize) % m_Length;
+      }
+
+      m_InClockState = 1;
+    }
+    else if(m_InClockState && !m_ClockIn.Get())
+    {
+      // clock in falling
+      m_InClockState = 0;
+
+      if(m_Divide == 1)
+      {
+        m_DividedClockState = 0;
+      }
+    }
   }
 
   void ReadCV()
   {
     if(0<m_DividePin)
     {
-      // [0, 1013] -> [0,7] -> 1, 2,4,8,16, 3, 6, 12 
+      // [0, 1013] -> [0,7] -> 1, 2,4,8,16, 3,6,12 
       int divideIdx = analogRead(m_DividePin)>>7;
       m_Divide = m_Dividers[divideIdx];
     }
@@ -127,45 +200,44 @@ struct Step8App
     }
   }
 
-  void UpdateClock()
-  {
-    m_PrevClock = m_Clock;
+  // void UpdateClock()
+  // {
+  //   m_PrevClock = m_Clock;
 
-    if (m_DoReset && m_ClockIn.IsRising())
-    {
-      m_Clock = 1;
-      m_PrevClock = 0;
-      m_ClockCounter = 0;
-    }
-    else if (m_ClockIn.IsRising() || m_ClockIn.IsFalling())
-    {
-      ++m_ClockCounter;
-      if (m_Divide <= m_ClockCounter)
-      {
-        m_ClockCounter = 0;
-        // toggle clock
-        m_Clock = 1 - m_Clock;
-      }
-    }
+  //   if (m_DoReset && m_ClockIn.IsRising())
+  //   {
+  //     m_Clock = 1;
+  //     m_PrevClock = 0;
+  //     m_ClockCounter = 0;
+  //   }
+  //   else if (m_ClockIn.IsRising() || m_ClockIn.IsFalling())
+  //   {
+  //     ++m_ClockCounter;
+  //     if (m_Divide <= m_ClockCounter)
+  //     {
+  //       m_ClockCounter = 0;
+  //       // toggle clock
+  //       m_Clock = 1 - m_Clock;
+  //     }
+  //   }
+  //  }
 
-  }
-
-  void AdvanceStep()
-  {
-    if (m_DoReset)
-    {
-      m_DoReset = false;
-      m_Step = 0;
-    }
-    else
-    {
-      // use parameters (length and step size) to advance the step
-      // no good alternative to avoid division that works in all cases
-      // assumes length>=1
-      // step size can be zero
-      m_Step = (m_Step + m_StepSize) % m_Length;
-    }
-  }
+  // void AdvanceStep()
+  // {
+  //   if (m_DoReset)
+  //   {
+  //     m_DoReset = false;
+  //     m_Step = 0;
+  //   }
+  //   else
+  //   {
+  //     // use parameters (length and step size) to advance the step
+  //     // no good alternative to avoid division that works in all cases
+  //     // assumes length>=1
+  //     // step size can be zero
+  //     m_Step = (m_Step + m_StepSize) % m_Length;
+  //   }
+  // }
 
   void WriteStep(int step)
   {
@@ -179,7 +251,7 @@ struct Step8App
     if (0 == m_Step)
     {
       // use divided clock
-      digitalWrite(m_ResetOutPin, m_Clock);
+      digitalWrite(m_ResetOutPin, m_DividedClockState);
     }
     else
     {
