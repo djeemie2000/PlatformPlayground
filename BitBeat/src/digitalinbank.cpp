@@ -42,7 +42,7 @@ void DigitalInBank::Update()
 {
     for (int idx = 0; idx < DigitalInBank::Size; ++idx)
     {
-        int temp = 1 - digitalRead(m_InputPin[idx]); // PULLUP => invert
+        int temp = digitalRead(m_InputPin[idx]); // not a button with PULLUP => do not invert
         m_History[idx] = (m_History[idx] << 1) | temp;
     }
 }

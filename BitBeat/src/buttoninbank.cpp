@@ -56,7 +56,7 @@ void ButtonInBank::Update(unsigned long millis)
 
         for (int idx = 0; idx < ButtonInBank::Size; ++idx)
         {
-            int temp = 1-digitalRead(m_InputPin[idx]);// PULLUP => invert
+            int temp = 1-digitalRead(m_InputPin[idx]);// button with PULLUP => invert
             m_History[idx] = (m_History[idx] << 1) | temp;
         }
     }
