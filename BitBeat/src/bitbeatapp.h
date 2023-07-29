@@ -18,21 +18,21 @@ const int Btn50Pin = 5;
 const int Btn100Pin = 6;
 const int BtnResetPin = 7;
 
-const int Gate1Pin = 8;
+const int Gate1Pin = 10; 
 const int Led1Pin = 9;
-const int Btn1Pin = 10;
+const int Btn1Pin = 8;
 
-const int Gate2Pin = 11;
-const int Led2Pin = 13;
-const int Btn2Pin = 12; // led pin -> cannot be used as input!!!!!!!!!!!!
+const int Gate2Pin = 13;
+const int Led2Pin = 12;
+const int Btn2Pin = 11; // led pin -> cannot be used as input!!!!!!!!!!!!
 
-const int Gate3Pin = A0;
+const int Gate3Pin = A2;
 const int Led3Pin = A1;
-const int Btn3Pin = A2;
+const int Btn3Pin = A0;
 
-const int Gate4Pin = A3;
+const int Gate4Pin = A5;
 const int Led4Pin = A4;
-const int Btn4Pin = A5;
+const int Btn4Pin = A3;
 
 struct BitBeatApp
 {
