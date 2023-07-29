@@ -29,18 +29,18 @@ void setup() {
   Serial.println("Loading params...");
   app.LoadParams(0);
 
-  //PrintEEPROM(0, 90);
+  PrintEEPROM(0, 90);
 
   Serial.println("Start running");
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  //TestDigitalOutBank(app.m_GateOut, 2);
-  //TestLedOut(app.m_LedOut, 1);
-  //TestButtonInGet(app.m_ButtonIn, 1);
-  //TestButtonIn(app.m_ButtonIn, 2);
-  //TestButtonIn(app.m_FunctionButtonIn, 4);
+  TestLedOut(app.m_LedOut, 2);
+  TestDigitalOutBank(app.m_GateOut, 2);
+  TestButtonInGet(app.m_ButtonIn, 4);
+  TestButtonIn(app.m_ButtonIn, 4);
+  TestButtonIn(app.m_FunctionButtonIn, 4);
 
   while(true)
   {
