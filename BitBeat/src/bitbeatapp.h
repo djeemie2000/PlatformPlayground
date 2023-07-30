@@ -105,18 +105,13 @@ struct BitBeatApp
         // tracks
         for (int tr = 0; tr < NumTracks; ++tr)
         {
-            // if (tr == 1)
-            // {
-            //     continue; // dirty hack beacuse pin 13 is led pin so no input is possible!
-            // }
-
             //handle track button input
             if (m_ButtonIn.IsClicked(tr))
             {
                 // toggle start/stop recording
                 if (tr == m_RecordingTrack)
                 {
-                    m_Track[tr].StopRecording(m_GateOut, m_LedOut, tr);
+                    m_Track[tr].StopRecording();
                     SaveTrackParams(tr);
                     m_RecordingTrack = -1;
                     // Serial.print(tr);
@@ -127,13 +122,13 @@ struct BitBeatApp
                     // only one recording track at a time!
                     if (0 <= m_RecordingTrack)
                     {
-                        m_Track[m_RecordingTrack].StopRecording(m_GateOut, m_LedOut, m_RecordingTrack);
+                        m_Track[m_RecordingTrack].StopRecording();
                         SaveTrackParams(m_RecordingTrack);
                         // Serial.print(m_RecordingTrack);
                         // Serial.println(" stop rec");
                     }
                     m_RecordingTrack = tr;
-                    m_Track[tr].StartRecording(m_GateOut, m_LedOut, tr);
+                    m_Track[tr].StartRecording();
                     // Serial.print(tr);
                     // Serial.println(" start rec");
                 }
@@ -143,10 +138,21 @@ struct BitBeatApp
             if (tr == m_RecordingTrack)
             {
                 m_Track[tr].Record(m_FunctionButtonIn.IsClicked(0), m_FunctionButtonIn.IsClicked(1), m_FunctionButtonIn.IsClicked(2));
+                m_Track[tr].DisplayRecording(m_GateOut, m_LedOut, tr);
             }
             else
             {
-                m_Track[tr].Play(clockRising, clockFalling, m_GateIn.IsClicked(1), m_FunctionButtonIn.IsClicked(3), m_GateOut, m_LedOut, tr);
+                // play mode or play + play mute mode
+                m_Track[tr].Play(clockRising, clockFalling, m_GateIn.IsClicked(1), m_FunctionButtonIn.IsClicked(3), 
+                                    m_FunctionButtonIn.Get(1), m_ButtonIn.IsClicked(tr));
+                if(m_FunctionButtonIn.Get(1))
+                {
+                    m_Track[tr].DisplayPlayMute(m_GateOut, m_LedOut, tr);
+                }
+                else
+                {
+                    m_Track[tr].DisplayPlay(m_GateOut, m_LedOut, tr);
+                }
             }
         }
 
@@ -195,6 +201,7 @@ struct BitBeatApp
         int off = offset;
         if ('B' == EEPROM.read(off++) && 'B' == EEPROM.read(off++))
         {
+            // V0.1 params
             if(0x00 == EEPROM.read(off++) && 0x01 == EEPROM.read(off++))
             {
                 // tracks

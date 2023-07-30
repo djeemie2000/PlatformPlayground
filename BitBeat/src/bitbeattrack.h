@@ -11,12 +11,17 @@ public:
     
     BitBeatTrack();
 
-    void Play(bool clockRising, bool clockFalling, bool resetRising, bool resetClicked, DigitalOutBank& gateOut, LedOutBank& ledOut, int idx);
+    void Play(bool clockRising, bool clockFalling, bool resetRising, bool resetClicked, 
+                bool btn50On, bool btnTrackClicked);
     
-    void StartRecording(DigitalOutBank& gateOut, LedOutBank& ledOut, int idx);
-    void StopRecording(DigitalOutBank& gateOut, LedOutBank& ledOut, int idx);
+    void StartRecording();
+    void StopRecording();
     
     void Record(bool btn0Clicked, bool btn50Clicked, bool btn100Clicked);
+
+    void DisplayPlay(DigitalOutBank& gateOut, LedOutBank& ledOut, int idx);
+    void DisplayPlayMute(DigitalOutBank& gateOut, LedOutBank& ledOut, int idx);
+    void DisplayRecording(DigitalOutBank& gateOut, LedOutBank& ledOut, int idx);
 
     //TODO EEPROM : save upon StopRecording, loadupon start
     void SaveParams(int offset);
@@ -40,4 +45,6 @@ private:
     //TODO state
     bool m_DoReset;
     uint8_t m_Step;
+    bool m_PlayMute;// true = play false = mute
+    bool m_GateOn;
 };

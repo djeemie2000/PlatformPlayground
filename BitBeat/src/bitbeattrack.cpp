@@ -3,7 +3,7 @@
 #include "ledoutbank.h"
 #include "EEPROM.h"
 
-BitBeatTrack::BitBeatTrack() : m_NumSteps(0x00), m_DoReset(false), m_Step(0x00)
+BitBeatTrack::BitBeatTrack() : m_NumSteps(0x00), m_DoReset(false), m_Step(0x00), m_PlayMute(true), m_GateOn(false)
 {
     // bits all zero
     for(int idx = 0; idx<ByteCapacity; ++idx)
@@ -43,12 +43,21 @@ void BitBeatTrack::ClearBitOff(uint8_t step)
     bitClear(m_BitOff[step>>3], step&0x07);
 }
 
-void BitBeatTrack::Play(bool clockRising, bool clockFalling, bool resetRising, bool resetClicked, DigitalOutBank &gateOut, LedOutBank &ledOut, int idx)
+void BitBeatTrack::Play(bool clockRising, bool clockFalling, bool resetRising, bool resetClicked, 
+                            bool btn50On, bool btnTrackClicked)
 {
+    if(btn50On)
+    {
+        // toggle play mute if track btn clicked
+        if(btnTrackClicked)
+        {
+            m_PlayMute = !m_PlayMute;
+        }
+    }
+
     if(0==m_NumSteps)
     {
-        gateOut.Clear(idx);
-        ledOut.LedOff(idx);
+        m_GateOn = false;
         return;
     }
 
@@ -74,48 +83,25 @@ void BitBeatTrack::Play(bool clockRising, bool clockFalling, bool resetRising, b
             }
         }
 
-        if (GetBitOn(m_Step))
-        {
-            gateOut.Set(idx);
-            ledOut.LedOn(idx);
-        }
-        else
-        {
-            gateOut.Clear(idx);
-            ledOut.LedOff(idx);
-        }
+        m_GateOn =  m_PlayMute && (GetBitOn(m_Step)?true:false);
     }
 
     if (clockFalling)
     {
-        if (GetBitOff(m_Step))
-        {
-            gateOut.Set(idx);
-            ledOut.LedOn(idx);
-        }
-        else
-        {
-            gateOut.Clear(idx);
-            ledOut.LedOff(idx);
-        }
+        m_GateOn = m_PlayMute && (GetBitOff(m_Step)?true:false);
     }
 }
 
-void BitBeatTrack::StartRecording(DigitalOutBank& gateOut, LedOutBank& ledOut, int idx)
+void BitBeatTrack::StartRecording()
 {
-    gateOut.Clear(idx);
-    ledOut.LedBlink(idx);
-
     //TODO state
     m_NumSteps = 0;
+    m_GateOn = 0;
+    // keep play mute?    
 }
 
-void BitBeatTrack::StopRecording(DigitalOutBank& gateOut, LedOutBank& ledOut, int idx)
+void BitBeatTrack::StopRecording()
 {
-    // gate already off
-    gateOut.Clear(idx);
-    ledOut.LedOff(idx);
-
     m_DoReset = true;//trigger reset upon first clock after recording
 }
 
@@ -142,6 +128,49 @@ void BitBeatTrack::Record(bool btn0Clicked, bool btn50Clicked, bool btn100Clicke
             ++m_NumSteps;
         }
     }
+}
+
+void BitBeatTrack::DisplayPlay(DigitalOutBank& gateOut, LedOutBank& ledOut, int idx)
+{
+    // gate + led ~ state
+    if(m_GateOn && m_PlayMute)
+    {
+        gateOut.Set(idx);
+        ledOut.LedOn(idx);
+    }
+    else
+    {
+        gateOut.Clear(idx);
+        ledOut.LedOff(idx);
+    }
+}
+
+void BitBeatTrack::DisplayPlayMute(DigitalOutBank& gateOut, LedOutBank& ledOut, int idx)
+{
+    // gate ~ state
+    if(m_GateOn && m_PlayMute)
+    {
+        gateOut.Set(idx);
+    }
+    else
+    {
+        gateOut.Clear(idx);
+    }
+    // led ~~play mute
+    if(m_PlayMute)
+    {
+        ledOut.LedOn(idx);
+    }
+    else
+    {
+        ledOut.LedOff(idx);
+    }
+}
+
+void BitBeatTrack::DisplayRecording(DigitalOutBank& gateOut, LedOutBank& ledOut, int idx)
+{
+    gateOut.Clear(idx);
+    ledOut.LedBlink(idx);
 }
 
 int BitBeatTrack::ParamSize() const
