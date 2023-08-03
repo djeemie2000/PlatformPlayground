@@ -145,13 +145,14 @@ struct BitBeatApp
                 // play mode or play + play mute mode
                 m_Track[tr].Play(clockRising, clockFalling, m_GateIn.IsClicked(1), m_FunctionButtonIn.IsClicked(3), 
                                     m_FunctionButtonIn.Get(1), m_ButtonIn.IsClicked(tr));
+                m_Track[tr].DisplayPlay(m_GateOut, tr);
                 if(m_FunctionButtonIn.Get(1))
                 {
-                    m_Track[tr].DisplayPlayMute(m_GateOut, m_LedOut, tr);
+                    m_Track[tr].DisplayPlayMute(m_LedOut, tr);
                 }
                 else
                 {
-                    m_Track[tr].DisplayPlay(m_GateOut, m_LedOut, tr);
+                    m_Track[tr].DisplayPlay(m_LedOut, tr);
                 }
             }
         }

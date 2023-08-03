@@ -19,8 +19,9 @@ public:
     
     void Record(bool btn0Clicked, bool btn50Clicked, bool btn100Clicked);
 
-    void DisplayPlay(DigitalOutBank& gateOut, LedOutBank& ledOut, int idx);
-    void DisplayPlayMute(DigitalOutBank& gateOut, LedOutBank& ledOut, int idx);
+    void DisplayPlay(LedOutBank& ledOut, int idx);
+    void DisplayPlay(DigitalOutBank& gateOut, int idx);
+    void DisplayPlayMute(LedOutBank& ledOut, int idx);
     void DisplayRecording(DigitalOutBank& gateOut, LedOutBank& ledOut, int idx);
 
     //TODO EEPROM : save upon StopRecording, loadupon start

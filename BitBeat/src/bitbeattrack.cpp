@@ -130,22 +130,20 @@ void BitBeatTrack::Record(bool btn0Clicked, bool btn50Clicked, bool btn100Clicke
     }
 }
 
-void BitBeatTrack::DisplayPlay(DigitalOutBank& gateOut, LedOutBank& ledOut, int idx)
+void BitBeatTrack::DisplayPlay(LedOutBank& ledOut, int idx)
 {
     // gate + led ~ state
     if(m_GateOn && m_PlayMute)
     {
-        gateOut.Set(idx);
         ledOut.LedOn(idx);
     }
     else
     {
-        gateOut.Clear(idx);
         ledOut.LedOff(idx);
     }
 }
 
-void BitBeatTrack::DisplayPlayMute(DigitalOutBank& gateOut, LedOutBank& ledOut, int idx)
+void BitBeatTrack::DisplayPlay(DigitalOutBank& gateOut, int idx)
 {
     // gate ~ state
     if(m_GateOn && m_PlayMute)
@@ -156,6 +154,10 @@ void BitBeatTrack::DisplayPlayMute(DigitalOutBank& gateOut, LedOutBank& ledOut, 
     {
         gateOut.Clear(idx);
     }
+}
+
+void BitBeatTrack::DisplayPlayMute(LedOutBank& ledOut, int idx)
+{
     // led ~~play mute
     if(m_PlayMute)
     {
