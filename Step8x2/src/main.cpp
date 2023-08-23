@@ -135,27 +135,34 @@ struct Step8App
     // after reset occured, keep m_InClockState high untill clock in is low
     // divider == 1 => divided clock out = clock in
     // divider == 2 => 
-    if(!m_InClockState && m_ClockIn.Get())
+
+    // clock rise => cntr odd to even is allowed
+    // clock fall => cntr even to odd allowed
+    bool clockInCntrOdd = m_InClockCounter & 1;
+    bool clockInAdvance = (!m_InClockState && m_ClockIn.Get() && clockInCntrOdd)
+                            || (m_InClockState && !m_ClockIn.Get() && !clockInCntrOdd);
+    
+    //if(!m_InClockState && m_ClockIn.Get())
+    if(clockInAdvance)
     {
       // clock in rising  => update clock out
       bool advanceStep =false;
 
-      if(m_Divide == 1)
-      {
-        m_DividedClockState = 1;
-        advanceStep = true;
-      }
-      else 
+      // if(m_Divide == 1)
+      // {
+      //   m_DividedClockState = 1;
+      //   advanceStep = true;
+      // }
+      // else 
       {
         ++m_InClockCounter;
-        if (m_Divide <= m_InClockCounter)
+        if (m_Divide*2 <= m_InClockCounter)
         {
           m_InClockCounter = 0;
-          // toggle divided clock
-          m_DividedClockState = 1 - m_DividedClockState;
-
           advanceStep = true;
         }
+
+        m_DividedClockState = m_InClockCounter<m_Divide;
       }      
 
       if(advanceStep)
@@ -167,18 +174,19 @@ struct Step8App
         m_Step = (m_Step + m_StepSize) % m_Length;
       }
 
-      m_InClockState = 1;
+      //m_InClockState = 1;
+      m_InClockState = m_ClockIn.Get()?1:0;
     }
-    else if(m_InClockState && !m_ClockIn.Get())
-    {
-      // clock in falling
-      m_InClockState = 0;
+    // else if(m_InClockState && !m_ClockIn.Get())
+    // {
+    //   // clock in falling
+    //   m_InClockState = 0;
 
-      if(m_Divide == 1)
-      {
-        m_DividedClockState = 0;
-      }
-    }
+    //   if(m_Divide == 1)
+    //   {
+    //     m_DividedClockState = 0;
+    //   }
+    // }
   }
 
   void ReadCV()
