@@ -19,3 +19,4 @@ private:
 };
 
 void TestDigitalOutBank(DigitalOutBank& bank, int repeats);
+void AllClear(DigitalOutBank& bank);

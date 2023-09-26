@@ -22,7 +22,7 @@ void PrintEEPROM(int offset, int length)
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  Serial.println("BitBeat v0.3...");
+  Serial.println("BitBeat v0.5...");
 
   app.Begin();
 
@@ -36,11 +36,17 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  TestLedOut(app.m_LedOut, 2);
-  TestDigitalOutBank(app.m_GateOut, 2);
+  
+  // test leds and buttons
+  TestLedOut(app.m_LedOut, 1);
+  TestDigitalOutBank(app.m_GateOut, 1);
   TestButtonInGet(app.m_ButtonIn, 4);
   TestButtonIn(app.m_ButtonIn, 4);
   TestButtonIn(app.m_FunctionButtonIn, 4);
+
+  // all leds / gates off
+  AllClear(app.m_GateOut);
+  AllOff(app.m_LedOut);
 
   while(true)
   {

@@ -108,3 +108,14 @@ void TestLedOut(LedOutBank &ledOut, int repeats)
         ApplyLedOut(ledOut);
     }
 }
+
+
+void AllOff(LedOutBank& ledOut)
+{
+    for (int idx = 0; idx < LedOutBank::Size; ++idx)
+    {
+        ledOut.LedOff(idx);
+    }
+    uint8_t counter = millis() >> 2;
+    ledOut.Update(counter);
+}

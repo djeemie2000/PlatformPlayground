@@ -43,3 +43,11 @@ void TestDigitalOutBank(DigitalOutBank& bank, int repeats)
     }
     Serial.println(" done");
 }
+
+void AllClear(DigitalOutBank& bank)
+{
+    for(int idx = 0; idx<DigitalOutBank::Size;++idx)
+    {
+        bank.Clear(idx);
+    }
+}

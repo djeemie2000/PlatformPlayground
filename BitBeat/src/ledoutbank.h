@@ -24,3 +24,4 @@ private:
 };
 
 void TestLedOut(LedOutBank& ledOut, int repeats);
+void AllOff(LedOutBank& ledOut);
