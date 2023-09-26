@@ -12,7 +12,7 @@ public:
     BitBeatTrack();
 
     void Play(bool clockRising, bool clockFalling, bool resetRising, bool resetClicked, 
-                bool btn50On, bool btnTrackClicked);
+                bool playMuteMode, bool btnTrackClicked);
     
     void StartRecording();
     void StopRecording();

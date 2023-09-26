@@ -102,35 +102,42 @@ struct BitBeatApp
         clockFalling = m_GateIn.IsReleased(0);
 #endif
 
-        // tracks
+        // determine play mute mode : no recording mode for any track AND btn 50% is pressed
+        bool btn50On = m_FunctionButtonIn.Get(1);
+        bool playMuteMode = (m_RecordingTrack<0) && btn50On;
+
+        // tracks button input 
         for (int tr = 0; tr < NumTracks; ++tr)
         {
-            //handle track button input
-            if (m_ButtonIn.IsClicked(tr))
+            //handle track button input for recording mode
+            if(!playMuteMode)
             {
-                // toggle start/stop recording
-                if (tr == m_RecordingTrack)
+                if (m_ButtonIn.IsClicked(tr))
                 {
-                    m_Track[tr].StopRecording();
-                    SaveTrackParams(tr);
-                    m_RecordingTrack = -1;
-                    // Serial.print(tr);
-                    // Serial.println(" stop rec");
-                }
-                else
-                {
-                    // only one recording track at a time!
-                    if (0 <= m_RecordingTrack)
+                    // toggle start/stop recording
+                    if (tr == m_RecordingTrack)
                     {
-                        m_Track[m_RecordingTrack].StopRecording();
-                        SaveTrackParams(m_RecordingTrack);
-                        // Serial.print(m_RecordingTrack);
+                        m_Track[tr].StopRecording();
+                        SaveTrackParams(tr);
+                        m_RecordingTrack = -1;
+                        // Serial.print(tr);
                         // Serial.println(" stop rec");
                     }
-                    m_RecordingTrack = tr;
-                    m_Track[tr].StartRecording();
-                    // Serial.print(tr);
-                    // Serial.println(" start rec");
+                    else
+                    {
+                        // only one recording track at a time!
+                        if (0 <= m_RecordingTrack)
+                        {
+                            m_Track[m_RecordingTrack].StopRecording();
+                            SaveTrackParams(m_RecordingTrack);
+                            // Serial.print(m_RecordingTrack);
+                            // Serial.println(" stop rec");
+                        }
+                        m_RecordingTrack = tr;
+                        m_Track[tr].StartRecording();
+                        // Serial.print(tr);
+                        // Serial.println(" start rec");
+                    }
                 }
             }
 
@@ -144,9 +151,9 @@ struct BitBeatApp
             {
                 // play mode or play + play mute mode
                 m_Track[tr].Play(clockRising, clockFalling, m_GateIn.IsClicked(1), m_FunctionButtonIn.IsClicked(3), 
-                                    m_FunctionButtonIn.Get(1), m_ButtonIn.IsClicked(tr));
+                                    playMuteMode, m_ButtonIn.IsClicked(tr));
                 m_Track[tr].DisplayPlay(m_GateOut, tr);
-                if(m_FunctionButtonIn.Get(1))
+                if(playMuteMode)
                 {
                     m_Track[tr].DisplayPlayMute(m_LedOut, tr);
                 }

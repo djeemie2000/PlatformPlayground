@@ -44,9 +44,9 @@ void BitBeatTrack::ClearBitOff(uint8_t step)
 }
 
 void BitBeatTrack::Play(bool clockRising, bool clockFalling, bool resetRising, bool resetClicked, 
-                            bool btn50On, bool btnTrackClicked)
+                            bool playMuteMode, bool btnTrackClicked)
 {
-    if(btn50On)
+    if(playMuteMode)
     {
         // toggle play mute if track btn clicked
         if(btnTrackClicked)
