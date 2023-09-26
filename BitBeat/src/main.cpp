@@ -27,7 +27,7 @@ void setup() {
   app.Begin();
 
   Serial.println("Loading params...");
-  app.LoadParams(0);
+  app.LoadParams();
 
   PrintEEPROM(0, 90);
 
@@ -47,6 +47,8 @@ void loop() {
   // all leds / gates off
   AllClear(app.m_GateOut);
   AllOff(app.m_LedOut);
+
+  Serial.println("running");
 
   while(true)
   {

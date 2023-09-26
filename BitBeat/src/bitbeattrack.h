@@ -24,10 +24,9 @@ public:
     void DisplayPlayMute(LedOutBank& ledOut, int idx);
     void DisplayRecording(DigitalOutBank& gateOut, LedOutBank& ledOut, int idx);
 
-    //TODO EEPROM : save upon StopRecording, loadupon start
     void SaveParams(int offset);
     void LoadParams(int offset);
-    int ParamSize() const;
+    static int ParamSize();
 
 private:
     int GetBitOn(uint8_t step) const;

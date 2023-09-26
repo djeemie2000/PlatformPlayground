@@ -68,7 +68,7 @@ void ApplyLedOut(LedOutBank &ledOut)
 
 void TestLedOut(LedOutBank &ledOut, int repeats)
 {
-    Serial.print("Testing led out bank...");
+    Serial.println("Testing led out bank...");
     for (int repeat = 0; repeat < repeats; ++repeat)
     {
         Serial.println("Led On");
@@ -107,6 +107,7 @@ void TestLedOut(LedOutBank &ledOut, int repeats)
         }
         ApplyLedOut(ledOut);
     }
+    Serial.println("done");
 }
 
 

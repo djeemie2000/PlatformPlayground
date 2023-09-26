@@ -64,7 +64,7 @@ void ButtonInBank::Update(unsigned long millis)
 
 void TestButtonIn(ButtonInBank &buttonIn, int repeats)
 {
-    Serial.println("Testing button in bank...");
+    Serial.print("Testing button in bank...");
     int eventCount = 0;
     for (int repeat = 0; repeat < repeats; ++repeat)
     {
@@ -94,6 +94,7 @@ void TestButtonIn(ButtonInBank &buttonIn, int repeats)
             delay(1);
         }
     }
+    Serial.println("done");
 }
 
 void TestButtonInGet(ButtonInBank &buttonIn, int repeats)
@@ -112,4 +113,5 @@ void TestButtonInGet(ButtonInBank &buttonIn, int repeats)
         }
         Serial.println();
     }
+    Serial.println("done");
 }

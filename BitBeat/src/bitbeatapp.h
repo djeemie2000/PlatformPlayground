@@ -46,13 +46,16 @@ struct BitBeatApp
     BitBeatTrack m_Track[NumTracks];
     int m_RecordingTrack;
 
+    static const int NumSlots = 4;
+    uint8_t m_Slot;
+
 #ifdef FAKECLOCK
     // fake clock
     unsigned long m_Millies;
     bool m_Clock;
 #endif
 
-    BitBeatApp() : m_RecordingTrack(-1)
+    BitBeatApp() : m_RecordingTrack(-1), m_Slot(0)
 #ifdef FAKECLOCK
     , m_Millies(0), m_Clock(false)
 #endif
@@ -102,15 +105,19 @@ struct BitBeatApp
         clockFalling = m_GateIn.IsReleased(0);
 #endif
 
-        // determine play mute mode : no recording mode for any track AND btn 50% is pressed
-        bool btn50On = m_FunctionButtonIn.Get(1);
-        bool playMuteMode = (m_RecordingTrack<0) && btn50On;
+        // mode precedence:
+        // 1) recording
+        // 2) slots     : no recording mode for any track AND btn 0% is pressed
+        // 3) play/mute : no recording mode for any track AND btn 50% is pressed
+        bool recordingMode = (0<=m_RecordingTrack);
+        bool slotMode = !recordingMode && m_FunctionButtonIn.Get(0);
+        bool playMuteMode = !recordingMode && ! playMuteMode && m_FunctionButtonIn.Get(1);
 
         // tracks button input 
         for (int tr = 0; tr < NumTracks; ++tr)
         {
             //handle track button input for recording mode
-            if(!playMuteMode)
+            if(!playMuteMode && !slotMode)
             {
                 if (m_ButtonIn.IsClicked(tr))
                 {
@@ -157,10 +164,31 @@ struct BitBeatApp
                 {
                     m_Track[tr].DisplayPlayMute(m_LedOut, tr);
                 }
-                else
+                else if(!slotMode)
                 {
                     m_Track[tr].DisplayPlay(m_LedOut, tr);
                 }
+            }
+
+            if(slotMode)
+            {
+                // if any track button is clicked in slot mode, change slot, then save slot, then load params from slot
+                for(int tr = 0; tr<NumTracks; ++tr)
+                {
+                    if(m_ButtonIn.IsClicked(tr))
+                    {
+                        m_Slot = tr;
+                        SaveGlobalHeader();//also saves m_Slot!
+                        LoadParams();//load params 
+                        break;
+                    }   
+                }
+                // display current slot in slot mode
+                for(int tr = 0; tr<NumTracks; ++tr)
+                {
+                    m_LedOut.LedOff(tr);
+                }
+                m_LedOut.LedOn(m_Slot);
             }
         }
 
@@ -171,10 +199,10 @@ struct BitBeatApp
 
     int TrackParamOffset(int tr)
     {
-        return 4+tr*m_Track[tr].ParamSize();
+        return 4+4+(m_Slot*NumTracks*BitBeatTrack::ParamSize())+(tr*BitBeatTrack::ParamSize());
     }
 
-    void SaveTrackParams(int tr)
+    void SaveGlobalHeader()
     {
         int off = 0;
         // header BitBeat BB
@@ -182,41 +210,56 @@ struct BitBeatApp
         EEPROM.update(off++, 'B');
         // version V0.1
         EEPROM.update(off++, 0x00);
-        EEPROM.update(off++, 0x01);
+        EEPROM.update(off++, 0x02);
+        // global params, slot, reserved
+        EEPROM.update(off++, 'B');
+        EEPROM.update(off++, 'G');
+        EEPROM.update(off++, m_Slot);
+        EEPROM.update(off++, 0x00);    
+    }
+
+    void SaveTrackParams(int tr)
+    {
+        // always update header!
+        SaveGlobalHeader();
         // track
         m_Track[tr].SaveParams(TrackParamOffset(tr));
     }
 
-    void SaveParams(int offset)
+    void SaveParams()
     {
-        int off = offset;
-        // header BitBeat BB
-        EEPROM.update(off++, 'B');
-        EEPROM.update(off++, 'B');
-        // version V0.1
-        EEPROM.update(off++, 0x00);
-        EEPROM.update(off++, 0x01);
+        SaveGlobalHeader();     
         // tracks
         for(int tr = 0; tr<NumTracks; ++ tr)
         {
-            m_Track[tr].SaveParams(off);
-            off += m_Track[tr].ParamSize();
+            m_Track[tr].SaveParams(TrackParamOffset(tr));
         }
     }
 
-    void LoadParams(int offset)
+    void LoadParams()
     {
-        int off = offset;
+        int off = 0;
         if ('B' == EEPROM.read(off++) && 'B' == EEPROM.read(off++))
         {
-            // V0.1 params
-            if(0x00 == EEPROM.read(off++) && 0x01 == EEPROM.read(off++))
+            // only read V0.2 params
+            if(0x00 == EEPROM.read(off++) && 0x02 == EEPROM.read(off++))
             {
+                if('B' == EEPROM.read(off++) && 'G' == EEPROM.read(off++))
+                {
+                    // global params
+                    uint8_t slot = EEPROM.read(off++);
+                    EEPROM.read(off++);//reserved
+
+                    if(slot<NumSlots)
+                    {
+                        m_Slot = slot;
+                    }
+                }
+
                 // tracks
                 for(int tr = 0; tr<NumTracks; ++ tr)
                 {
-                    m_Track[tr].LoadParams(off);
-                    off += m_Track[tr].ParamSize();
+                    m_Track[tr].LoadParams(TrackParamOffset(tr));
                 }
             }
         }

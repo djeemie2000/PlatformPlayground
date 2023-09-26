@@ -175,20 +175,21 @@ void BitBeatTrack::DisplayRecording(DigitalOutBank& gateOut, LedOutBank& ledOut,
     ledOut.LedBlink(idx);
 }
 
-int BitBeatTrack::ParamSize() const
+int BitBeatTrack::ParamSize()
 {
-    return 3 + 2*ByteCapacity;
+    return 4 + 2*ByteCapacity;
 }
 
 void BitBeatTrack::SaveParams(int offset)
 {
-    // Serial.print(offset);
-    // Serial.println("Save ");
+    Serial.print(offset);
+    Serial.println("Save ");
 
     int off = offset;
     EEPROM.update(off++, 'B');
     EEPROM.update(off++, 'T');
     EEPROM.update(off++, m_NumSteps);
+    EEPROM.update(off++, m_PlayMute);
     for(int idx = 0; idx<ByteCapacity; ++idx)
     {
         EEPROM.update(off++, m_BitOn[idx]);
@@ -201,13 +202,14 @@ void BitBeatTrack::SaveParams(int offset)
 
 void BitBeatTrack::LoadParams(int offset)
 {
-    // Serial.print(offset);
-    // Serial.println("Load ");
+    Serial.print(offset);
+    Serial.println("Load ");
 
     int off = offset;
     if ('B' == EEPROM.read(off++) && 'T' == EEPROM.read(off++))
     {
         m_NumSteps = EEPROM.read(off++);
+        EEPROM.read(off++); // ignore playmute from saved
         for(int idx = 0; idx<ByteCapacity; ++idx)
         {
             m_BitOn[idx] = EEPROM.read(off++);
