@@ -29,7 +29,9 @@ void setup() {
   Serial.println("Loading params...");
   app.LoadParams();
 
+#ifdef DEBUGAPP
   PrintEEPROM(0, 90);
+#endif
 
   Serial.println("Start running");
 }
@@ -39,10 +41,12 @@ void loop() {
   
   // test leds and buttons
   TestLedOut(app.m_LedOut, 1);
+ #ifdef DEBUGAPP
   TestDigitalOutBank(app.m_GateOut, 1);
   TestButtonInGet(app.m_ButtonIn, 4);
   TestButtonIn(app.m_ButtonIn, 4);
   TestButtonIn(app.m_FunctionButtonIn, 4);
+#endif
 
   // all leds / gates off
   AllClear(app.m_GateOut);

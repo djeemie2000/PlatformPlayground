@@ -182,8 +182,8 @@ int BitBeatTrack::ParamSize()
 
 void BitBeatTrack::SaveParams(int offset)
 {
-    Serial.print(offset);
-    Serial.println("Save ");
+    //Serial.print(offset);
+    //Serial.println("Save ");
 
     int off = offset;
     EEPROM.update(off++, 'B');
@@ -202,8 +202,8 @@ void BitBeatTrack::SaveParams(int offset)
 
 void BitBeatTrack::LoadParams(int offset)
 {
-    Serial.print(offset);
-    Serial.println("Load ");
+    //Serial.print(offset);
+    //Serial.println("Load ");
 
     int off = offset;
     if ('B' == EEPROM.read(off++) && 'T' == EEPROM.read(off++))
