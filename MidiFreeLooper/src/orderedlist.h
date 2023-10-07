@@ -27,12 +27,12 @@ public:
                 return true;
             }
         }
-        else if(m_Head == m_Begin && key<m_Begin->Key)
+        else if(m_Head == 0 && key<m_Begin->Key)
         {
             // insert into begin == head
             if(Item* inserted = AllocateItem(key, value))
             {
-                inserted->Next = m_Head;
+                inserted->Next = m_Begin;
                 m_Head = inserted;
                 m_Begin = inserted;
                 return true;
@@ -73,10 +73,10 @@ public:
         return m_Head ? m_Head->Value : '0';
     }
 
-    bool MoveHeadToBegin()
+    bool ResetHead()
     {
-        m_Head = m_Begin;
-        return m_Head != 0;
+        m_Head = 0;
+        return true;
     }
 
     bool MoveHeadToNext()
@@ -84,6 +84,11 @@ public:
         if(m_Head && m_Head->Next)
         {
             m_Head = m_Head->Next;
+            return true;
+        }
+        if(m_Head == 0 && m_Begin != 0)
+        {
+            m_Head = m_Begin;
             return true;
         }
         return false;
@@ -95,6 +100,11 @@ public:
         if(m_Head && m_Head->Next && m_Head->Next->Key == key)
         {
             m_Head = m_Head->Next;
+            return true;
+        }
+        if(m_Head == 0 && m_Begin && m_Begin->Key == key)
+        {
+            m_Head = m_Begin;
             return true;
         }
         return false;

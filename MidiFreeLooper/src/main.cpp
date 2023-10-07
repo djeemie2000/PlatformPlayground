@@ -12,21 +12,19 @@ void PrintList(OrderedList& list)
 {
   Serial.print("Size ");
   Serial.println(list.Size());
-  if(list.MoveHeadToBegin())
+  
+  list.ResetHead());
+  while(list.MoveHeadToNext())
   {
-    do
-    {
-      Serial.print(list.HeadKey());
-      Serial.print(' ');
-      Serial.println(list.HeadValue());
-    }
-    while(list.MoveHeadToNext());
+    Serial.print(list.HeadKey());
+    Serial.print(' ');
+    Serial.println(list.HeadValue());
   }
 }
 
-void TestListAdd()
+void TestListAddInOrder()
 {
-  Serial.println("TestListAdd");
+  Serial.println("TestListAddInOrder");
 
   OrderedList list;
 
@@ -46,6 +44,26 @@ void TestListAdd()
   PrintList(list);
 }
 
+void TestListAddResetHeadAdd()
+{
+  Serial.println("TestListAddResetHeadAdd");
+
+  OrderedList list;
+
+  list.Add(12, 'a');
+  list.Add(12, 'b');
+  list.ResetHead();
+  list.Add(9, 'c');
+  list.Add(11, 'd');
+  list.ResetHead();
+  list.Add(1, 'e');
+  list.Add(2, 'f');
+
+  list.Add(17, 'n');
+
+  PrintList(list);
+}
+
 void TestListRead()
 {
   Serial.println("TestListRead");
@@ -59,6 +77,7 @@ void TestListRead()
   list.Add(17, 'e');
   list.Add(18, 'f');
   list.Add(18, 'g');
+  list.Add(20, 'h');
 
   PrintList(list);
 
@@ -71,18 +90,12 @@ void TestListRead()
       // handle if begin is not at key ??
       if(0==key)
       {
-        list.MoveHeadToBegin();
-      }
-      else if(!list.HeadAt(key))
-      {
-        list.MoveHeadToNextIfNextKeyEquals(key);
+        list.ResetHead();
       }
 
-      bool advanced = true;
-      while(list.HeadAt(key) && advanced)
+      while(list.MoveHeadToNextIfNextKeyEquals(key))
       {
         Serial.println(list.HeadValue());
-        advanced = list.MoveHeadToNextIfNextKeyEquals(key);
       }
     }
   }
@@ -113,27 +126,21 @@ void TestListReadWrite()
     Serial.println(repeat);
 
     // do this if you want to use the same keys on each repeat:
-    //writeCntr = 0;
+    writeCntr = 0;
 
     for(int key = 0; key<24; ++key)
     {
       Serial.print("Key ");
       Serial.println(key);
-      // handle if begin is not at key ??
+      // handle if begin is not at key ?
       if(0==key)
       {
-        list.MoveHeadToBegin();
-      }
-      else if(!list.HeadAt(key))
-      {
-        list.MoveHeadToNextIfNextKeyEquals(key);
+        list.ResetHead();
       }
 
-      bool advanced = true;
-      while(list.HeadAt(key) && advanced)
+      while(list.MoveHeadToNextIfNextKeyEquals(key))
       {
         Serial.println(list.HeadValue());
-        advanced = list.MoveHeadToNextIfNextKeyEquals(key);
       }
 
       ++writeCntr;
@@ -158,13 +165,18 @@ void TestListReadWrite()
 
 void loop() {
   // put your main code here, to run repeatedly:
-  // TestListAdd();
-  // delay(1000);
+  TestListAddInOrder();
+  delay(1000);
 
-  // TestListRead();
-  // delay(8000);
+  TestListAddResetHeadAdd();
+  delay(1000);
+  
+  TestListRead();
+  delay(1000);
 
   TestListReadWrite();
+  delay(1000);
+  
   delay(20000);
 }
 
