@@ -1,11 +1,12 @@
 #include <Arduino.h>
 
+template<int Capacity, class ValueType>
 class OrderedList
 {
 public:
-    static const int Capacity = 8;//for testing/development
+    //static const int Capacity = 8;//for testing/development
 
-    OrderedList() : m_Size(0), m_Begin(0), m_Head(0)
+    OrderedList(ValueType defaultValue) : m_Size(0), m_Begin(0), m_Head(0), m_DefaultValue(defaultValue)
     {}
 
     int Size() const { return m_Size;   }
@@ -16,7 +17,7 @@ public:
         m_Head = 0;
     }
 
-    bool Add(int key, char value)
+    bool Add(int key, ValueType value)
     {       
         if(0 == m_Size)
         {
@@ -67,10 +68,10 @@ public:
         return m_Head ? m_Head->Key : -1;
     }
 
-    char HeadValue() const
+    ValueType HeadValue() const
     {
         // TODO default value for Value type
-        return m_Head ? m_Head->Value : '0';
+        return m_Head ? m_Head->Value : m_DefaultValue;
     }
 
     bool ResetHead()
@@ -113,14 +114,14 @@ public:
 private:
     struct Item
     {
-        char Value;//TODO replace by other value type
+        ValueType Value;//TODO replace by other value type
         int Key;
         //Item* Prev;//???
         Item* Next;
     };
 
 
-    Item* AllocateItem(int key, char value)
+    Item* AllocateItem(int key, ValueType value)
     {
         if(m_Size < Capacity)
         {
@@ -135,6 +136,8 @@ private:
 
         return 0;
     }
+
+    ValueType m_DefaultValue;
 
     Item m_Items[Capacity];
     int m_Size;

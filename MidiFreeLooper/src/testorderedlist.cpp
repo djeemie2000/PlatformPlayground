@@ -1,25 +1,26 @@
 #include "testorderedlist.h"
 #include <orderedlist.h>
 
-void PrintList(OrderedList& list)
+template<int N, class ValueType>
+void PrintList(HardwareSerial& serial, OrderedList<N, char>& list)
 {
-  Serial.print("Size ");
-  Serial.println(list.Size());
+  serial.print("Size ");
+  serial.println(list.Size());
   
   list.ResetHead();
   while(list.MoveHeadToNext())
   {
-    Serial.print(list.HeadKey());
-    Serial.print(' ');
-    Serial.println(list.HeadValue());
+    serial.print(list.HeadKey());
+    serial.print(' ');
+    serial.println(list.HeadValue());
   }
 }
 
-void TestListAddInOrder()
+void TestListAddInOrder(HardwareSerial& serial)
 {
-  Serial.println("TestListAddInOrder");
+  serial.println("TestListAddInOrder");
 
-  OrderedList list;
+  OrderedList<8, char> list('0');
 
   list.Add(12, 'a');
   list.Add(12, 'b');
@@ -34,14 +35,14 @@ void TestListAddInOrder()
   list.Add(18, 'h');
   list.Add(18, 'i');// >= capacity 8
 
-  PrintList(list);
+  PrintList(serial, list);
 }
 
-void TestListAddResetHeadAdd()
+void TestListAddResetHeadAdd(HardwareSerial& serial)
 {
-  Serial.println("TestListAddResetHeadAdd");
+  serial.println("TestListAddResetHeadAdd");
 
-  OrderedList list;
+  OrderedList<8, char> list('0');
 
   list.Add(12, 'a');
   list.Add(12, 'b');
@@ -54,14 +55,14 @@ void TestListAddResetHeadAdd()
 
   list.Add(17, 'n');
 
-  PrintList(list);
+  PrintList(Serial, list);
 }
 
-void TestListRead()
+void TestListRead(HardwareSerial& serial)
 {
-  Serial.println("TestListRead");
+  serial.println("TestListRead");
 
-  OrderedList list;
+  OrderedList<8, char> list('0');
 
   list.Add(12, 'a');
   list.Add(12, 'b');
@@ -72,14 +73,14 @@ void TestListRead()
   list.Add(18, 'g');
   list.Add(20, 'h');
 
-  PrintList(list);
+  PrintList(Serial, list);
 
   for(int repeat = 0; repeat<2; ++repeat)
   {
     for(int key = 0; key<24; ++key)
     {
-      Serial.print("Key ");
-      Serial.println(key);
+      serial.print("Key ");
+      serial.println(key);
       // handle if begin is not at key ??
       if(0==key)
       {
@@ -88,43 +89,44 @@ void TestListRead()
 
       while(list.MoveHeadToNextIfNextKeyEquals(key))
       {
-        Serial.println(list.HeadValue());
+        serial.println(list.HeadValue());
       }
     }
   }
 }
 
-void AddToList(OrderedList& list, int key, char value)
+template<int N, class ValueType>
+void AddToList(HardwareSerial& serial, OrderedList<N, ValueType>& list, int key, char value)
 {
   bool added = list.Add(key, value);
-  Serial.print("add ");
-  Serial.print(value);
-  Serial.print(" at ");
-  Serial.print(key);
-  Serial.print(" -> ");
-  Serial.println(added);
+  serial.print("add ");
+  serial.print(value);
+  serial.print(" at ");
+  serial.print(key);
+  serial.print(" -> ");
+  serial.println(added);
 }
 
-void TestListReadWrite()
+void TestListReadWrite(HardwareSerial& serial)
 {
-  Serial.println("TestListReadWrite");
+  serial.println("TestListReadWrite");
 
-  OrderedList list;
+  OrderedList<8, char> list('0');
   int writeCntr = 0;
   char writeValue = 'a';
 
   for(int repeat = 0; repeat<4; ++repeat)
   {
-    Serial.print("Repeat ");
-    Serial.println(repeat);
+    serial.print("Repeat ");
+    serial.println(repeat);
 
     // do this if you want to use the same keys on each repeat:
     writeCntr = 0;
 
     for(int key = 0; key<24; ++key)
     {
-      Serial.print("Key ");
-      Serial.println(key);
+      serial.print("Key ");
+      serial.println(key);
       // handle if begin is not at key ?
       if(0==key)
       {
@@ -133,23 +135,23 @@ void TestListReadWrite()
 
       while(list.MoveHeadToNextIfNextKeyEquals(key))
       {
-        Serial.println(list.HeadValue());
+        serial.println(list.HeadValue());
       }
 
       ++writeCntr;
       if(8==writeCntr)
       {
-        AddToList(list, key, writeValue);
+        AddToList(serial, list, key, writeValue);
         writeValue+=1;
       }
       else if(13==writeCntr)
       {
-        AddToList(list, key, writeValue);
+        AddToList(serial, list, key, writeValue);
         writeValue+=1;
         writeCntr = -1;
       }
     }
 
-    PrintList(list);
+    PrintList(serial, list);
   }
 }

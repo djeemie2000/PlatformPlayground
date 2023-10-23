@@ -2,24 +2,37 @@
 #include "orderedlist.h"
 #include "testorderedlist.h"
 
+#include "midivoicemessage.h"
+#include "midinoteparser.h"
+
+#include "devboard.h"
+#include "midiout.h"
+
+MidiVoiceMessage message;
+MidiNoteParser midiNoteParser;
+DevBoard devBoard;
+MidiOut midiOut;
+
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(115200);
-  Serial.println("MidiFreeLooper v0.1...");
+  //Serial.begin(31250);//115200);
+  devBoard.Begin();
+  midiOut.Begin(&devBoard.serialMidi);
+  devBoard.serialDebug.println("MidiFreeLooper v0.2...");
 }
 
-void DoTests()
+void DoTests(HardwareSerial& serial)
 {
-  TestListAddInOrder();
+  TestListAddInOrder(serial);
   delay(1000);
 
-  TestListAddResetHeadAdd();
+  TestListAddResetHeadAdd(serial);
   delay(1000);
   
-  TestListRead();
+  TestListRead(serial);
   delay(1000);
 
-  TestListReadWrite();
+  TestListReadWrite(serial);
   delay(1000);
   
   delay(20000);
@@ -38,7 +51,32 @@ void DoTests()
 void loop() {
   // put your main code here, to run repeatedly:
 
-  DoTests();
+//  DoTests(devBoard.serialDebug);
+
+  const int maxNumBytes = 6;
+  int numBytes = 0;
+  while (devBoard.serialMidi.available() && numBytes++ < maxNumBytes)
+  {
+    // midi in
+    uint8_t byte = devBoard.serialMidi.read();
+    // midi Thru
+    devBoard.serialMidi.write(byte);
+
+    // TODO midi start stop
+    if(byte == 0xF8)
+    {
+      // on midi clock
+    }
+    else
+    {  
+      if (midiNoteParser.Parse(byte, message))
+      {
+        //TODO
+      }
+    }
+  
+  }
+
 }
 
 
