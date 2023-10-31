@@ -21,7 +21,7 @@ public:
 
 private:
     void AllNotesOff(MidiOut& midiOut);
-    void MessageOut(MidiOut& midiOut, MidiVoiceMessage& message);
+    void MessageOut(MidiOut& midiOut, const MidiVoiceMessage& message);
 
     bool m_PlayMute;
     int m_RecordArm;

@@ -8,12 +8,12 @@ struct MidiVoiceMessage
     uint8_t Param2;
 };
 
-uint8_t Command(MidiVoiceMessage& message);
-uint8_t Channel(MidiVoiceMessage& message);
-uint8_t MidiNote(MidiVoiceMessage& message);
-uint8_t Velocity(MidiVoiceMessage& message);
-bool IsNoteOn(MidiVoiceMessage& message);
-bool IsNoteOff(MidiVoiceMessage& message);
-bool IsController(MidiVoiceMessage& message);
+uint8_t Command(const MidiVoiceMessage& message);
+uint8_t Channel(const MidiVoiceMessage& message);
+uint8_t MidiNote(const MidiVoiceMessage& message);
+uint8_t Velocity(const MidiVoiceMessage& message);
+bool IsNoteOn(const MidiVoiceMessage& message);
+bool IsNoteOff(const MidiVoiceMessage& message);
+bool IsController(const MidiVoiceMessage& message);
 
-void PrintVoiceMessage(MidiVoiceMessage &message, HardwareSerial& serialDebug);
+void PrintVoiceMessage(const MidiVoiceMessage &message, HardwareSerial& serialDebug);

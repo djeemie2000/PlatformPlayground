@@ -68,7 +68,7 @@ public:
         return m_Head ? m_Head->Key : -1;
     }
 
-    ValueType HeadValue() const
+    const ValueType& HeadValue() const
     {
         // TODO default value for Value type
         return m_Head ? m_Head->Value : m_DefaultValue;

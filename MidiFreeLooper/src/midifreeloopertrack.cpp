@@ -21,7 +21,7 @@ void MidiFreeLooperTrack::AllNotesOff(MidiOut& midiOut)
     }
 }
 
-void MidiFreeLooperTrack::MessageOut(MidiOut& midiOut, MidiVoiceMessage& message)
+void MidiFreeLooperTrack::MessageOut(MidiOut& midiOut, const MidiVoiceMessage& message)
 {
     uint8_t note = MidiNote(message);
     uint8_t channel = Channel(message);
@@ -109,7 +109,7 @@ void MidiFreeLooperTrack::OnMidiClock(MidiOut& midiOut)
         if(m_PlayMute)
         {
             // TODO note stack!
-            midiOut.VoiceMessage(m_Events.HeadValue());
+            MessageOut(midiOut, m_Events.HeadValue());
         }
     }
 }
