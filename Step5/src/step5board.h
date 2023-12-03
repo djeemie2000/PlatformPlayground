@@ -31,6 +31,7 @@ struct Step5Board
 
   void Begin()
   {
+    pinMode(LED_BUILTIN, OUTPUT);
     stepOut.Begin(4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
     selectGateOut.Begin(A0, A1, A2, A3);
     clockResetIn.Begin(2, 3);
@@ -39,5 +40,16 @@ struct Step5Board
     bus1In.Begin(A6);
     bus2In.Begin(A7);
   }
+
+  void LedOn()
+  {
+    digitalWrite(LED_BUILTIN, LOW);
+  }
+
+  void LedOff()
+  {
+    digitalWrite(LED_BUILTIN, HIGH);
+  }
+
   
 };
