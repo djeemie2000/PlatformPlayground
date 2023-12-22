@@ -42,7 +42,7 @@ struct Step5Board
     lengthIn.Begin(A4);
     bus1In.Begin(A6);
     bus2In.Begin(A7);
-    fakeClock.Begin(50);
+    fakeClock.Begin(300);
   }
 
   void LedOn()

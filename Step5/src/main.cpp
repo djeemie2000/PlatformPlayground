@@ -135,7 +135,7 @@ void loop() {
   while(true)
   {
     app.Update(board);
-    //delay(1);// mSec
+    delay(1);// mSec
   }
 
 }
