@@ -47,7 +47,7 @@ void DigitalInBank::Update()
     }
 }
 
-void TestButtonIn(DigitalInBank &buttonIn, int repeats)
+void TestDigitalIn(DigitalInBank &buttonIn, int repeats)
 {
     Serial.println("Testing digital in bank...");
     int eventCount = 0;
@@ -81,7 +81,7 @@ void TestButtonIn(DigitalInBank &buttonIn, int repeats)
     }
 }
 
-void TestButtonInGet(DigitalInBank &buttonIn, int repeats)
+void TestDigitalInGet(DigitalInBank &buttonIn, int repeats)
 {
     Serial.println("Testing digital in bank get...");
     for (int repeat = 0; repeat < repeats; ++repeat)

@@ -1,6 +1,9 @@
 #pragma once
 #include <Arduino.h>
 #include "step5board.h"
+#include "cvclock.h"
+
+#define FAKECLOCK 1
 
 struct Step5App
 {
@@ -8,12 +11,22 @@ struct Step5App
     int m_Length;
     bool m_ResetFlag;
     //TODO cvclock on gate outputs 
-
+    CVClock clockOutBus1;
+    CVClock clockOutBus2;
+    
     Step5App() 
         : m_Step(0)
         , m_Length(5)
         , m_ResetFlag(false)
+        , clockOutBus1()
+        , clockOutBus2()
     {}
+
+    void Begin()
+    {
+        clockOutBus1.Begin();
+        clockOutBus2.Begin();
+    }
 
     void Update(Step5Board& board)
     {
@@ -21,12 +34,19 @@ struct Step5App
         board.clockResetIn.Update();
 
         int prevLength = m_Length;
-        m_Length = 10*board.lengthIn.Get()>>10;
+        m_Length = 1+(10*board.lengthIn.Get()>>10);
 
         bool clockRising = board.clockResetIn.IsClicked(0);
+        bool clockHigh = board.clockResetIn.Get(0);
         bool resetRising = board.clockResetIn.IsClicked(1) || board.resetBtnIn.IsClicked(0); 
         int prevStep = m_Step;
 
+#ifdef FAKECLOCK
+        board.fakeClock.Tick();
+        clockRising = board.fakeClock.IsClicked();
+        clockHigh = board.fakeClock.Get();
+#endif
+ 
         if(resetRising)
         {
             m_ResetFlag = true;
@@ -51,42 +71,52 @@ struct Step5App
             }
         }
 
-        if(prevLength<=5)
+        // only clear prev upon change
+        if(prevLength!=m_Length || prevStep != m_Step)
         {
-            board.stepOut.Clear(prevStep);
-            board.stepOut.Clear(prevStep+5);
-        }
-        else
-        {
-            board.stepOut.Clear(prevStep);
+            if(prevLength<=5)
+            {
+                board.stepOut.Clear(prevStep);
+                board.stepOut.Clear(prevStep+5);
+            }
+            else
+            {
+                board.stepOut.Clear(prevStep);
+            }
         }
 
         if(m_Length<=5)
         {
+            // bus 1 to cv out 1
+            // bus 2 to cv out 2
+            board.selectGateOut.Clear(0);
+            board.selectGateOut.Set(1);
+
             board.stepOut.Set(m_Step);
             board.stepOut.Set(m_Step+5);
-
-            // TODO or the other way around?
-            board.selectGateOut.Set(0);
-            board.selectGateOut.Clear(1);
         }
         else 
         {
-            // all step outs low exceptcurrent step
-            board.stepOut.Set(m_Step);
-
-            // select depeding on step<=5 or not
-            if(m_Step<=5)
+            // select depending on step<=5 or not
+            if(m_Step<5)
             {
-                board.selectGateOut.Set(0);
-                board.selectGateOut.Set(1);
-            }
-            else 
-            {
+                // bus 1 to cv out 1 and to cv out 2
                 board.selectGateOut.Clear(0);
                 board.selectGateOut.Clear(1);
             }
+            else 
+            {
+                // bus 2 to cv out 1 and to cv out 2
+                board.selectGateOut.Set(0);
+                board.selectGateOut.Set(1);
+            }
+
+            // all step outs low exceptcurrent step
+            board.stepOut.Set(m_Step);
         }
+
+        // need 'settling time' before reading CV?
+        delay(8);
 
         // read bus CV AFTER setting current step/select
         // gate out length depending on bus CV
@@ -95,35 +125,65 @@ struct Step5App
 
         int bus1Cv = board.bus1In.Get();
         int bus2Cv = board.bus2In.Get();
-        // TODO gate out ~CVClock
-        // fornow, gate out ~
-        if(bus1Cv<512)
+        
+        // gate out ~CVClock
+        if(m_Length<=5)
         {
-            board.selectGateOut.Clear(2);
+            clockOutBus1.Update(clockHigh, bus1Cv);
+            clockOutBus2.Update(clockHigh, bus2Cv);
+        }
+        else if(m_Step<5)
+        {
+            clockOutBus1.Update(clockHigh, bus1Cv);
+            clockOutBus2.Update(clockHigh, bus1Cv);
         }
         else 
+        {
+            clockOutBus1.Update(clockHigh, bus2Cv);
+            clockOutBus2.Update(clockHigh, bus2Cv);
+        }
+
+        if(clockOutBus1.Get())
         {
             board.selectGateOut.Set(2);
         }
-
-        if(bus2Cv<512)
-        {
-            board.selectGateOut.Clear(3);
-        }
         else 
+        {
+            board.selectGateOut.Clear(2);
+        }
+
+        if(clockOutBus2.Get())
         {
             board.selectGateOut.Set(3);
         }
+        else 
+        {
+            board.selectGateOut.Clear(3);
+        }
 
-        bool clockHigh = board.clockResetIn.Get(0);
-        if(clockHigh)
-        {
-            board.LedOn();
-        }
-        else
-        {
-            board.LedOff();
-        }
+#ifdef DEBUGOUT
+        //TODO serial out all member and local variables
+        Serial.print(m_Length);
+        Serial.print(' ');
+        Serial.print(m_Step);
+        Serial.print(' ');
+        Serial.print(prevLength);
+        Serial.print(' ');
+        Serial.print(prevStep);
+        Serial.print(' ');
+        Serial.print(clockRising);
+        Serial.print(' ');
+        Serial.print(clockHigh);
+        Serial.print(' ');
+        Serial.print(bus1Cv);
+        Serial.print(' ');
+        Serial.print(bus2Cv);
+        Serial.print(' ');
+        Serial.print(clockOutBus1.Get());
+        Serial.print(' ');
+        Serial.print(clockOutBus2.Get());
+        Serial.println();
+#endif
     }
 
 

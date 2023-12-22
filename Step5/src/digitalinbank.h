@@ -21,5 +21,5 @@ private:
     uint8_t m_History[Size];
 };
 
-void TestButtonIn(DigitalInBank& buttonIn, int repeats);
-void TestButtonInGet(DigitalInBank& buttonIn, int repeats);
+void TestDigitalIn(DigitalInBank& buttonIn, int repeats);
+void TestDigitalInGet(DigitalInBank& buttonIn, int repeats);
