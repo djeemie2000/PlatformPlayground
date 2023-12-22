@@ -29,6 +29,7 @@ struct Step5App
     {
         board.lengthIn.Read();
         board.clockResetIn.Update();
+        board.resetBtnIn.Update(millis());
 
         int prevLength = m_Length;
         m_Length = 1 + (10 * board.lengthIn.Get() >> 10);
