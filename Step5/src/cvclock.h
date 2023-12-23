@@ -1,5 +1,6 @@
 #pragma once
 #include <Arduino.h>
+#include "cvclockstate.h"
 
 class CVClock
 {
@@ -10,6 +11,6 @@ public:
     void Update(int clockIn, int cv);
     int Get() const;
 private:
-    // TODO counter, period...
-    int m_State;
+// int m_State;
+    CVClockState m_State;
 };
