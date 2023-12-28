@@ -17,24 +17,28 @@ void setup() {
   
   board.Begin();
 
-  AllClear(board.stepOut);
-  AllClear(board.selectGateOut);
+  AllClear<12>(board.stepSelectOut);
+  AllClear<2>(board.gateOut);
 }
 
 void TestGateOutClockResetIn()
 {
   // assumes gate out 1 / gate out 2 are connected to clock / reset in
   Serial.println("Set Gate 1 out");
-  board.selectGateOut.Set(2);
+  board.gateOut.Set(0);
+  board.gateOut.Update();
   TestDigitalInGet(board.clockResetIn, 1);
   Serial.println("Clear Gate 1 out");
-  board.selectGateOut.Clear(2);
+  board.gateOut.Clear(0);
+  board.gateOut.Update();
 
   Serial.println("Set Gate 2 out");
-  board.selectGateOut.Set(3);
+  board.gateOut.Set(1);
+  board.gateOut.Update();
   TestDigitalInGet(board.clockResetIn, 1);
   Serial.println("Clear Gate 2 out");
-  board.selectGateOut.Clear(3);
+  board.gateOut.Clear(1);
+  board.gateOut.Update();
 }
 
 void TestCVBus()
@@ -43,21 +47,26 @@ void TestCVBus()
   Serial.println("Test CV bus...");
   Serial.println("Clear Select 1");
   Serial.println("Set Select 2");
-  board.selectGateOut.Clear(0);//left row
-  board.selectGateOut.Set(1);//right row
+  board.stepSelectOut.Clear(10);//left row
+  board.stepSelectOut.Set(11);//right row
   // very slowly iterate through all leds/steps
   // so you can check the CV output at each step
-  for(int step = 0; step<DigitalOutBank10::Size/2; ++step)
+  for(int step = 0; step<5; ++step)
   {
-    int step2 = step + DigitalOutBank10::Size/2;
+    int step2 = step + 5;
     Serial.print("Step ");
     Serial.print(step);
     Serial.print(" ");
     Serial.println(step2);
 
-    AllClear(board.stepOut);
-    board.stepOut.Set(step);
-    board.stepOut.Set(step2);
+    AllClear<12>(board.stepSelectOut);
+    board.stepSelectOut.Clear(10);//left row
+    board.stepSelectOut.Set(11);//right row
+
+    board.stepSelectOut.Set(step);
+    board.stepSelectOut.Set(step2);
+
+    board.stepSelectOut.Update();
 
     delay(5);//?? needed ??
     board.bus1In.Read();
@@ -76,55 +85,60 @@ void TestCVBus2()
   // select bus 1 on output 1 vs select bus 2 on output 2
   Serial.println("Test CV bus 2...");
   Serial.println("Set step 0 5");
-  AllClear(board.stepOut);
-  board.stepOut.Set(0);
-  board.stepOut.Set(5);
+  AllClear<12>(board.stepSelectOut);
+  board.stepSelectOut.Set(0);
+  board.stepSelectOut.Set(5);
 
   // very slowly iterate through all select combinations
   // so you can check the CV output at each combination
   Serial.println("Set Select 1");
   Serial.println("Clear Select 2");
-  board.selectGateOut.Set(0);
-  board.selectGateOut.Clear(1);
+  board.stepSelectOut.Set(10);
+  board.stepSelectOut.Clear(11);
+  board.stepSelectOut.Update();
   delay(10000);
 
   Serial.println("Clear Select 1");
   Serial.println("Set Select 2");
-  board.selectGateOut.Clear(0);
-  board.selectGateOut.Set(1);
+  board.stepSelectOut.Clear(10);
+  board.stepSelectOut.Set(11);
+  board.stepSelectOut.Update();
   delay(10000);
 
   Serial.println("Set Select 1");
   Serial.println("Set Select 2");
-  board.selectGateOut.Set(0);
-  board.selectGateOut.Set(1);
+  board.stepSelectOut.Set(10);
+  board.stepSelectOut.Set(11);
+  board.stepSelectOut.Update();
   delay(10000);
 
   Serial.println("Clear Select 1");
   Serial.println("Clear Select 2");
-  board.selectGateOut.Clear(0);
-  board.selectGateOut.Clear(1);
+  board.stepSelectOut.Clear(10);
+  board.stepSelectOut.Clear(11);
+  board.stepSelectOut.Update();
   delay(10000);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  //int cntr = 0;
 
-  // TODO quick test of all leds?
-  AllClear(board.stepOut);
-  AllClear(board.selectGateOut);
+  // quick test of all leds?
+  AllClear(board.gateOut);
+  AllClear(board.stepSelectOut);
+
+  // while(true)
+  // {
+  //   TestDigitalOutBank<12>(board.stepSelectOut, 2);
+  //   TestDigitalOutBank<2>(board.gateOut, 2);
+  // }
 
 //   while(true)
 //   {
-// //    TestAnalogIn(board.lengthIn, 20);
 //     TestCVBus();
 //   }
 
-//   TestDigitalOutBank(board.stepOut, 2);
-//   TestDigitalOutBank(board.selectGateOut, 2);
 //   TestButtonIn(board.resetBtnIn, 5);
-// //  TestDigitalInGet(board.clockResetIn, 2);
 //   TestGateOutClockResetIn();
 //   TestAnalogIn(board.lengthIn, 20);
 //   return;

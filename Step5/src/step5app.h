@@ -72,25 +72,26 @@ struct Step5App
         // only clear/update prev upon change
         if (clockRising) // prevLength!=m_Length || prevStep != m_Step)
         {
+            //TODO all clear??
             if (prevLength <= 5)
             {
-                board.stepOut.Clear(prevStep);
-                board.stepOut.Clear(prevStep + 5);
+                board.stepSelectOut.Clear(prevStep);
+                board.stepSelectOut.Clear(prevStep + 5);
             }
             else
             {
-                board.stepOut.Clear(prevStep);
+                board.stepSelectOut.Clear(prevStep);
             }
 
             if (m_Length <= 5)
             {
                 // bus 1 to cv out 1
                 // bus 2 to cv out 2
-                board.selectGateOut.Clear(0);
-                board.selectGateOut.Set(1);
+                board.stepSelectOut.Clear(10);
+                board.stepSelectOut.Set(11);
 
-                board.stepOut.Set(m_Step);
-                board.stepOut.Set(m_Step + 5);
+                board.stepSelectOut.Set(m_Step);
+                board.stepSelectOut.Set(m_Step + 5);
             }
             else
             {
@@ -98,22 +99,23 @@ struct Step5App
                 if (m_Step < 5)
                 {
                     // bus 1 to cv out 1 and to cv out 2
-                    board.selectGateOut.Clear(0);
-                    board.selectGateOut.Clear(1);
+                    board.stepSelectOut.Clear(10);
+                    board.stepSelectOut.Clear(11);
                 }
                 else
                 {
                     // bus 2 to cv out 1 and to cv out 2
-                    board.selectGateOut.Set(0);
-                    board.selectGateOut.Set(1);
+                    board.stepSelectOut.Set(10);
+                    board.stepSelectOut.Set(11);
                 }
 
                 // all step outs low exceptcurrent step
-                board.stepOut.Set(m_Step);
+                board.stepSelectOut.Set(m_Step);
             }
 
+            board.stepSelectOut.Update();
             // need 'settling time' before reading CV?
-            delay(8);
+            delay(1);
         }
 
         // read bus CV AFTER setting current step/select
@@ -143,21 +145,23 @@ struct Step5App
 
         if (clockOutBus1.Get())
         {
-            board.selectGateOut.Set(2);
+            board.gateOut.Set(0);
         }
         else
         {
-            board.selectGateOut.Clear(2);
+            board.gateOut.Clear(0);
         }
 
         if (clockOutBus2.Get())
         {
-            board.selectGateOut.Set(3);
+            board.gateOut.Set(1);
         }
         else
         {
-            board.selectGateOut.Clear(3);
+            board.gateOut.Clear(1);
         }
+
+        board.gateOut.Update();
 
 #ifdef DEBUGOUT
         // TODO serial out all member and local variables
