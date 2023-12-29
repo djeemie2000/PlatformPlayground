@@ -50,19 +50,24 @@ public:
         }
     }
 
+    void ClearAll()
+    {
+        m_OutputMask = 0x00000000;
+    }
+
     void Update()
     {
         uint8_t ignoreMaskB = m_IgnoreMask & 0xFF;
         uint8_t outputMaskB = m_OutputMask & 0xFF;
-        PORTB = (PORTB & ignoreMaskB) | outputMaskB; 
 
         uint8_t ignoreMaskC = m_IgnoreMask>>8 & 0xFF;
         uint8_t outputMaskC = m_OutputMask>>8 & 0xFF;
-        PORTC = (PORTC & ignoreMaskC) | outputMaskC; 
-
 
         uint8_t ignoreMaskD = m_IgnoreMask>>16 & 0xFF;
         uint8_t outputMaskD = m_OutputMask>>16 & 0xFF;
+
+        PORTB = (PORTB & ignoreMaskB) | outputMaskB; 
+        PORTC = (PORTC & ignoreMaskC) | outputMaskC; 
         PORTD = (PORTD & ignoreMaskD) | outputMaskD; 
     }
 

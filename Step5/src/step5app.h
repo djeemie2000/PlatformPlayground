@@ -31,13 +31,16 @@ struct Step5App
         board.clockResetIn.Update();
         board.resetBtnIn.Update(millis());
 
-        int prevLength = m_Length;
         m_Length = 1 + (10 * board.lengthIn.Get() >> 10);
 
         bool clockRising = board.clockResetIn.IsClicked(0);
         bool clockHigh = board.clockResetIn.Get(0);
         bool resetRising = board.clockResetIn.IsClicked(1) || board.resetBtnIn.IsClicked(0);
-        int prevStep = m_Step;
+
+        // if(board.resetBtnIn.IsClicked(0))
+        // {
+        //     Serial.println('R');
+        // }
 
 #ifdef FAKECLOCK
         board.fakeClock.Tick();
@@ -70,18 +73,10 @@ struct Step5App
         }
 
         // only clear/update prev upon change
-        if (clockRising) // prevLength!=m_Length || prevStep != m_Step)
+        if (clockRising)
         {
-            //TODO all clear??
-            if (prevLength <= 5)
-            {
-                board.stepSelectOut.Clear(prevStep);
-                board.stepSelectOut.Clear(prevStep + 5);
-            }
-            else
-            {
-                board.stepSelectOut.Clear(prevStep);
-            }
+            // all clear??
+            board.stepSelectOut.ClearAll();
 
             if (m_Length <= 5)
             {
@@ -115,7 +110,7 @@ struct Step5App
 
             board.stepSelectOut.Update();
             // need 'settling time' before reading CV?
-            delay(1);
+            delay(5);
         }
 
         // read bus CV AFTER setting current step/select
@@ -125,6 +120,13 @@ struct Step5App
 
         int bus1Cv = board.bus1In.Get();
         int bus2Cv = board.bus2In.Get();
+        
+        // if (clockRising)
+        // {
+        //     Serial.print(bus1Cv);
+        //     Serial.print(' ');
+        //     Serial.println(bus2Cv);
+        // }
 
         // gate out ~CVClock
         if (m_Length <= 5)

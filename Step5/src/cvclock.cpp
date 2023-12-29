@@ -11,11 +11,11 @@ void CVClock::Begin()
 void CVClock::Update(int clockIn, int cv)
 {
     int duration = cv;
-    if(cv<32)
+    if(cv<48)
     {
         duration = 0;
     }
-    else if(cv>992)//1024-32)
+    else if(cv>976)//1024-48)
     {
         duration = 1024;
     }
