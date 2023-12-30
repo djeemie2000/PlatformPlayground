@@ -3,9 +3,11 @@
 #include "fastdac.h"
 #include "fastdigitalwrite.h"
 
+#define DOSERIALDEBUG 1
+
 struct NanoLooperApp
 {
-  static const int loopLength = 1536;// 1.5 kB
+  static const int loopLength = 1700;//1536;// 1.5 kB
   static const int recordingLedPin = LED_BUILTIN; // 13 PB5
   static const int recordingButtonInPin = 2; //PD2
   static const int speedInPin = A0;
@@ -23,7 +25,8 @@ struct NanoLooperApp
   {
     delayLine.Begin();
     dac.Begin();
-    // TODO recording button in
+    // recording button in
+    pinMode(recordingButtonInPin, INPUT_PULLUP);
     // recording led -> use builtin led for now
     pinMode(recordingLedPin, OUTPUT);
 
@@ -34,7 +37,7 @@ struct NanoLooperApp
   void update()
   {
     // first read speed CV
-    int delayusec = analogRead(speedInPin)<<2;// [0-4096[ milliseconds
+    int delayusec = analogRead(speedInPin);// [0-4096[ milliseconds
     
     // then read audio in
     uint8_t audioValue = analogRead(audioPinIn)>>2;// [0,256[
@@ -45,11 +48,20 @@ struct NanoLooperApp
     int recordingBtn = fastDigitalReadPortD<2>();//PD2
     if(!prevRecordingBtn && recordingBtn)
     {
+#ifdef DOSERIALDEBUG
+      Serial.println('R');
+#endif
       recordingCounter = loopLength;
     }
     else if(0<recordingCounter)
     {
       --recordingCounter;
+#ifdef DOSERIALDEBUG
+      if(0==recordingCounter)
+      {
+        Serial.println('r');
+      }
+#endif
     }
     prevRecordingBtn = recordingBtn;
     fastDigitalWritePortB<5>(recordingCounter);// pin13 PB5
@@ -64,6 +76,9 @@ struct NanoLooperApp
     // read delay line
     //    write to fast dac out 
     dac.Write(delayLine.Read());
+
+    // degrade sample
+    //delayLine.Degrade();
 
     // advance delay line
     delayLine.Advance();
@@ -89,6 +104,11 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+
+  //TestFastDacSlow(app.dac, 1, 0);
+  //TestFactDacFastDescending(app.dac, 100);
+//  return;
+
   app.update();
 }
 
