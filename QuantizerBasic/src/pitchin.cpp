@@ -17,7 +17,7 @@ void PitchIn::Read()
     m_PrevPitch = m_Pitch;
     
     const int margin = 4;
-    int value = m_In.Get() + margin;
+    int value = (1023-m_In.Get()) + margin;
 
     // 1024 ~ 5V ~ midi note 60
     // => midi note = 60 * value / 1024 = 15 * value / 256

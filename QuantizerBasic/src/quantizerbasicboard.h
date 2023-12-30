@@ -26,8 +26,8 @@ struct QuantizerBoard
     {
         triggerOut.Begin(4,7);
         buttons.Begin(A0, A1, A2, A3);
-        led1Out.Begin(6, 9);
-        led2Out.Begin(3, 5);
+        led1Out.Begin(3, 5);
+        led2Out.Begin(6, 9);
         pitchIn1.Begin(A6);
         pitchIn2.Begin(A7);
         analogOut.Begin();

@@ -61,8 +61,9 @@ void TestRGLed2(RGLed& led, int repeats)
 
 void ColorOut(RGLed& led, uint8_t color)
 {
-    uint8_t c = color>>1;
-    led.Set(c, 255-c);
+//    uint8_t c = color>>1;
+//    led.Set(c, 255-c);
+    led.Set(color, 255-color);
 }
 
 void TestColorOut(RGLed& led, int repeats)
@@ -77,5 +78,6 @@ void TestColorOut(RGLed& led, int repeats)
             delay(delayTime);
         }
     }
+    led.Set(0,0);
     Serial.println("Done");
 }
