@@ -24,6 +24,42 @@ public:
         }
     }
 
+    void Reverse()
+    {
+        --m_Current;
+        if(m_Current<m_Values)
+        {
+            m_Current = m_End - 1;
+        }
+    }
+
+    void Reset()
+    {
+        m_Current = m_Values;
+    }
+
+    void SkipForward(int skip)
+    {
+        // skip should be 0 <= skip <= Size
+        m_Current += skip;
+        if(m_End<=m_Current)
+        {
+            m_Current -= Size;
+        }
+
+    }
+
+    void SkipBackwards(int skip)
+    {
+        // skip should be 0 <= skip <= Size
+        m_Current -= skip;
+        if(m_Current<m_Values)
+        {
+            m_Current += Size;
+        }
+
+    }
+
     void Write(uint8_t value)
     {
         *m_Current = value;
