@@ -82,6 +82,18 @@ public:
         }
     }
 
+    void AntiDegrade()
+    {
+        if(0x7F<*m_Current)
+        {
+            ++*m_Current;
+        }
+        else if(*m_Current<0x7F)
+        {
+            --*m_Current;
+        }
+    }
+
 private:
     uint8_t m_Values[Size];
     uint8_t* m_Current;

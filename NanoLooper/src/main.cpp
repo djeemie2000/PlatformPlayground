@@ -2,14 +2,18 @@
 #include "delayline.h"
 #include "fastdac.h"
 #include "fastdigitalwrite.h"
+#include "lowpassfilter.h"
 
 #define DOSERIALDEBUG 1
 
 struct NanoLooperApp
 {
-  static const int loopLength = 1762;// 1.7 kB
+  static const int loopLength = 1700;// 1.7 kB
   static const int recordingLedPin = LED_BUILTIN; // 13 PB5
   static const int recordingButtonInPin = 2; //PD2
+  static const int degradeInPin = 3;//PD3
+  static const int antidegradeInPin = A3;//PC3
+  static const int reverseInPin = A4;//PC4
   static const int speedInPin = A0;
   static const int audioPinIn = A1;
   static const int resetPeriodInPin = A2;
@@ -33,6 +37,10 @@ struct NanoLooperApp
     dac.Begin();
     // recording button in
     pinMode(recordingButtonInPin, INPUT_PULLUP);
+    // button in
+    pinMode(degradeInPin, INPUT_PULLUP);
+    pinMode(antidegradeInPin, INPUT_PULLUP);
+    pinMode(reverseInPin, INPUT_PULLUP);
     // recording led -> use builtin led for now
     pinMode(recordingLedPin, OUTPUT);
 
@@ -40,7 +48,7 @@ struct NanoLooperApp
     cvCntr = 0;
     delayusec = 0;
     resetCounter = 0;
-    resetPeriod = 0xFFFF;
+    resetPeriod = 16000;
   }
 
   bool RecordingBtnClicked()
@@ -75,8 +83,8 @@ struct NanoLooperApp
       }
       else
       {
-        resetPeriod = analogRead(resetPeriodInPin)<<5;// [0-32768[
-        resetPeriod = max(64, resetPeriod);
+        resetPeriod = analogRead(resetPeriodInPin)<<4;// [0-32768[
+        resetPeriod = max(128, resetPeriod);
         cvCntr = 0;
       }
 
@@ -88,21 +96,43 @@ struct NanoLooperApp
       dac.Write(delayLine.Read());
 
       // degrade sample
-      //delayLine.Degrade();
+      if(!fastDigitalReadPortD<3>())
+      {
+        delayLine.Degrade();
+      }
+      
+      if(!fastDigitalReadPortC<4>())
+      {
+        delayLine.AntiDegrade();
+      }
 
       // advance delay line
-      delayLine.Advance();
+      if(fastDigitalReadPortC<3>())
+      {
+        delayLine.Advance();
+      }
+      else
+      {
+        delayLine.Reverse();
+      }
 
       // periodic reset 
       if(resetPeriod<resetCounter)
       {
         delayLine.Reset();
         resetCounter = 0;
+#ifdef DOSERIALDEBUG
+        Serial.println(resetPeriod);
+#endif
+
       }
       ++resetCounter;
 
-      // delay ~ speed cv
-      delayMicroseconds(delayusec);
+      //if(fastDigitalReadPortD<3>())
+      {
+        // delay ~ speed cv
+        delayMicroseconds(delayusec);
+      }
   }
 
   void DoRecording()
@@ -118,6 +148,11 @@ struct NanoLooperApp
     // reset delay line
     delayLine.Reset();
     resetCounter = 0;
+
+    analogRead(audioPinIn);
+    delay(2);
+    analogRead(audioPinIn);
+    delay(2);
 
     int cntr = 0; 
     while(cntr<loopLength)
