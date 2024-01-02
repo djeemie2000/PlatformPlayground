@@ -12,6 +12,7 @@ public:
     {
         m_Current = m_Values;
         m_End = m_Current + Size;
+        m_Last = m_End -1;
         memset(m_Values, 0x7F, Size);
     }
 
@@ -29,7 +30,7 @@ public:
         --m_Current;
         if(m_Current<m_Values)
         {
-            m_Current = m_End - 1;
+            m_Current = m_Last;
         }
     }
 
@@ -82,13 +83,14 @@ public:
         }
     }
 
-    void AntiDegrade()
+    void Saturate()
     {
-        if(0x7F<*m_Current)
+        // prevent flipping by ++ on oxFF or -- on 0x00
+        if(0x7F<*m_Current && *m_Current<0xFF)
         {
             ++*m_Current;
         }
-        else if(*m_Current<0x7F)
+        else if(*m_Current<0x7F && 0x00<*m_Current)
         {
             --*m_Current;
         }
@@ -98,4 +100,5 @@ private:
     uint8_t m_Values[Size];
     uint8_t* m_Current;
     uint8_t* m_End;
+    uint8_t* m_Last;
 };

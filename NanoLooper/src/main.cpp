@@ -3,23 +3,33 @@
 #include "fastdac.h"
 #include "fastdigitalwrite.h"
 #include "lowpassfilter.h"
+#include "pseudorandom.h"
+#include "bitcrush.h"
 
 #define DOSERIALDEBUG 1
 
 struct NanoLooperApp
 {
-  static const int loopLength = 1700;// 1.7 kB
+  static const int loopLength = 1024+512;// 1.7 kB
+  // output pins
   static const int recordingLedPin = LED_BUILTIN; // 13 PB5
+  static const int randomOutPin = 12;//PB4
+  // button in pins
   static const int recordingButtonInPin = 2; //PD2
   static const int degradeInPin = 3;//PD3
-  static const int antidegradeInPin = A3;//PC3
+  static const int saturateInPin = A3;//PC3
   static const int reverseInPin = A4;//PC4
-  static const int speedInPin = A0;
-  static const int audioPinIn = A1;
-  static const int resetPeriodInPin = A2;
+  // CV pins
+  static const int speedInPin = A0;//PC0
+  static const int audioPinIn = A1;//PC1
+  static const int resetPeriodInPin = A2;//PC2
+  static const int bitcrushInPin = A6;
 
   DelayLine<loopLength> delayLine;//assumes 328 2k memory
   FastDac dac;//assumes arduino nano
+  PseudoRandom pseudoRandom;
+  int randomState;
+
   int prevRecordingBtn;
   int cvCntr;
 
@@ -27,6 +37,8 @@ struct NanoLooperApp
 
   int resetCounter;
   int resetPeriod;
+
+  int bitcrush;
 
   NanoLooperApp()
   {}
@@ -39,16 +51,20 @@ struct NanoLooperApp
     pinMode(recordingButtonInPin, INPUT_PULLUP);
     // button in
     pinMode(degradeInPin, INPUT_PULLUP);
-    pinMode(antidegradeInPin, INPUT_PULLUP);
+    pinMode(saturateInPin, INPUT_PULLUP);
     pinMode(reverseInPin, INPUT_PULLUP);
     // recording led -> use builtin led for now
     pinMode(recordingLedPin, OUTPUT);
+    // random out pin
+    pinMode(randomOutPin, OUTPUT);
 
     prevRecordingBtn = 0;
     cvCntr = 0;
     delayusec = 0;
     resetCounter = 0;
     resetPeriod = 16000;
+    randomState = 1;
+    bitcrush =0;
   }
 
   bool RecordingBtnClicked()
@@ -81,19 +97,31 @@ struct NanoLooperApp
         delayusec = analogRead(speedInPin)>>1;// [0-512[ microseconds
         cvCntr = 1;
       }
+      else if(1==cvCntr)
+      {
+        resetPeriod = analogRead(resetPeriodInPin)<<4;// [0-32768/2[
+        resetPeriod = max(128, resetPeriod);
+        cvCntr = 2;
+      }
       else
       {
-        resetPeriod = analogRead(resetPeriodInPin)<<4;// [0-32768[
-        resetPeriod = max(128, resetPeriod);
+        bitcrush = analogRead(bitcrushInPin)>>7;//[0,7]
         cvCntr = 0;
       }
 
       // recording led off
       fastDigitalWritePortB<5>(0);// pin13 PB5
 
-      // read delay line
-      //    write to fast dac out 
-      dac.Write(delayLine.Read());
+      // update random
+      uint32_t random = pseudoRandom.Rand();
+      //Serial.println(random);
+      // TODO compare with threshold ~ CV/pot
+      if((random & 0xFFFF)<128)
+      {
+        // toggle state
+        randomState = 1-randomState;
+      }
+      fastDigitalWritePortB<4>(randomState);
 
       // degrade sample
       if(!fastDigitalReadPortD<3>())
@@ -101,13 +129,30 @@ struct NanoLooperApp
         delayLine.Degrade();
       }
       
-      if(!fastDigitalReadPortC<4>())
+      if(!fastDigitalReadPortC<3>())
       {
-        delayLine.AntiDegrade();
+        delayLine.Saturate();
       }
 
-      // advance delay line
-      if(fastDigitalReadPortC<3>())
+
+      // read delay line
+      //    write to fast dac out 
+      uint8_t audioOut = delayLine.Read();
+
+      // bitcrush ~ CV [0, 7]
+      if(bitcrush>5)
+      {
+        audioOut = BitCrush2(audioOut, bitcrush-5);
+      }
+      else
+      {
+        audioOut = BitCrush1(audioOut, bitcrush);
+      }
+      dac.Write(audioOut);
+
+
+      // advance/reverse delay line
+      if(fastDigitalReadPortC<4>())
       {
         delayLine.Advance();
       }
@@ -120,19 +165,16 @@ struct NanoLooperApp
       if(resetPeriod<resetCounter)
       {
         delayLine.Reset();
+//        pseudoRandom.Reset();//???
         resetCounter = 0;
 #ifdef DOSERIALDEBUG
         Serial.println(resetPeriod);
 #endif
-
       }
       ++resetCounter;
 
-      //if(fastDigitalReadPortD<3>())
-      {
-        // delay ~ speed cv
-        delayMicroseconds(delayusec);
-      }
+      // delay ~ speed cv
+      delayMicroseconds(delayusec);
   }
 
   void DoRecording()
@@ -141,18 +183,17 @@ struct NanoLooperApp
       Serial.println('R');
 #endif
 
-    // first read speed CV (once)
-    //int delayusec = 0;// analogRead(speedInPin);// [0-4096[ milliseconds
-    // ?? always sample at highest freq?
+    // always sample at highest freq
 
     // reset delay line
     delayLine.Reset();
+    pseudoRandom.Reset();
     resetCounter = 0;
 
-    analogRead(audioPinIn);
-    delay(2);
-    analogRead(audioPinIn);
-    delay(2);
+    // analogRead(audioPinIn);
+    // delay(2);
+    // analogRead(audioPinIn);
+    // delay(2);
 
     int cntr = 0; 
     while(cntr<loopLength)
