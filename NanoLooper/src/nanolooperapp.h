@@ -9,6 +9,8 @@
 #include "bitcrush.h"
 #include "analoginbank.h"
 
+//#define DOSERIALDEBUG 1
+
 struct NanoLooperApp
 {
     static const int loopLength = 1024 + 512 + 128; // 1.625 kB
@@ -103,6 +105,9 @@ struct NanoLooperApp
         int gate = fastDigitalReadPortC<5>();//PC5
         bool rising = !prevResetGate && gate;
         prevResetGate = gate;
+// #ifdef DOSERIALDEBUG
+//         Serial.println('s');
+// #endif 
         return rising;
     }
 
@@ -137,7 +142,7 @@ struct NanoLooperApp
             squareLFOCounter = 0;
             squareLFOState = 1 - squareLFOState;
 #ifdef DOSERIALDEBUG
-            Serial.println(resetPeriod);
+            Serial.println(squareLFOPeriod);
 #endif
         }
         fastDigitalWritePortB<5>(squareLFOState); // pin13 PB5

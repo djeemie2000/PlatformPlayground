@@ -1,9 +1,6 @@
 #include <Arduino.h>
 #include "nanolooperapp.h"
 
-#define DOSERIALDEBUG 1
-
-
 
 NanoLooperApp app;
 
