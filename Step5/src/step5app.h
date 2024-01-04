@@ -3,14 +3,14 @@
 #include "step5board.h"
 #include "cvclock.h"
 
-#define FAKECLOCK 1
+//#define FAKECLOCK 1
 
 struct Step5App
 {
     int m_Step;
     int m_Length;
     bool m_ResetFlag;
-    // TODO cvclock on gate outputs
+    // cvclock on gate outputs
     CVClock clockOutBus1;
     CVClock clockOutBus2;
 
@@ -110,7 +110,11 @@ struct Step5App
 
             board.stepSelectOut.Update();
             // need 'settling time' before reading CV?
+#ifdef USEATM168
             delay(5);
+#else
+            delay(1);
+#endif
         }
 
         // read bus CV AFTER setting current step/select
