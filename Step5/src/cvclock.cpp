@@ -15,7 +15,7 @@ void CVClock::Update(int clockIn, int cv)
     {
         duration = 0;
     }
-    else if(cv>976)//1024-48)
+    else if(cv>950)// 4.7V vs 5V ~ 962
     {
         duration = 1024;
     }

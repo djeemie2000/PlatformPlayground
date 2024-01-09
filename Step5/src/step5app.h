@@ -4,6 +4,7 @@
 #include "cvclock.h"
 
 //#define FAKECLOCK 1
+#define USEATM168 1
 
 struct Step5App
 {
