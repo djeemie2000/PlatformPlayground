@@ -85,7 +85,7 @@ public:
 
     void Saturate()
     {
-        // prevent flipping by ++ on oxFF or -- on 0x00
+        // prevent flipping by ++ on 0xFF or -- on 0x00
         if(0x7F<*m_Current && *m_Current<0xFF)
         {
             ++*m_Current;

@@ -23,6 +23,14 @@ public:
         // 4 MSB to PB0..PB3
         PORTB = (PORTB & 0xF0) | (value>>4);
     }
+
+    void WriteFlipped(uint8_t value)
+    {
+        // 4 MSB to PD4..PD7,
+        PORTD = (PORTD & 0x0F) | (value>>4);
+        // 4 LSB to PB0..PB3
+        PORTB = (PORTB & 0xF0) | (value<<4);
+    }
 };
 
 void TestFastDacSlow(FastDac& dac, int increase, int delayMs)

@@ -13,7 +13,7 @@
 
 struct NanoLooperApp
 {
-    static const int loopLength = 1024 + 512 + 128; // 1.625 kB
+    static const int loopLength = 1024 + 512 + 128; // 1.625 kB = 7/4 kB
     // output pins
     static const int squareLFOOutPin = LED_BUILTIN; // 13 PB5
     static const int randomOutPin = 12;             // PB4
@@ -24,10 +24,10 @@ struct NanoLooperApp
     static const int reverseInPin = A4;        // PC4
     static const int resetInPin = A5;          // PC5
     // analog in pins
-    static const int audioPinIn = A1; // PC1
-
     static const int speedInPin = A0;           // PC0
+    static const int audioPinIn = A1; // PC1 // TODO A6
     static const int squareLFOPeriodInPin = A2; // PC2
+
     static const int bitcrushInPin = A6;
     static const int randomProbabilityInPin = A7;
 
@@ -247,7 +247,7 @@ struct NanoLooperApp
             // advance delay line
             delayLine.Advance();
 
-            // delay ~ speed cv
+            // delay needed??
             // delayMicroseconds(delayusec);
 
             ++cntr;
