@@ -34,9 +34,10 @@ public:
         }
     }
 
-    void Reset()
+    void Reset(int offset)
     {
-        m_Current = m_Values;
+        // offset should be 0<= offset <= Size 
+        m_Current = m_Values + offset;
     }
 
     void SkipForward(int skip)
@@ -69,6 +70,16 @@ public:
     uint8_t Read() const
     {
         return *m_Current;
+    }
+
+    uint8_t Read(int offset) const
+    {
+        return *(m_Values + offset);
+    }
+
+    void Write(int offset, uint8_t value)
+    {
+        *(m_Values + offset) = value;
     }
 
     void Degrade()

@@ -2,57 +2,68 @@
 #include <Arduino.h>
 
 #include "delayline.h"
-#include "fastdac.h"
+#include "mcpdac.h"
 #include "fastdigitalwrite.h"
 #include "lowpassfilter.h"
 #include "pseudorandom.h"
-#include "bitcrush.h"
+#include "degrade.h"
 #include "analoginbank.h"
+#include "fastdigitalinbank.h"
+#include "fastdigitaloutbank.h"
+#include "analoginbank821.h"
 
-//#define DOSERIALDEBUG 1
+#define DOSERIALDEBUG 1
+
+// pins 10 11 12 13 for SPI
+// TODO pins 4..9 for 6x digital in/out
+// TODO pins 2 3 for 2x digital in
+// TODO A6 A7 for 2x audio in (A7 unused if mono in)
+// TODO A0..A5 for analog in 
+// -> TODO use 4051 3 digital in + 1 analog in for 8 pots
 
 struct NanoLooperApp
 {
     static const int loopLength = 1024 + 512 + 128; // 1.625 kB = 7/4 kB
-    // output pins
-    static const int squareLFOOutPin = LED_BUILTIN; // 13 PB5
-    static const int randomOutPin = 12;             // PB4
     // button/gate in pins
     static const int recordingButtonInPin = 2; // PD2
-    static const int degradeInPin = 3;         // PD3
-    static const int saturateInPin = A3;       // PC3
-    static const int reverseInPin = A4;        // PC4
-    static const int resetInPin = A5;          // PC5
-    // analog in pins
-    static const int speedInPin = A0;           // PC0
-    static const int audioPinIn = A1; // PC1 // TODO A6
-    static const int squareLFOPeriodInPin = A2; // PC2
+    static const int reverseInPin = 3;        // PD3
+    static const int resetInPin = 4;          // PD4
+    // degrade saturate non destructive via analogin
+    // static const int degradeInPin = 5;         // PD5 
+    // static const int saturateInPin = 6;       // PD6 
+    static const int flippedInPin = 7;
+    // output pins
+    static const int squareLFOOutPin = 8; // PB0
+    static const int randomOutPin = 9;  // BP1
+    // pins 10 11 12 13 for SPI
+    // analog in pins (8 to 1) A0 A1 A2 A3
+    //TODO A4 A5
+    static const int audioPinIn = A6; // ADC6
+    static const int audioRightInPin = A7;//??? ADC7
 
-    static const int bitcrushInPin = A6;
-    static const int randomProbabilityInPin = A7;
 
     DelayLine<loopLength> delayLine; // assumes 328 2k memory
-    FastDac dac;                     // assumes arduino nano
-    AnalogInBank<4> analogIn;
+    MCPDac dac;                     // assumes arduino nano
+    FastDigitalInBank<6> digitalIn; // assumes arduino nano
+    FastDigitalOutBank<3> digitalOut; // assumes arduino nano
+    AnalogInBank821<0,1,2> analogIn; // assumes arduino nano
+
 
     // random out (1/0)
     PseudoRandom pseudoRandom;
     int randomState;
     uint16_t randomThreshold;
 
-    int prevRecordingBtn;
-
-    int prevResetGate;
-
     int delayusec;
+    int resetOffset;
+
+    uint8_t degrade;
+    uint8_t saturate;
 
     // square LFO out (1/0)
     int squareLFOCounter;
     int squareLFOPeriod;
     int squareLFOState;
-
-    // bitcrush
-    int bitcrush;
 
     NanoLooperApp()
     {
@@ -63,29 +74,28 @@ struct NanoLooperApp
         delayLine.Begin();
         dac.Begin();
         // button/gate in
-        pinMode(recordingButtonInPin, INPUT_PULLUP);
-        pinMode(degradeInPin, INPUT_PULLUP);
-        pinMode(saturateInPin, INPUT_PULLUP);
-        pinMode(reverseInPin, INPUT_PULLUP);
-        pinMode(resetInPin, INPUT_PULLUP);
+        digitalIn.Assign(0, recordingButtonInPin, true);
+        digitalIn.Assign(1, reverseInPin, true);
+        digitalIn.Assign(2, resetInPin, true);
+        // digitalIn.Assign(3, degradeInPin, true);
+        // digitalIn.Assign(4, saturateInPin, true);
+        digitalIn.Assign(5, flippedInPin, true);
         // outputs
-        pinMode(squareLFOOutPin, OUTPUT);
-        pinMode(randomOutPin, OUTPUT);
-        // analogIn
-        analogIn.Begin();
-        analogIn.Assign(0, speedInPin);
-        analogIn.Assign(1, squareLFOPeriodInPin);
-        analogIn.Assign(2, randomProbabilityInPin);
-        analogIn.Assign(3, bitcrushInPin);
+        digitalOut.Assign(0, squareLFOOutPin);
+        digitalOut.Assign(1, randomOutPin);
 
-        prevRecordingBtn = 0;
-        prevResetGate = 0;
+        analogIn.Begin(A3);
+
         delayusec = 0;
+        resetOffset = 0;
+
+        degrade = 0;
+        saturate = 0;
+
         squareLFOCounter = 0;
         squareLFOPeriod = 16000;
         randomState = 1;
         randomThreshold = 128;
-        bitcrush = 0;
         squareLFOState = 1;
 
         analogIn.UpdateAll();
@@ -93,48 +103,43 @@ struct NanoLooperApp
 
     bool RecordingBtnClicked()
     {
-        int recordingBtn = fastDigitalReadPortD<2>(); // PD2
-        bool clicked = !prevRecordingBtn && recordingBtn;
-        prevRecordingBtn = recordingBtn;
-        return clicked;
+        return digitalIn.IsFalling(0);
     }
 
     bool ResetGateRising()
     {
-        // A5 //PC5
-        int gate = fastDigitalReadPortC<5>();//PC5
-        bool rising = !prevResetGate && gate;
-        prevResetGate = gate;
-// #ifdef DOSERIALDEBUG
-//         Serial.println('s');
-// #endif 
-        return rising;
+        return digitalIn.IsRising(2);
     }
 
     void update()
     {
         // first read record button in
+        digitalIn.Update();
         if (RecordingBtnClicked())
         {
-            DoRecording();
+            DoFill();
+            //DoRecording();
         }
         else
         {
-            DoPlayback();
+            DoLooping();
         }
     }
 
-    void DoPlayback()
+    void DoLooping()
     {
         // first read CV(s)
         // alternate between CV ins 
         analogIn.Update();
 
         delayusec = analogIn.Get(0) >> 1;   // [0-512[ microseconds        
-        squareLFOPeriod = analogIn.Get(1) << 3; // [0-32768/4[
+        resetOffset = analogIn.Get(1); // [0,1024[ TODO 
+        squareLFOPeriod = analogIn.Get(2) << 3; // [0-32768/4[
         squareLFOPeriod = max(32, squareLFOPeriod);        
-        randomThreshold = analogIn.Get(2); // [0, 1024[ ??
-        bitcrush = analogIn.Get(3) >> 6; //[0,15] ?? more types?
+        randomThreshold = analogIn.Get(3); // [0, 1024[ ??
+
+        degrade = analogIn.Get(4) >> 3;// [0,128[
+        saturate = analogIn.Get(5) >> 3;// [0,128[
 
         // update square LFO
         if (squareLFOPeriod < squareLFOCounter)
@@ -145,8 +150,8 @@ struct NanoLooperApp
             Serial.println(squareLFOPeriod);
 #endif
         }
-        fastDigitalWritePortB<5>(squareLFOState); // pin13 PB5
         ++squareLFOCounter;
+        digitalOut.Set(0, squareLFOState);
 
         // update random out
         uint32_t random = pseudoRandom.Rand();
@@ -156,61 +161,47 @@ struct NanoLooperApp
             // toggle state
             randomState = 1 - randomState;
         }
-        fastDigitalWritePortB<4>(randomState);
+        digitalOut.Set(1, randomState);
 
-        if(ResetGateRising())
+        // reset gate rising
+        if(digitalIn.IsRising(2))
         {
-            delayLine.Reset();
-        }
-
-        // degrade/saturate sample
-        if (!fastDigitalReadPortD<3>())
-        {
-            delayLine.Degrade();
-        }
-        if (!fastDigitalReadPortC<3>())
-        {
-            delayLine.Saturate();
+            // reset position from analogIn!!
+            delayLine.Reset(resetOffset);
+#ifdef DOSERIALDEBUG
+            Serial.println(resetOffset);
+#endif
         }
 
         // read audio from delay line
-        uint8_t audioOut = delayLine.Read();
+        uint8_t audioOut = delayLine.Read();    
 
-        // process/bitcrush audio 
-        // ~ CV [0, 15]
-        if(bitcrush<4)
-        {
-            // 0 .. 3
-            audioOut = BitCrush3(audioOut, 2*bitcrush);// 0 2 4 6
-        }
-        else if(bitcrush<8)
-        {
-            //4..7
-             audioOut = BitCrush1(audioOut, 1+2*(bitcrush-4)); // 1 3 5 7
-        }
-        else if(bitcrush<12)
-        {
-            //8..11
-             audioOut = BitCrush1b(audioOut, 1+2*(bitcrush-8)); // 1 3 5 7
-        }
-        else
-        {
-            //12..15
-            audioOut = BitCrush2(audioOut, bitcrush - 11);
-        }        
+        audioOut = Degrade(audioOut, degrade);
+        audioOut = Saturate(audioOut, saturate);
 
         // write audio to fast dac out
-        dac.Write(audioOut);
-
-        // advance/reverse delay line
-        if (fastDigitalReadPortC<4>())
+        if(digitalIn.Get(5))
         {
-            delayLine.Advance();
+            dac.Write(audioOut);
+            dac.WriteR(audioOut);
         }
         else
+        {
+            dac.WriteFlipped(audioOut);
+            dac.WriteRFlipped(audioOut);
+        }
+
+        // advance/reverse delay line
+        if (!digitalIn.Get(1))
         {
             delayLine.Reverse();
         }
+        else
+        {
+            delayLine.Advance();
+        }
+
+        digitalOut.Update();
 
         // delay ~ speed cv
         delayMicroseconds(delayusec);
@@ -224,9 +215,11 @@ struct NanoLooperApp
 
         // always sample at highest freq
 
-        // reset delay line
-        delayLine.Reset();
+        // reset delay line to zero!
+        delayLine.Reset(0);
+        // reset squareLFO
         squareLFOCounter = 0;
+        // do not reset random 
 
         int cntr = 0;
         while (cntr < loopLength)
@@ -234,15 +227,14 @@ struct NanoLooperApp
             // read audio in
             uint8_t audioValue = analogRead(audioPinIn) >> 2; // [0,256[
 
-            // recording led on
-            fastDigitalWritePortB<5>(1); // pin13 PB5
-
+            digitalIn.Update();//??
+            
             //  write delay line
             delayLine.Write(audioValue);
 
-            // read delay line
-            //    write to fast dac out
-            dac.Write(0x7F); // delayLine.Read());
+            // write to dac out for timing purposes (?)
+            dac.Write(0x7F);
+            dac.WriteR(0x7F);
 
             // advance delay line
             delayLine.Advance();
@@ -257,4 +249,49 @@ struct NanoLooperApp
         Serial.println('r');
 #endif
     }
+
+    void DoFill()
+    {
+#ifdef DOSERIALDEBUG
+        Serial.println('F');
+#endif
+
+        // always sample at highest freq
+
+        // reset delay line to zero!
+        delayLine.Reset(0);
+        // reset squareLFO
+        squareLFOCounter = 0;
+        // do not reset random 
+
+        uint8_t audioValue = 0x00;
+        int cntr = 0;
+        while (cntr < loopLength)
+        {
+            // read audio in
+            audioValue += 9; // [0,256[
+
+            digitalIn.Update();//??
+            
+            //  write delay line
+            delayLine.Write(audioValue);
+
+            // write to dac out for timing purposes (?)
+            dac.Write(0x7F);
+            dac.WriteR(0x7F);
+
+            // advance delay line
+            delayLine.Advance();
+
+            // delay needed??
+            // delayMicroseconds(delayusec);
+
+            ++cntr;
+        }
+
+#ifdef DOSERIALDEBUG
+        Serial.println('f');
+#endif
+    }
+
 };

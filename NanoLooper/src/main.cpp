@@ -2,6 +2,7 @@
 #include "nanolooperapp.h"
 
 //#include "nanolooperspeedtest.h"
+#include "testdac.h"
 
 NanoLooperApp app;
 
@@ -37,8 +38,10 @@ void loop() {
   // put your main code here, to run repeatedly:
 
   //TestFastDacSlow(app.dac, 1, 0);
-  //TestFactDacFastDescending(app.dac, 100);
-//  return;
+//  TestDacFastDescending(app.dac, 40);
+
+  //TestAnalogInBank821(app.analogIn2, 20);
+  //return;
 
     // DoSpeedTest();
     // return;

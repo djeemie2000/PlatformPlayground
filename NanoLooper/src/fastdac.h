@@ -33,39 +33,4 @@ public:
     }
 };
 
-void TestFastDacSlow(FastDac& dac, int increase, int delayMs)
-{
-    int value = 0;
-    while(true)
-    {
-        dac.Write(value);
-        value += increase;
-        if(256>= value)
-        {
-            value -= 256;
-        }
-        delay(delayMs);
-    }
-}
 
-void TestFactDacFastAscending(FastDac& dac, int delayUsec)
-{
-    uint8_t value = 0x00;
-    while(true)
-    {
-        dac.Write(value);
-        ++value;
-        delayMicroseconds(delayUsec);
-    }
-}
-
-void TestFactDacFastDescending(FastDac& dac, int delayUsec)
-{
-    uint8_t value = 0xFF;
-    while(true)
-    {
-        dac.Write(value);
-        --value;
-        delayMicroseconds(delayUsec);
-    }
-}

@@ -54,3 +54,26 @@ private:
     int m_Value[Size];
     int m_UpdateIdx;
 };
+
+template<int Size>
+void TestAnalogInBank(AnalogInBank<Size>& bank, int repeats)
+{
+    Serial.println("Test analog in bank 821...");
+    for(int repeat = 0; repeat<repeats; ++repeat)
+    {
+        for(int idx = 0; idx<Size; ++ idx)
+        {
+            bank.Update();
+        }
+
+        for(int idx = 0; idx<Size; ++ idx)
+        {
+            Serial.print(idx);
+            Serial.print(' ');
+            Serial.println(bank.Get(idx));
+        }
+
+        delay(500);
+    }
+    Serial.println("done");
+}
