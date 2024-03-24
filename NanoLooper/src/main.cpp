@@ -3,6 +3,7 @@
 
 //#include "nanolooperspeedtest.h"
 #include "testdac.h"
+#include "testdevboard.h"
 
 NanoLooperApp app;
 
@@ -27,7 +28,7 @@ NanoLooperApp app;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  Serial.println("Nanolooper v0.1");
+  Serial.println("Nanolooper v0.2");
 
   Serial.print("app begin...");
   app.Begin();
@@ -36,6 +37,9 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+
+  TestGateOut(app);
+  TestLedOut(app);
 
   //TestFastDacSlow(app.dac, 1, 0);
 //  TestDacFastDescending(app.dac, 40);
@@ -46,7 +50,7 @@ void loop() {
     // DoSpeedTest();
     // return;
 
-  app.update();
+  //app.update();
 }
 
 // put function definitions here:

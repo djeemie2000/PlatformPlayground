@@ -11,22 +11,19 @@
 #include "fastdigitalinbank.h"
 #include "fastdigitaloutbank.h"
 #include "analoginbank821.h"
+#include "shiftiobank.h"
 #include "tapehead.h"
 #include "squarelfostate.h"
 #include "pseudorandomstate.h"
 
 #define DOSERIALDEBUG 1
 
-// pins 10 11 12 13 for SPI
-// TODO pins 4..9 for 6x digital in/out
-// TODO pins 2 3 for 2x digital in
-// TODO A6 A7 for 2x audio in (A7 unused if mono in)
-// TODO A0..A5 for analog in 
-// -> TODO use 4051 3 digital in + 1 analog in for 8 pots
+//TODO devBoard vs app => reuseable devBoard
 
 struct NanoLooperApp
 {
     static const int loopLength = 1024 + 512;;// + 128; // 1.625 kB = 7/4 kB
+
     // button/gate in pins
     static const int recordingButtonInPin = 2; // PD2
     static const int reverseInPin = 3;        // PD3
@@ -43,17 +40,24 @@ struct NanoLooperApp
     // analog in pins (8 to 1) A0 A1 A2 A3
     //TODO A4 A5
     static const int audioPinIn = A6; // ADC6
-    static const int audioRightInPin = A7;//??? ADC7
-
+    static const int audioRightInPin = A7;// ADC7
 
     DelayLine<loopLength> delayLine; // assumes 328 2k memory
     TapeHead<loopLength> writeHead;
     TapeHead<loopLength> readHeadL;
     TapeHead<loopLength> readHeadR;
+
+    // MCP dac uses CS pin 10 
     MCPDac dac;                     // assumes arduino nano
-    FastDigitalInBank<4> digitalIn; // assumes arduino nano
-    FastDigitalOutBank<4> digitalOut; // assumes arduino nano
+    // 2x gate in pin D2 D3
+    // 4x button in pin D6 D7 A4 A5 -> TODO debouncing
+    FastDigitalInBank<6> gateButtonIn; // assumes arduino nano
+    // 2x gate out pin D4 D5
+    FastDigitalOutBank<2> gateOut; // assumes arduino nano
+    // 8 to 3 analog in: Ain A3 + Din A0 A1 A2 = PORTC 0 1 2
     AnalogInBank821<0,1,2> analogIn; // assumes arduino nano
+    // TODO shift register in x1 + out x2 uses CS pin D9
+    ShiftIOBank<16> shiftIO;
 
     // random out (1/0)
     PseudoRandomState<2> pseudoRandom;
@@ -78,19 +82,23 @@ struct NanoLooperApp
         writeHead.Reset(0);
         readHeadL.Reset(0);
         readHeadR.Reset(0);
-        dac.Begin();
-        // button/gate in
-        digitalIn.Assign(0, recordingButtonInPin, true);
-        digitalIn.Assign(1, reverseInPin, true);
-        digitalIn.Assign(2, resetInPin, true);
-        digitalIn.Assign(3, flippedInPin, true);
-        // outputs
-        digitalOut.Assign(0, squareLFOOutPin);
-        digitalOut.Assign(1, randomOutPin);
-        digitalOut.Assign(2, squareLFOOutPin2);
-        digitalOut.Assign(3, randomOutPin2);
 
+        dac.Begin();
+        // gate in
+        gateButtonIn.Assign(0, 2, true);
+        gateButtonIn.Assign(1, 3, true);
+        // button in
+        gateButtonIn.Assign(2, 6, true);
+        gateButtonIn.Assign(3, 7, true);
+        gateButtonIn.Assign(4, A4, true);
+        gateButtonIn.Assign(5, A5, true);
+        // gate out
+        gateOut.Assign(0, 4);
+        gateOut.Assign(1, 5);
+        // analog in 8 to 3
         analogIn.Begin(A3);
+        // shift register IO
+        shiftIO.Begin(9);
 
         delayusec = 0;
         resetOffsetL = 0;
@@ -112,18 +120,18 @@ struct NanoLooperApp
 
     bool RecordingBtnClicked()
     {
-        return digitalIn.IsFalling(0);
+        return gateButtonIn.IsFalling(0);
     }
 
     bool ResetGateRising()
     {
-        return digitalIn.IsRising(2);
+        return gateButtonIn.IsRising(2);
     }
 
     void update()
     {
         // first read record button in
-        digitalIn.Update();
+        gateButtonIn.Update();
         if (RecordingBtnClicked())
         {
             DoFill();
@@ -154,18 +162,18 @@ struct NanoLooperApp
         lfo.SetPeriod(0, squareLFOPeriod);
         lfo.SetPeriod(1, squareLFOPeriod/2);   
         lfo.Update();
-        digitalOut.Set(0, lfo.Get(0));
-        digitalOut.Set(2, lfo.Get(1));
+        gateOut.Set(0, lfo.Get(0));
+        gateOut.Set(2, lfo.Get(1));
 
         // update random out
         pseudoRandom.SetThreshold(0, analogIn.Get(4));// [0, 1024[ ??
         pseudoRandom.SetThreshold(1, analogIn.Get(4)/2);
         pseudoRandom.Update();
-        digitalOut.Set(1, pseudoRandom.Get(0));
-        digitalOut.Set(3, pseudoRandom.Get(1));
+        gateOut.Set(1, pseudoRandom.Get(0));
+        gateOut.Set(3, pseudoRandom.Get(1));
 
         // reset gate rising
-        if(digitalIn.IsRising(2))
+        if(gateButtonIn.IsRising(2))
         {
             // reset position is read from analogIn
             readHeadL.Reset(resetOffsetL);
@@ -186,7 +194,7 @@ struct NanoLooperApp
         audioOutR = Saturate(audioOutR, saturate);
 
         // write audio to fast dac out
-        if(digitalIn.Get(3))
+        if(gateButtonIn.Get(3))
         {
             dac.Write(audioOutL);
             dac.WriteR(audioOutR);
@@ -198,7 +206,7 @@ struct NanoLooperApp
         }
 
         // advance/reverse delay line
-        if (!digitalIn.Get(1))
+        if (!gateButtonIn.Get(1))
         {
             readHeadL.Reverse();
             readHeadR.Reverse();
@@ -209,7 +217,7 @@ struct NanoLooperApp
             readHeadR.Advance();
         }
 
-        digitalOut.Update();
+        gateOut.Update();
 
         // delay ~ speed cv
         delayMicroseconds(delayusec);
@@ -238,7 +246,7 @@ struct NanoLooperApp
             // read audio in
             uint8_t audioValue = analogRead(audioPinIn) >> 2; // [0,256[
 
-            digitalIn.Update();//??
+            gateButtonIn.Update();//??
             
             //  write delay line
             delayLine.Write(writeHead.Get(), audioValue);
@@ -284,7 +292,7 @@ struct NanoLooperApp
             // read audio in
             audioValue += 9 + cntr%10 + cntr/200; // [0,256[
 
-            digitalIn.Update();//??
+            gateButtonIn.Update();//??
             
             //  write delay line
             delayLine.Write(writeHead.Get(), audioValue);
