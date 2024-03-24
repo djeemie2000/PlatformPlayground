@@ -19,7 +19,7 @@ public:
         }
     }
 
-    void SetPeriod(int idx, uint16_t threshold)
+    void SetThreshold(int idx, uint16_t threshold)
     {
         // no check on index
         randomThreshold[idx] = threshold;
