@@ -38,8 +38,8 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-  TestGateOut(app);
-  TestLedOut(app);
+  TestGateOut(app.devBoard);
+  TestLedOut(app.devBoard);
 
   //TestFastDacSlow(app.dac, 1, 0);
 //  TestDacFastDescending(app.dac, 40);

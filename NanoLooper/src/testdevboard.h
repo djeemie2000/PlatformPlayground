@@ -6,12 +6,12 @@
 #include "shiftiobank.h"
 //TODO DevBoard vs App
 
-void TestGateOut(NanoLooperApp& board)
+void TestGateOut(DevBoard& board)
 {
     TestDigitalOutBank(board.gateOut, 5);
 }
 
-void TestLedOut(NanoLooperApp& board)
+void TestLedOut(DevBoard& board)
 {
     TestDigitalOutBank(board.shiftIO, 5);
 }
