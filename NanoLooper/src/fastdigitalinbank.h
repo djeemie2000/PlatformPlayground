@@ -69,3 +69,34 @@ private:
     uint32_t m_PrevInputMask;
     int m_Offset[Size];
 };
+
+template<int Size>
+void PrintChanges(FastDigitalInBank<Size>& bank)
+{
+    for(int idx = 0; idx<Size; ++idx)
+    {
+        if(bank.IsFalling(idx))
+        {
+            Serial.print("input ");
+            Serial.print(idx);
+            Serial.println(" is falling");
+        }
+        else if(bank.IsRising(idx))
+        {
+            Serial.print("input ");
+            Serial.print(idx);
+            Serial.println(" is rising");
+        }
+    }
+}
+
+template<int Size>
+void PrintValues(FastDigitalInBank<Size>& bank)
+{
+    for(int idx = 0; idx<Size; ++idx)
+    {
+        Serial.print(bank.Get(idx));
+    }
+    Serial.println();
+}
+

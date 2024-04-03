@@ -82,7 +82,7 @@ struct NanoLooperApp
         pseudoRandom.SetThreshold(0, 128);
         pseudoRandom.SetThreshold(1, 128);
 
-        devBoard.analogIn.UpdateAll();
+        devBoard.potIn.UpdateAll();
     }
 
     bool RecordingBtnClicked()
@@ -114,17 +114,17 @@ struct NanoLooperApp
     {
         // first read CV(s)
         // alternate between CV ins 
-        devBoard.analogIn.Update();
+        devBoard.potIn.Update();
 
-        delayusec = devBoard.analogIn.Get(0) >> 1;   // [0-512[ microseconds        
-        resetOffsetL = devBoard.analogIn.Get(1); // [0,1024[ TODO 
-        resetOffsetR = devBoard.analogIn.Get(2); // [0,1024[ TODO 
+        delayusec = devBoard.potIn.Get(0) >> 1;   // [0-512[ microseconds        
+        resetOffsetL = devBoard.potIn.Get(1); // [0,1024[ TODO 
+        resetOffsetR = devBoard.potIn.Get(2); // [0,1024[ TODO 
         
-        degrade = devBoard.analogIn.Get(6) >> 3;// [0,128[
-        saturate = devBoard.analogIn.Get(7) >> 3;// [0,128[
+        degrade = devBoard.potIn.Get(6) >> 3;// [0,128[
+        saturate = devBoard.potIn.Get(7) >> 3;// [0,128[
 
         // update square LFO
-        int squareLFOPeriod = devBoard.analogIn.Get(3) << 3; // [0-32768/4[
+        int squareLFOPeriod = devBoard.potIn.Get(3) << 3; // [0-32768/4[
         squareLFOPeriod = max(32, squareLFOPeriod);        
         lfo.SetPeriod(0, squareLFOPeriod);
         lfo.SetPeriod(1, squareLFOPeriod/2);   
@@ -133,8 +133,8 @@ struct NanoLooperApp
         devBoard.gateOut.Set(2, lfo.Get(1));
 
         // update random out
-        pseudoRandom.SetThreshold(0, devBoard.analogIn.Get(4));// [0, 1024[ ??
-        pseudoRandom.SetThreshold(1, devBoard.analogIn.Get(4)/2);
+        pseudoRandom.SetThreshold(0, devBoard.potIn.Get(4));// [0, 1024[ ??
+        pseudoRandom.SetThreshold(1, devBoard.potIn.Get(4)/2);
         pseudoRandom.Update();
         devBoard.gateOut.Set(1, pseudoRandom.Get(0));
         devBoard.gateOut.Set(3, pseudoRandom.Get(1));

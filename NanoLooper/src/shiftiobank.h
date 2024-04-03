@@ -9,6 +9,7 @@ public:
     ShiftIOBank() 
     : m_CsPin(9) 
     , m_OutValues(0)
+    , m_PrevInValues(0) 
     , m_InValues(0) 
     {}
 
@@ -19,10 +20,13 @@ public:
         // assumes;
         // SPI.begin();
         // SPI.setClockDivider(SPI_CLOCK_DIV2); //AVR: defult is 4 so 16MHz/4 = 4MHz
+        m_PrevInValues = 0;
+        m_InValues = 0;
     }
 
     void Update()
     {
+        m_PrevInValues = m_InValues;
         // TODO configurable or template param
         // hard coded pin 9  = PB1 
         fastDigitalWritePortB<1>(0); // digitalWrite(m_CsPin, LOW);
@@ -50,9 +54,22 @@ public:
         return bitRead(m_InValues, idx);
     }
 
+    int IsRising(int idx) const
+    {
+        return !bitRead(m_PrevInValues, idx) 
+        && bitRead(m_InValues, idx);
+    }
+
+    int IsFalling(int idx) const
+    {
+        return bitRead(m_PrevInValues, idx) 
+        && !bitRead(m_InValues, idx);
+    }
+
 private:
     int m_CsPin;
     uint16_t m_OutValues;
+    uint16_t m_PrevInValues;
     uint16_t m_InValues;
 };
 
@@ -75,3 +92,32 @@ void TestDigitalOutBank(ShiftIOBank<Size>& bank, int repeats)
     Serial.println(" done");
 }
 
+template<int Size>
+void PrintChanges(ShiftIOBank<Size>& bank)
+{
+    for(int idx = 0; idx<Size; ++idx)
+    {
+        if(bank.IsFalling(idx))
+        {
+            Serial.print("input ");
+            Serial.print(idx);
+            Serial.println(" is falling");
+        }
+        else if(bank.IsRising(idx))
+        {
+            Serial.print("input ");
+            Serial.print(idx);
+            Serial.println(" is rising");
+        }
+    }
+}
+
+template<int Size>
+void PrintValues(ShiftIOBank<Size>& bank)
+{
+    for(int idx = 0; idx<Size; ++idx)
+    {
+        Serial.print(bank.Get(idx));
+    }
+    Serial.println();
+}

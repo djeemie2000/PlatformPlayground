@@ -24,7 +24,7 @@ public:
         pinMode(A2, OUTPUT);
         for(int idx = 0; idx<Size; ++idx)
         {
-            m_PrevValue[idx] = 0;
+            m_IsChanged[idx] = false;
             m_Value[idx] = 0;
         }
         m_UpdateIdx = 0;
@@ -36,15 +36,17 @@ public:
         return m_Value[idx];
     }
 
+    // TODO IsChanged true during 8 updates until next update of idx
     bool IsChanged(int idx) const
     {
         // no check on index
-        int diff = m_Value[idx] - m_PrevValue[idx];
-        return 2<abs(diff);
+        return m_IsChanged[idx];
     }
 
     void Update()
     {
+        // TODO clear all ischanged flags?
+
         // alternating read
         fastDigitalWritePortC<PinA>(m_UpdateIdx & 0x01);
         fastDigitalWritePortC<PinB>(m_UpdateIdx & 0x02);
@@ -58,8 +60,17 @@ public:
         // Serial.print(' ');
         // Serial.println(idx);
         
-        m_PrevValue[idx] = m_Value[idx];
-        m_Value[idx] = analogRead(m_AnalogInPin);
+        int newValue = analogRead(m_AnalogInPin);
+        int absDiff = abs(m_Value[idx] - newValue);
+        if(2<absDiff)
+        {
+            m_Value[idx] = newValue;
+            m_IsChanged[idx] = true;
+        }
+        else
+        {
+            m_IsChanged[idx] = false;
+        }
         ++m_UpdateIdx;
     }
 
@@ -79,7 +90,7 @@ private:
     int m_AnalogInPin;
     uint8_t m_UpdateIdx;
     int m_Value[Size];
-    int m_PrevValue[Size];
+    bool m_IsChanged[Size];
 };
 
 template<class BankType>
@@ -103,4 +114,19 @@ void TestAnalogInBank821(BankType& bank, int repeats)
         delay(500);
     }
     Serial.println("done");
+}
+
+template<int pinA, int pinB, int pinC>
+void PrintChanges(AnalogInBank821<pinA, pinB, pinC>& bank)
+{
+    for(int idx = 0; idx<AnalogInBank821<pinA, pinB, pinC>::Size; ++idx)
+    {
+        if(bank.IsChanged(idx))
+        {
+            Serial.print("input ");
+            Serial.print(idx);
+            Serial.print(" is changed to ");
+            Serial.println(bank.Get(idx));
+        }
+    }
 }

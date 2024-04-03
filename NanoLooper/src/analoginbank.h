@@ -56,6 +56,17 @@ private:
 };
 
 template<int Size>
+void PrintValues(AnalogInBank<Size>& bank)
+{
+    for(int idx = 0; idx<Size; ++ idx)
+    {
+        Serial.print(idx);
+        Serial.print(' ');
+        Serial.println(bank.Get(idx));
+    }
+}
+
+template<int Size>
 void TestAnalogInBank(AnalogInBank<Size>& bank, int repeats)
 {
     Serial.println("Test analog in bank 821...");
@@ -66,12 +77,7 @@ void TestAnalogInBank(AnalogInBank<Size>& bank, int repeats)
             bank.Update();
         }
 
-        for(int idx = 0; idx<Size; ++ idx)
-        {
-            Serial.print(idx);
-            Serial.print(' ');
-            Serial.println(bank.Get(idx));
-        }
+        PrintValues(bank);
 
         delay(500);
     }

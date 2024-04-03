@@ -38,14 +38,18 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-  TestGateOut(app.devBoard);
-  TestLedOut(app.devBoard);
-
+  //TestGateOut(app.devBoard, 2);//ok
+  //TestLedOut(app.devBoard, 1);//ok
+  //TestPatchOut(app.devBoard, 1);//ok
+  //TestGateOutToGateInToLedOut(app.devBoard, 5);//ok
+  //TestButtons(app.devBoard, 2);//ok
+  //TestPots(app.devBoard, 2);//ok TODO all pots on HW
+  TestPotsChanged(app.devBoard, 2);// NOK 8 x changed >< 1x changedn slow change not detected
+  
+  
   //TestFastDacSlow(app.dac, 1, 0);
 //  TestDacFastDescending(app.dac, 40);
 
-  //TestAnalogInBank821(app.analogIn2, 20);
-  //return;
 
     // DoSpeedTest();
     // return;
