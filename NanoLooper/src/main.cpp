@@ -44,8 +44,8 @@ void loop() {
   //TestGateOutToGateInToLedOut(app.devBoard, 5);//ok
   //TestButtons(app.devBoard, 2);//ok
   //TestPots(app.devBoard, 2);//ok TODO all pots on HW
-  TestPotsChanged(app.devBoard, 2);// NOK 8 x changed >< 1x changedn slow change not detected
-  
+  //TestPotsChanged(app.devBoard, 2);// 1x changed ok, slow change is detected ok, false positives nok
+  TestGateOutToAudioIn(app.devBoard, 5);
   
   //TestFastDacSlow(app.dac, 1, 0);
 //  TestDacFastDescending(app.dac, 40);

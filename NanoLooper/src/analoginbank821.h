@@ -45,8 +45,25 @@ public:
 
     void Update()
     {
-        // TODO clear all ischanged flags?
+        ClearChanged();
+        UpdateSingle();        
+    }
 
+    void UpdateAll()
+    {
+        ClearChanged();
+        // read all
+        m_UpdateIdx = 0;
+        for(int idx = 0; idx<Size; ++idx)
+        {
+             UpdateSingle();
+        }
+        m_UpdateIdx = 0;
+    }
+
+private:
+    void UpdateSingle()
+    {
         // alternating read
         fastDigitalWritePortC<PinA>(m_UpdateIdx & 0x01);
         fastDigitalWritePortC<PinB>(m_UpdateIdx & 0x02);
@@ -74,18 +91,15 @@ public:
         ++m_UpdateIdx;
     }
 
-    void UpdateAll()
+
+    void ClearChanged()
     {
-        // read all
-        m_UpdateIdx = 0;
         for(int idx = 0; idx<Size; ++idx)
         {
-             Update();
+            m_IsChanged[idx] = false;
         }
-        m_UpdateIdx = 0;
     }
 
-private:
     int m_ChangeThreshold;
     int m_AnalogInPin;
     uint8_t m_UpdateIdx;

@@ -66,6 +66,11 @@ struct DevBoard
         return shiftIO.Get(idx);
     }
 
+    int GetPatchInRising(int idx) const
+    {
+        return shiftIO.IsRising(idx);
+    }
+
     void SetLedOut(int idx, int value)
     {
         //TODO dirty hack to fix HW issue by remapping idx 0 1 2 7 3 4 5 6 

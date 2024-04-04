@@ -137,33 +137,37 @@ void TestPatchOutToPatchInToLedOut(DevBoard& board)
 
 void TestGateOutToAudioIn(DevBoard& board, int repeats)
 {
-    Serial.print("Test Gate out to audio in ...");
+    Serial.println("Test Gate out to audio in ...");
     // gate out set alternating gates out
     // led out based on gate out state
     // upon each change in gates out check changes in analog in
-    const int delayMSecs = 300;
+    const int delayMSecs = 1000;
 
     for(int repeat = 0; repeat<repeats; ++repeat)
     {
         board.SetGateOut(0, 1);
-        board.SetGateOut(1, 0);
+        board.SetGateOut(1, 1);
         board.SetLedOut(0, 1);
         board.SetLedOut(1, 0);    
         board.gateOut.Update();// gate out
         board.shiftIO.Update();// leds
+        delay(1);
         board.audioIn.Update();// read audio in
         PrintValues(board.audioIn);
+        Serial.println();
         delay(delayMSecs);
 
-        board.SetGateOut(0, 0);
-        board.SetGateOut(1, 1);
-        board.SetLedOut(0, 0);
-        board.SetLedOut(1, 1);    
-        board.gateOut.Update();// gate out
-        board.shiftIO.Update();// leds
-        board.audioIn.Update();// read audio in
-        PrintValues(board.audioIn);
-        delay(delayMSecs);
+        // board.SetGateOut(0, 0);
+        // board.SetGateOut(1, 1);
+        // board.SetLedOut(0, 0);
+        // board.SetLedOut(1, 1);    
+        // board.gateOut.Update();// gate out
+        // board.shiftIO.Update();// leds
+        // delay(1);
+        // board.audioIn.Update();// read audio in
+        // PrintValues(board.audioIn);
+        // Serial.println();
+        // delay(delayMSecs);
     }
     Serial.println(" Done");
 }
@@ -212,7 +216,7 @@ void TestPots(DevBoard& board, int repeats)
 
 void TestPotsChanged(DevBoard& board, int repeats)
 {
-    Serial.print("Test Pots changed...");
+    Serial.println("Test Pots changed...");
     int msecs = 1000 * repeats;
     for(int repeat = 0; repeat<msecs; ++repeat)
     {
