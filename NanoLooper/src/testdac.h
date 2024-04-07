@@ -8,6 +8,7 @@ void TestDacSlow(DacType& dac, int increase, int delayMs)
     while(true)
     {
         dac.Write(value);
+        dac.WriteR(value);
         value += increase;
         if(256>= value)
         {
