@@ -13,10 +13,11 @@ public:
     , m_InValues(0) 
     {}
 
-    void Begin(int csPin)
+    void Begin(int csPin, int loadPin)
     {
         m_CsPin = csPin;
         pinMode(m_CsPin, OUTPUT);
+        pinMode(loadPin, OUTPUT);
         // assumes;
         // SPI.begin();
         // SPI.setClockDivider(SPI_CLOCK_DIV2); //AVR: defult is 4 so 16MHz/4 = 4MHz
@@ -28,7 +29,14 @@ public:
     {
         m_PrevInValues = m_InValues;
         // TODO configurable or template param
-        // hard coded pin 9  = PB1 
+
+        // short low pulse on input load pin 8 = PB0
+        fastDigitalWritePortB<0>(0); // digitalWrite(m_LoadPin, LOW);
+        delayMicroseconds(5);
+        fastDigitalWritePortB<0>(1); //digitalWrite(m_LoadPin, HIGH);
+        delayMicroseconds(5);
+
+        // hard coded CS pin 9  = PB1 
         fastDigitalWritePortB<1>(0); // digitalWrite(m_CsPin, LOW);
         m_InValues = SPI.transfer16(m_OutValues);
         fastDigitalWritePortB<1>(1); //digitalWrite(m_CsPin, HIGH);
@@ -90,6 +98,24 @@ void TestDigitalOutBank(ShiftIOBank<Size>& bank, int repeats)
         }
     }
     Serial.println(" done");
+}
+
+template<int Size>
+void ClearAll(ShiftIOBank<Size>& bank)
+{
+    for(int idx = 0; idx<Size; ++idx)
+    {
+        bank.Set(idx, 0);
+    }
+}
+
+template<int Size>
+void SetAll(ShiftIOBank<Size>& bank)
+{
+    for(int idx = 0; idx<Size; ++idx)
+    {
+        bank.Set(idx, 1);
+    }
 }
 
 template<int Size>

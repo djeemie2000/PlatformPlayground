@@ -135,6 +135,35 @@ void TestPatchOutToPatchInToLedOut(DevBoard& board)
     Serial.println(" Done");
 }
 
+void TestPatchOutToLedToPatchIn(DevBoard& board, int repeats)
+{
+    Serial.println("Test Patch out to patch in ...");
+    for(int repeat = 0; repeat<repeats; ++repeat)
+    {
+        for(int gate = 0; gate<8; ++gate)
+        {
+            //SetAll(board.shiftIO);
+            ClearAll(board.shiftIO);
+            board.SetPatchOut(gate, 1);
+            board.SetLedOut(gate, 1);
+            board.shiftIO.Update();//set out 
+            // 2nd update to read in after out has been set
+            board.shiftIO.Update();
+            
+            Serial.print(gate);
+            Serial.print(' ');
+            for(int ptch = 0; ptch<8; ++ptch)
+            {
+                Serial.print(board.GetPatchIn(ptch));
+            }
+            Serial.println();
+            
+            delay(300);
+        }      
+    }
+     Serial.println(" Done");
+}
+
 void TestGateOutToAudioIn(DevBoard& board, int repeats)
 {
     Serial.println("Test Gate out to audio in ...");

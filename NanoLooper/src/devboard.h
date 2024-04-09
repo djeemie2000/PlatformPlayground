@@ -46,8 +46,10 @@ struct DevBoard
         gateOut.Assign(1, 5);
         // analog in 8 to 3 AIn pin A3 select pins A0 A1 A2
         potIn.Begin(A3, 2);// change threshold > 2
-        // shift register IO CS pin 9
-        shiftIO.Begin(9);
+        // shift register IO 
+        // CS pin 9
+        // shift register in load pin 8
+        shiftIO.Begin(9, 8);
         // 
         audioIn.Begin();
         audioIn.Assign(0, A6);
@@ -63,12 +65,12 @@ struct DevBoard
 
     int GetPatchIn(int idx) const
     {
-        return shiftIO.Get(idx);
+        return shiftIO.Get(8+idx);
     }
 
     int GetPatchInRising(int idx) const
     {
-        return shiftIO.IsRising(idx);
+        return shiftIO.IsRising(8+idx);
     }
 
     void SetLedOut(int idx, int value)

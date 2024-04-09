@@ -46,7 +46,7 @@ void loop() {
   //TestPots(app.devBoard, 2);//ok TODO all pots on HW
   //TestPotsChanged(app.devBoard, 2);// 1x changed ok, slow change is detected ok, false positives nok
   //TestGateOutToAudioIn(app.devBoard, 5);
-  
+  TestPatchOutToLedToPatchIn(app.devBoard, 2);
   //TestFastDacSlow(app.dac, 1, 0);
 //  TestDacFastDescending(app.dac, 40);
 
@@ -54,7 +54,7 @@ void loop() {
     // DoSpeedTest();
     // return;
 
-  app.update();
+  //app.update();
 }
 
 // put function definitions here:
