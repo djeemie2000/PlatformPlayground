@@ -7,6 +7,12 @@
 
 NanoLooperApp app;
 
+//#define DOSERIALDEBUG2
+
+#ifdef DOSERIALDEBUG2
+int debugCntr;
+#endif
+
 // void DoSpeedTest()
 // {
 //   FastDac dac1;
@@ -28,7 +34,7 @@ NanoLooperApp app;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  Serial.println("Nanolooper v0.5");
+  Serial.println("Nanolooper v0.6");
 
   Serial.print("app begin...");
   app.Begin();
@@ -55,6 +61,16 @@ void loop() {
     // return;
 
   app.update();
+
+#ifdef DOSERIALDEBUG2
+  ++debugCntr;
+  if(10000<debugCntr)
+  {
+    debugCntr = 0;
+    Serial.println(millis());
+  }
+#endif
+
 }
 
 // put function definitions here:

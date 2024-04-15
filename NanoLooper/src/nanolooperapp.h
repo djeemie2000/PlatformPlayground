@@ -10,6 +10,7 @@
 #include "tapehead.h"
 #include "squarelfostate.h"
 #include "pseudorandomstate.h"
+#include "nanolooperspeedtest.h"
 
 #define DOSERIALDEBUG 1
 
@@ -76,6 +77,8 @@ struct NanoLooperApp
         pseudoRandom.SetThreshold(3, 128);
 
         devBoard.potIn.UpdateAll();
+
+        setupFastAnalogRead(2);
     }
 
     void update()
@@ -92,25 +95,13 @@ struct NanoLooperApp
         }
         else
         {
-            DoLooping();
+            //DoLooping();
+            DoProcessing();
         }
     }
 
-    void DoLooping()
+    void UpdatePatchIO()
     {
-        // first read CV(s),gate in, patch in
-        devBoard.potIn.Update();
-        devBoard.gateButtonIn.Update();
-        devBoard.shiftIO.Update();
-
-        // pot 0 speed
-        int delayusec = devBoard.GetPot(0) >> 1;   // [0-512[ microseconds        
-        // TODO mod delay based on audio in R * mod depth pot 4
-        
-        // reset position pots 1 5
-        int resetOffsetL = devBoard.GetPot(1)*3/2; // [0,1024+512[  
-        int resetOffsetR = devBoard.GetPot(5)*3/2; // [0,1024+512[  
-        
         // pot 2 6 -> LFO and random controls L R
         // update square LFO
         int squareLFOPeriod1 = devBoard.GetPot(2) << 3; // [0-32768/4[
@@ -149,7 +140,156 @@ struct NanoLooperApp
         devBoard.SetPatchOut(7, pseudoRandom.Get(3));
         devBoard.SetLedOut(6, pseudoRandom.Get(3));
 
+    }
 
+    int CalcMixedAudio(uint8_t newByte, uint8_t oldByte, int feedback, int feedbackoffset)
+    {
+        int newSigned = 128 - newByte;// invert????//newByte - 128;
+        int oldSigned = oldByte - 128;
+        int mixedSigned = (feedbackoffset*oldSigned + feedback*oldSigned + (256-feedback)*newSigned)>>8;
+        return 128+mixedSigned;
+    }
+
+    void DoProcessing()
+    {
+        // first read CV(s),gate in, patch in
+        devBoard.potIn.Update();
+        devBoard.gateButtonIn.Update();
+        devBoard.shiftIO.Update();
+
+        UpdatePatchIO();
+
+        // TODO delay needed???
+        // pot 0 speed
+        int delayusec = devBoard.GetPot(0) >> 2;   // [0-512[ microseconds        
+
+        // pot 4 feedback
+        int feedback = devBoard.GetPot(4)>>2;//  [0, 256]
+
+        // optimize read only 1 audio in (left)
+        devBoard.audioIn.Update(0);
+
+        // int newAudio = devBoard.GetAudioInL8bit() - 128;
+        // int oldAudio = delayLine.Read(writeHead.Get()) - 128;
+        // int mixedAudio = (feedback*oldAudio + (256-feedback)*newAudio)>>8;
+        // delayLine.Write(writeHead.Get(), mixedAudio+128);
+
+        delayLine.Write(writeHead.Get(), 
+                        CalcMixedAudio(devBoard.GetAudioInL8bit(), delayLine.Read(writeHead.Get()), feedback, 32));
+        //always (!) advance write head !!!
+        writeHead.Advance();
+
+
+        // reset position pots 1 5
+        int resetOffsetL = devBoard.GetPot(1)*3/2; // [0,1024+512[  
+        int resetOffsetR = devBoard.GetPot(5)*3/2; // [0,1024+512[  
+        
+        // reset upon patch 0 4 rising
+        if(devBoard.GetPatchInRising(0))
+        {
+            // reset position is read from analogIn
+            // // backwards wrt write head!
+            // readHeadL.Reset(writeHead.Get());
+            readHeadL.Reverse(resetOffsetL);
+#ifdef DOSERIALDEBUG
+            Serial.println(resetOffsetL);
+#endif
+        }
+
+        if(devBoard.GetPatchInRising(4))
+        {
+            // readHeadR.Reset(writeHead.Get());
+            readHeadR.Reverse(resetOffsetR);
+            // backwards wrt write head!
+#ifdef DOSERIALDEBUG
+            Serial.println(resetOffsetR);
+#endif
+        }
+
+        // read audio from delay line
+        // degrade pot 3 saturate pot 7
+        int degrade = devBoard.GetPot(3) >> 3;// [0,128[
+        int saturate = devBoard.GetPot(7) >> 3;// [0,128[
+
+        uint8_t audioOutL = delayLine.Read(readHeadL.Get());    
+        audioOutL = Degrade(audioOutL, degrade);
+        audioOutL = Saturate(audioOutL, saturate);
+
+        uint8_t audioOutR = delayLine.Read(readHeadR.Get());    
+        audioOutR = Degrade(audioOutR, degrade);
+        audioOutR = Saturate(audioOutR, saturate);
+
+        // write audio to fast dac out
+        // flipped patch in 2 6
+        if(devBoard.GetPatchIn(2))
+        {
+            devBoard.dac.WriteFlipped(audioOutL);
+        }
+        else
+        {
+            devBoard.dac.Write(audioOutL);
+        }
+
+        if(devBoard.GetPatchIn(6))
+        {
+            devBoard.dac.WriteRFlipped(audioOutR);
+        }
+        else
+        {
+            devBoard.dac.WriteR(audioOutR);
+        }
+
+        // advance/reverse delay line
+        if (devBoard.GetPatchIn(1))
+        {
+            readHeadL.Reverse();
+        }
+        else
+        {
+            readHeadL.Advance();
+        }
+
+        if(devBoard.GetPatchIn(5))
+        {
+            readHeadR.Reverse();
+        }
+        else
+        {
+            readHeadR.Advance();
+        }
+
+        // gate out
+        devBoard.gateOut.Update();
+
+        // delay ~ speed cv
+        if(devBoard.GetPatchIn(7))
+        {
+            delayMicroseconds(2*delayusec);
+        }
+        else
+        {
+            delayMicroseconds(delayusec);
+        }
+
+    }
+
+    void DoLooping()
+    {
+        // first read CV(s),gate in, patch in
+        devBoard.potIn.Update();
+        devBoard.gateButtonIn.Update();
+        devBoard.shiftIO.Update();
+
+        UpdatePatchIO();
+
+        // pot 0 speed
+        int delayusec = devBoard.GetPot(0) >> 1;   // [0-512[ microseconds        
+        // TODO mod delay based on audio in R * mod depth pot 4
+        
+        // reset position pots 1 5
+        int resetOffsetL = devBoard.GetPot(1)*3/2; // [0,1024+512[  
+        int resetOffsetR = devBoard.GetPot(5)*3/2; // [0,1024+512[  
+        
         // reset upon patch 0 4 rising
         if(devBoard.GetPatchInRising(0))
         {

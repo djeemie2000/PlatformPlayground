@@ -14,7 +14,7 @@ public:
         pseudoRandom.Reset();
         for(int idx = 0; idx<Size; ++idx)
         {
-            randomState[idx] = 1;
+            randomState[idx] = 0;
             randomThreshold[idx] = 128;
         }
     }
@@ -36,7 +36,7 @@ public:
         pseudoRandom.Reset();
         for(int idx = 0; idx<Size; ++idx)
         {
-            randomState[idx] = 1;
+            randomState[idx] = 0;
         }
     }
 

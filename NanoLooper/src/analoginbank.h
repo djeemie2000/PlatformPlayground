@@ -39,6 +39,13 @@ public:
         }
     }
 
+    void Update(int idx)
+    {
+        // alternating read
+        m_Value[idx] = analogRead(m_Pin[idx]);
+    }
+
+
     void UpdateAll()
     {
         // read all
