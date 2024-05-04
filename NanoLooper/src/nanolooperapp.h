@@ -18,31 +18,21 @@ struct NanoLooperApp
 {
     static const int loopLength = 1024 + 512;// + 128; // 1.625 kB = 7/4 kB
 
-    // button/gate in pins
-    static const int recordingButtonInPin = 2; // PD2
-    static const int reverseInPin = 3;        // PD3
-    static const int resetInPin = 4;          // PD4
-    static const int flippedInPin = 5;
-    // TODO octaveUpPin 
-
     DevBoard devBoard;//TODO 
 
-    DelayLine<loopLength> delayLine; // assumes 328 2k memory
+    DelayLine<loopLength> delayLine; // assumes atmega328 2k memory
     TapeHead<loopLength> writeHead;
     TapeHead<loopLength> readHeadL;
     TapeHead<loopLength> readHeadR;
-
-  //  int delayusec;
-   // int resetOffsetL;
-   // int resetOffsetR;
-
-    uint8_t degrade;
-    uint8_t saturate;
 
     // square LFO out (1/0)
     SquareLFOState<4> lfo;
     // random out (1/0)
     PseudoRandomState<4> pseudoRandom;
+
+    static const int loopingMode = 1;
+    static const int processingMode = 1;
+    int mode;
 
     NanoLooperApp()
     {
@@ -56,13 +46,6 @@ struct NanoLooperApp
         readHeadR.Reset(0);
 
         devBoard.Begin();
-
-//        delayusec = 0;
-//        resetOffsetL = 0;
-//        resetOffsetR = 32;
-
- //       degrade = 0;
- //       saturate = 0;
 
         lfo.Begin();
         lfo.SetPeriod(0, 8000);
@@ -79,24 +62,38 @@ struct NanoLooperApp
         devBoard.potIn.UpdateAll();
 
         setupFastAnalogRead(2);
+
+        mode = 1;
     }
 
     void update()
     {
-        // first read record button in
         devBoard.gateButtonIn.Update();
         if (devBoard.GetButtonPressed(0))
         {
+            // record
             DoRecording();
+            // then loop the recording
+            mode = loopingMode;
         }
         else if(devBoard.GetButtonPressed(1))
         {
-            DoFill();
+            // process audio in
+            mode = processingMode;
+        }
+        else if(devBoard.GetButtonPressed(2))
+        {
+            // loop the recording
+            mode = loopingMode;
+        }
+
+        if(mode == processingMode)
+        {
+            DoProcessing();
         }
         else
         {
-            //DoLooping();
-            DoProcessing();
+            DoLooping();
         }
     }
 
