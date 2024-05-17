@@ -63,7 +63,7 @@ struct NanoLooperApp
 
         setupFastAnalogRead(2);
 
-        mode = 1;
+        mode = processingMode;
     }
 
     void update()

@@ -34,7 +34,7 @@ int debugCntr;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  Serial.println("Nanolooper v0.6");
+  Serial.println("Nanolooper v0.7");
 
   Serial.print("app begin...");
   app.Begin();
