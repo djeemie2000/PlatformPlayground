@@ -4,7 +4,7 @@
 #include "cvclock.h"
 
 //#define FAKECLOCK 1
-#define USEATM168 1
+//#define USEATM168 1
 
 struct Step5App
 {
@@ -114,7 +114,7 @@ struct Step5App
 #ifdef USEATM168
             delay(5);
 #else
-            delay(1);
+            delay(0);
 #endif
         }
 

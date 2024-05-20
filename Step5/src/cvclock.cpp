@@ -11,11 +11,11 @@ void CVClock::Begin()
 void CVClock::Update(int clockIn, int cv)
 {
     int duration = cv;
-    if(cv<48)
+    if(cv<16)//48)
     {
         duration = 0;
     }
-    else if(cv>950)// 4.7V vs 5V ~ 962
+    else if(cv>1008)//950)// 4.7V vs 5V ~ 962
     {
         duration = 1024;
     }

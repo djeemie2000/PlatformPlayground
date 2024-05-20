@@ -13,7 +13,12 @@ void setup() {
   Serial.begin(115200);
 
   delay(1000);
-  Serial.println("Step5 v0.1...");
+  Serial.println("Step5 v0.2...");
+#ifdef FAKECLOCK
+  Serial.println("Fake clock");
+#else
+  Serial.println("Clock input");
+#endif
   
   board.Begin();
 
