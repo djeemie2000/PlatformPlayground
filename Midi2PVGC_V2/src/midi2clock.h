@@ -1,0 +1,46 @@
+#pragma once
+#include <Arduino.h>
+
+template<int Size>
+class GateOutBank;
+class LedOut;
+
+// TODO make more generic cfr configuration 
+// has 2 x reset pulse output (pulse on upon midi start, pulse off upon first midi clock)
+// has 2x 4PPPQ (1/16th) clock output
+// has 2x 6PPQ clock output
+// has 2x 12PPQ (high resolution) clock output
+// status led will be 
+//  continuously on when clock is not running
+//  showing 1PPQ clock when clock is running
+class Midi2Clock
+{
+public:
+    static const int NumGates = 8;
+    static const int NumCounters = NumGates;
+
+    Midi2Clock();
+
+    void Begin(GateOutBank<NumGates>* gates, LedOut* ledOut);
+
+    void OnMessage(uint8_t byte);
+    bool ClockIsRunning() const;
+
+    void saveParams(int offset);
+    int paramSize() const;
+    void loadParams(int offset);
+
+    void PrintState();
+
+private:
+    GateOutBank<NumGates>* m_Gates;
+    LedOut* m_LedOut;
+
+    int m_Cntr24PPQ;// [0-23], 24 upon reset
+    uint32_t m_ClockPattern[NumCounters];
+
+    bool m_ClockIsRunning;
+    bool m_DoReset;
+};
+
+void ToggleClockIsRunning(Midi2Clock& midi2Clock);
