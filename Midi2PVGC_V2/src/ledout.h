@@ -35,18 +35,19 @@ void LedOut::Apply(uint8_t counter, int idx, FastDigitalOutBank<Size>& bank)
         {
             if(m_LedOutMask == 0xFF || (m_LedOutMask & counter))
             {
-                bank.Set(idx);
+                bank.Set(index);
             }
             else
             {
-                bank.Clear(idx);
+                bank.Clear(index);
             }
         }
         else
         {
-            bank.Clear(idx);
+            bank.Clear(index);
         }
     }
+    bank.Update();
 }
 
 template<int Size>

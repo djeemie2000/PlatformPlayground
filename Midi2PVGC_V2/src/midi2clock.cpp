@@ -20,17 +20,17 @@ void Midi2Clock::Begin(GateOutBank<Midi2Clock::NumGates>* gates, LedOut* ledOut)
     m_ClockPattern[0] = 0x01000000;//reset -> only on bit 24
 
     m_ClockPattern[1] = 0x00000FFF;// 2PPQ 6/12
-    m_ClockPattern[1] = 0x001C71C7;// 4PPQ 3/6
-    m_ClockPattern[1] = 0x00249249;// 8PPQ 1/3
+    m_ClockPattern[2] = 0x001C71C7;// 4PPQ 3/6
+    m_ClockPattern[3] = 0x00249249;// 8PPQ 1/3
     
-    m_ClockPattern[5] = m_ClockPattern[0];//reset -> only on bit 24
+    m_ClockPattern[4] = m_ClockPattern[0];//reset -> only on bit 24
 
-    m_ClockPattern[7] = 0x000F0F0F;// 6PPQ 4/8
-    m_ClockPattern[7] = 0x00333333;// 6PPQ 2/4
+    m_ClockPattern[5] = 0x000F0F0F;// 6PPQ 4/8
+    m_ClockPattern[6] = 0x00333333;// 6PPQ 2/4
     m_ClockPattern[7] = 0x00555555;// 12PPQ 1/2
 
     m_Cntr24PPQ = 24;//reset
-    m_ClockIsRunning = false;
+    m_ClockIsRunning = true;
     m_DoReset = true;
 
     for(int gate = 0; gate<NumGates; ++gate)
@@ -53,7 +53,7 @@ void Midi2Clock::OnMessage(uint8_t byte)
 
         for(int idx=0; idx<NumGates;++idx)
         {
-            if(bit_is_set(m_ClockPattern[idx], m_Cntr24PPQ))
+            if(bitRead(m_ClockPattern[idx], m_Cntr24PPQ))
             {
                 m_Gates->GateOn(idx);
             }
@@ -102,7 +102,7 @@ void Midi2Clock::OnMessage(uint8_t byte)
             // gate out
             for(int idx=0; idx<NumGates;++idx)
             {
-                if(bit_is_set(m_ClockPattern[idx], m_Cntr24PPQ))
+                if(bitRead(m_ClockPattern[idx], m_Cntr24PPQ))
                 {
                     m_Gates->GateOn(idx);
                 }
@@ -129,7 +129,9 @@ void Midi2Clock::PrintState()
     Serial.println(m_Cntr24PPQ, DEC);
     for(int idx = 0; idx<NumCounters;++idx)
     {
-        Serial.println(bit_is_set(m_ClockPattern[idx], m_Cntr24PPQ)?1:0, DEC);
+        Serial.print(m_ClockPattern[idx], HEX);
+        Serial.print(' ');
+        Serial.println(bitRead(m_ClockPattern[idx], m_Cntr24PPQ)?1:0, DEC);
     }
 }
 

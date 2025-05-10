@@ -20,6 +20,8 @@ public:
     void Apply(FastDigitalOutBank<Size>& bank);
     void Apply(int offset, FastDigitalOutBank<Size>& bank);
 
+    void PrintState();
+
 private:
     uint8_t m_Gate[Size];//TODO uint8_t m_State;
     uint8_t m_Counter;
@@ -107,7 +109,20 @@ void GateOutBank<Size>::Apply(int offset, FastDigitalOutBank<Size>& bank)
             bank.Clear(offset+idx);
         }
     }
+    bank.Update();
 }
+
+template<int Size>
+void GateOutBank<Size>::PrintState()
+{
+    for(int idx=0; idx<Size; ++idx)
+    {
+        Serial.print(m_Gate[idx], HEX);
+        Serial.print(' ');
+    }
+    Serial.println();
+}
+
 
 template<int Size>
 void AllGateOff(GateOutBank<Size>& bank)

@@ -169,7 +169,7 @@ template<int NumGates>
 void Midi2Gate<NumGates>::PrintState()
 {
     Serial.println(m_LearnIndex, DEC);
-    for(int idx = 0; idx<Midi2Gate::NumGates;++idx)
+    for(int idx = 0; idx<NumGates;++idx)
     {
         Serial.print(m_Channel[idx], HEX);
         Serial.print(' ');
