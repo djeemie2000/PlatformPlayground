@@ -19,13 +19,13 @@ void Midi2Clock::Begin(GateOutBank<Midi2Clock::NumGates>* gates, LedOut* ledOut)
 
     m_ClockPattern[0] = 0x01000000;//reset -> only on bit 24
 
-    m_ClockPattern[1] = 0x00000FFF;// 2PPQ 6/12
+    m_ClockPattern[1] = 0x0003F03F;// 2PPQ 6/12
     m_ClockPattern[2] = 0x001C71C7;// 4PPQ 3/6
     m_ClockPattern[3] = 0x00249249;// 8PPQ 1/3
     
     m_ClockPattern[4] = m_ClockPattern[0];//reset -> only on bit 24
 
-    m_ClockPattern[5] = 0x000F0F0F;// 6PPQ 4/8
+    m_ClockPattern[5] = 0x000F0F0F;// 3PPQ 4/8
     m_ClockPattern[6] = 0x00333333;// 6PPQ 2/4
     m_ClockPattern[7] = 0x00555555;// 12PPQ 1/2
 

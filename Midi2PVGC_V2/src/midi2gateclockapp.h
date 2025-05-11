@@ -90,7 +90,9 @@ struct Midi2GateClockApp
     
     if (buttonInBank.IsFalling(0) && mode == midi2gatemode)// not in mode clock??? !!!!!
     {
+      #ifdef DEBUGAPP
       Serial.println("toggle learning");
+      #endif
       midi2Gate.ToggleLearning();
     }
 
@@ -100,8 +102,10 @@ struct Midi2GateClockApp
       mode = (mode == midi2gatemode) ? midi2clockmode : midi2gatemode;
       modeChanged = true;
 
+      #ifdef DEBUGAPP
       Serial.print("toggle mode ");
       Serial.println(mode);
+      #endif
     }
 
     uint8_t counter = millies >> 2;
@@ -144,7 +148,9 @@ struct Midi2GateClockApp
 
   void saveParams(int offset)
   {
+      #ifdef DEBUGAPP
       Serial.println("save params");
+      #endif
 
       int off = offset;
       EEPROM.update(off++, 'M');
@@ -168,7 +174,9 @@ struct Midi2GateClockApp
 
   void loadParams(int offset)
   {
+      #ifdef DEBUGAPP
       Serial.println("load params");
+      #endif
 
       int off = offset;
       if ('M' == EEPROM.read(off++) 
