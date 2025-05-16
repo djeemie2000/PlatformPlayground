@@ -18,6 +18,8 @@
 // midi in + test
 // 
 
+//#define DEBUGAPP
+
 #ifdef DEBUGAPP
 DebugCounter debugCounter;
 #endif
@@ -149,6 +151,12 @@ void loop()
     app1.midi2Clock.PrintState();
     Serial.println();
     app1.gatesOut_midi2Clock.PrintState();
+    Serial.println();
+
+    Serial.println("Fixed"); 
+    app1.midi2GateFixed.PrintState();
+    Serial.println();
+    app1.gatesOut_midi2GateFixed.PrintState();
     Serial.println();
   }
   #endif

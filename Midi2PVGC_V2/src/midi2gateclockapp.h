@@ -78,15 +78,16 @@ struct Midi2GateClockApp
     midi2Gate.Begin(&gatesOut_midi2Gate, &ledOut_midi2Gate);
     midi2Clock.Begin(&gatesOut_midi2Clock, &ledOut_midi2clock);
     midi2GateFixed.Begin(&gatesOut_midi2GateFixed, &ledOut_midi2GateFixed);
-    // midi channel 10, chromatic starting at midi note 36
-    midi2GateFixed.Assign(0, 10, 36);//C
-    midi2GateFixed.Assign(1, 10, 38);//D
-    midi2GateFixed.Assign(2, 10, 40);//E
-    midi2GateFixed.Assign(3, 10, 41);//F
-    midi2GateFixed.Assign(4, 10, 43);//G
-    midi2GateFixed.Assign(5, 10, 45);//A
-    midi2GateFixed.Assign(6, 10, 47);//B
-    midi2GateFixed.Assign(7, 10, 48);//C
+    // midi channel 10, chromatic scale starting at midi note 36
+    uint8_t midichannel = 0x09;
+    midi2GateFixed.Assign(0, midichannel, 36);//C
+    midi2GateFixed.Assign(1, midichannel, 38);//D
+    midi2GateFixed.Assign(2, midichannel, 40);//E
+    midi2GateFixed.Assign(3, midichannel, 41);//F
+    midi2GateFixed.Assign(4, midichannel, 43);//G
+    midi2GateFixed.Assign(5, midichannel, 45);//A
+    midi2GateFixed.Assign(6, midichannel, 47);//B
+    midi2GateFixed.Assign(7, midichannel, 48);//C
     
     mode = midi2gatemode;
 
@@ -102,6 +103,7 @@ struct Midi2GateClockApp
   void OnMidiMessage(MidiVoiceMessage& message)
   {
     midi2Gate.OnMessage(message);
+    midi2GateFixed.OnMessage(message);
   }
 
   void Update(unsigned long millies)
@@ -142,7 +144,8 @@ struct Midi2GateClockApp
     uint8_t counter = millies >> 2;
     gatesOut_midi2Gate.Update(millies);
     gatesOut_midi2Clock.Update(millies);
-
+    gatesOut_midi2GateFixed.Update(millies);
+    
     // apply depending on gate vs clock mode
     if(midi2gatemode == mode)
     {
