@@ -3,6 +3,7 @@
 
 #include "midi2gate.h"
 #include "midi2clock.h"
+#include "midi2gatefixed.h"
 #include "fastdigitalinbank.h"
 //#include "debugcounter.h"
 #include "fastdigitaloutbank.h"
@@ -26,9 +27,15 @@ struct Midi2GateClockApp
   LedOut ledOut_midi2clock;
   Midi2Clock midi2Clock;
 
+  GateOutBank<8> gatesOut_midi2GateFixed;
+  LedOut ledOut_midi2GateFixed;
+  Midi2GateFixed<8> midi2GateFixed;
+
+
   // mode : 0x04 = midi2gate 0X02=midi2clock
   const uint8_t midi2gatemode = 0x04;
   const uint8_t midi2clockmode = 0x02;
+  const uint8_t midi2gatefixedmode = 0x01;
   uint8_t mode;
 
   // check for saveParams
@@ -65,8 +72,21 @@ struct Midi2GateClockApp
     ledOut_midi2clock.Begin();
     gatesOut_midi2Clock.Begin();
 
+    ledOut_midi2GateFixed.Begin();
+    gatesOut_midi2GateFixed.Begin();
+
     midi2Gate.Begin(&gatesOut_midi2Gate, &ledOut_midi2Gate);
     midi2Clock.Begin(&gatesOut_midi2Clock, &ledOut_midi2clock);
+    midi2GateFixed.Begin(&gatesOut_midi2GateFixed, &ledOut_midi2GateFixed);
+    // midi channel 10, chromatic starting at midi note 36
+    midi2GateFixed.Assign(0, 10, 36);//C
+    midi2GateFixed.Assign(1, 10, 38);//D
+    midi2GateFixed.Assign(2, 10, 40);//E
+    midi2GateFixed.Assign(3, 10, 41);//F
+    midi2GateFixed.Assign(4, 10, 43);//G
+    midi2GateFixed.Assign(5, 10, 45);//A
+    midi2GateFixed.Assign(6, 10, 47);//B
+    midi2GateFixed.Assign(7, 10, 48);//C
     
     mode = midi2gatemode;
 
@@ -88,7 +108,7 @@ struct Midi2GateClockApp
   {
     buttonInBank.Update();
     
-    if (buttonInBank.IsFalling(0) && mode == midi2gatemode)// not in mode clock??? !!!!!
+    if (buttonInBank.IsFalling(0) && mode == midi2gatemode)// only not in mode gate !!
     {
       #ifdef DEBUGAPP
       Serial.println("toggle learning");
@@ -99,7 +119,18 @@ struct Midi2GateClockApp
     if(buttonInBank.IsFalling(1))
     {
       // toggle mode
-      mode = (mode == midi2gatemode) ? midi2clockmode : midi2gatemode;
+      if(mode == midi2gatemode)
+      {
+        mode = midi2clockmode;
+      }
+      else if(mode == midi2clockmode)
+      {
+        mode = midi2gatefixedmode;
+      }
+      else
+      {
+        mode = midi2gatemode;
+      }
       modeChanged = true;
 
       #ifdef DEBUGAPP
@@ -122,6 +153,11 @@ struct Midi2GateClockApp
     {
       gatesOut_midi2Clock.Apply(gateOutBank);
       ledOut_midi2clock.Apply(counter, 1, ledOutBank);
+    }
+    else if(midi2gatefixedmode == mode)
+    {
+      gatesOut_midi2GateFixed.Apply(gateOutBank);
+      ledOut_midi2GateFixed.Apply(counter, 2, ledOutBank);
     }
   }
 
