@@ -14,7 +14,6 @@
 
 struct Midi2GateClockApp
 {
-  int statusLed1Pin;
   FastDigitalInBank<2> buttonInBank;
   FastDigitalOutBank<8> gateOutBank;
   FastDigitalOutBank<3> ledOutBank;

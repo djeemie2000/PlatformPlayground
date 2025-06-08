@@ -6,6 +6,7 @@
 #include "midivoicemessage.h"
 #include "midinoteparser.h"
 #include "midi2gateclockapp.h"
+#include "midi2pvgapp.h"
 
 // hardware init and test
 //
@@ -18,17 +19,24 @@
 // midi in + test
 // 
 
-//#define DEBUGAPP
+#define DEBUGAPP
+//#define GCAPP
 
 #ifdef DEBUGAPP
 DebugCounter debugCounter;
 #endif
 
 MidiNoteParser midiNoteParser;
+#ifdef GCAPP
 Midi2GateClockApp app1;
+#endif
+#ifndef GCAPP
+Midi2PVGApp app2;
+#endif 
 
 void TestHardware()
 {
+#ifdef GCAPP
   TestDigitalOutBank(app1.ledOutBank, 2);
   TestDigitalOutBank(app1.gateOutBank, 2);
 
@@ -40,6 +48,21 @@ void TestHardware()
     delay(1);
   }
   Serial.println(" done");
+#else
+  TestDigitalOutBank(app2.ledOutBank, 2);
+  TestDigitalOutBank(app2.gateOutBank, 2);
+
+  TestMCP4728(app2.dac, 2);
+
+  Serial.print("test buttons...");
+  for(int repeat = 0; repeat<3000; ++repeat)
+  {
+    app2.buttonInBank.Update();
+    PrintChanges(app2.buttonInBank);
+    delay(1);
+  }
+  Serial.println(" done");
+#endif
 }
 
 void TestMidiIn()
@@ -74,15 +97,19 @@ void setup()
 {
   // put your setup code here, to run once:
   Serial.begin(31250);
-  Serial.println("Midi2PVGC V2 v0.5...");
+  Serial.println("Midi2PVGC V2 v0.7...");
 
 #ifdef DEBUGAPP
   debugCounter.Begin(2000);
 #endif
 
+#ifdef GCAPP
   app1.Begin();
-
   app1.loadParams(128);
+#else
+  app2.Begin();
+  app2.loadParams(192);
+#endif
 
 #ifdef DEBUGAPP
   TestHardware();
@@ -109,22 +136,32 @@ void loop()
       }
 #endif
 
+#ifdef GCAPP
       app1.OnMidiMessage(byte);
+#endif
 
       MidiVoiceMessage message;
       if (midiNoteParser.Parse(byte, message))
       {
 //        printVoiceMessage(message);
+#ifdef GCAPP
         app1.OnMidiMessage(message);
+#else
+        app2.OnMidiMessage(message);
+#endif
       }
     }
 
     // update based on millis
     unsigned long millies = millis();
 
+#ifdef GCAPP
     app1.Update(millies);
-
     app1.CheckSaveParams(128);
+#else
+    app2.Update(millies);
+    app2.CheckSaveParams(128);
+#endif
 
 #ifdef DEBUGAPP
 
@@ -138,6 +175,7 @@ void loop()
     Serial.println(elapsedMillis, DEC);
     Serial.println();
 
+#ifdef GCAPP
     Serial.print("Mode ");
     Serial.println(app1.mode);
     
@@ -158,6 +196,7 @@ void loop()
     Serial.println();
     app1.gatesOut_midi2GateFixed.PrintState();
     Serial.println();
+#endif
   }
   #endif
     
