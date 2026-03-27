@@ -10,6 +10,9 @@ MCP4728Dac::MCP4728Dac()
     {
         m_Value[ch] = 0;
         m_Configured[ch] = false;
+        m_Gain[ch] = MCP4728Dac::gain::MCP4728_GAIN_1X;
+        m_PdMode[ch] = MCP4728Dac::pd_mode::MCP4728_PD_MODE_NORMAL;
+        m_Vref[ch] = MCP4728Dac::vref::MCP4728_VREF_INTERNAL;
     }
 }
 
@@ -54,7 +57,8 @@ void MCP4728Dac::ConfigureChannel(int channel,
         uint8_t sequential_write_cmd = MCP4728_MULTI_IR_CMD;
         sequential_write_cmd |= (channel << 1);
         // no udac support (yet)
-        // sequential_write_cmd |= udac;
+        bool udac = false;
+        sequential_write_cmd |= udac;
         output_buffer[0] = sequential_write_cmd;
 
         // VREF PD1 PD0 Gx D11 D10 D9 D8 [A] D7 D6 D5 D4 D3 D2 D1 D0 [A]
@@ -66,13 +70,12 @@ void MCP4728Dac::ConfigureChannel(int channel,
         output_buffer[1] = new_value >> 8;
         output_buffer[2] = new_value & 0xFF;
 
-        Wire.beginTransmission(m_Address);
-        Wire.write(output_buffer, 3);
-        Wire.endTransmission(m_Address);
+
+        WriteBuffer(output_buffer, 3);
     }
 }
 
-void MCP4728Dac::SetValue(int channel, int value)
+void MCP4728Dac::SetValue(int channel, uint16_t value)
 {
     if (0 <= channel && channel < NumChannels)
     {
@@ -97,21 +100,51 @@ void MCP4728Dac::Update()
     output_buffer[6] = m_Value[3] >> 8;
     output_buffer[7] = m_Value[3] & 0xFF;
 
-    Wire.beginTransmission(m_Address);
-    Wire.write(output_buffer, 8);
-    Wire.endTransmission(m_Address);
+    WriteBuffer(output_buffer, 8);
 }
 
-void TestMCP4728(MCP4728Dac& bank, int repeats)
+void MCP4728Dac::WriteBuffer(const uint8_t* output_buffer, int size)
 {
-    Serial.println("Testing mcp4728 bank...");
+    // for(int idx = 0; idx<size; ++idx)
+    // {
+    //     Serial.print(output_buffer[idx], HEX);
+    //     Serial.write(' ');
+    // }
+
+    Wire.beginTransmission(m_Address);
+    Wire.write(output_buffer, size);
+    // uint8_t tmp = 
+    Wire.endTransmission(m_Address);
+
+    //Serial.println(tmp, HEX);
+}
+
+
+void TestMCP4728(MCP4728Dac& bank, int repeats, bool internal)
+{
+    if(internal)
+    {
+        Serial.println("Testing mcp4728 bank internal VREF...");
+    }
+    else
+    {
+        Serial.println("Testing mcp4728 bank external VREF...");
+    }
+
     for(int repeat = 0; repeat<repeats; ++repeat)
     {
         for(int channel = 0;channel<MCP4728Dac::NumChannels; ++ channel)
         {
-            bank.ConfigureChannel(channel, MCP4728Dac::MCP4728_VREF_VDD, MCP4728Dac::MCP4728_GAIN_1X, MCP4728Dac::MCP4728_PD_MODE_NORMAL);
+            if(internal)
+            {
+                bank.ConfigureChannel(channel, MCP4728Dac::MCP4728_VREF_INTERNAL, MCP4728Dac::MCP4728_GAIN_2X, MCP4728Dac::MCP4728_PD_MODE_NORMAL);
+            }
+            else
+            {
+                bank.ConfigureChannel(channel, MCP4728Dac::MCP4728_VREF_VDD, MCP4728Dac::MCP4728_GAIN_1X, MCP4728Dac::MCP4728_PD_MODE_NORMAL);
+            }
 
-            for(int value = 0; value < 4096; value += 512)
+            for(int value = 0; value < 4096; value += 256)
             {
                 Serial.print(channel);
                 Serial.print(" ");
@@ -119,8 +152,12 @@ void TestMCP4728(MCP4728Dac& bank, int repeats)
 
                 bank.SetValue(channel, value);
 
+                bank.Update();
+
                 delay(250);
             }
+
+            bank.SetValue(channel, 2048);
         }
     }
 }

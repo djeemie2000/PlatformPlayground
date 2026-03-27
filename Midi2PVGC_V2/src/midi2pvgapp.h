@@ -66,6 +66,7 @@ struct Midi2PVGApp
     buttonInBank.Assign(0, 2, true);
     buttonInBank.Assign(1, 3, true);
 
+    dac.Begin(MCP4728Dac::MCP4728_I2CADDR_DEFAULT);
 
     ledOut_midi2VG.Begin();
     gatesOut_midi2VG.Begin();

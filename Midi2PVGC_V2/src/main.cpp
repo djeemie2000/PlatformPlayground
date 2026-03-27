@@ -7,6 +7,7 @@
 #include "midinoteparser.h"
 #include "midi2gateclockapp.h"
 #include "midi2pvgapp.h"
+#include "scani2c.h"
 
 // hardware init and test
 //
@@ -52,7 +53,8 @@ void TestHardware()
   TestDigitalOutBank(app2.ledOutBank, 2);
   TestDigitalOutBank(app2.gateOutBank, 2);
 
-  TestMCP4728(app2.dac, 2);
+  TestMCP4728(app2.dac, 2, true);
+  TestMCP4728(app2.dac, 2, false);
 
   Serial.print("test buttons...");
   for(int repeat = 0; repeat<3000; ++repeat)
@@ -97,7 +99,7 @@ void setup()
 {
   // put your setup code here, to run once:
   Serial.begin(31250);
-  Serial.println("Midi2PVGC V2 v0.7...");
+  Serial.println("Midi2PVGC V2 v0.8...");
 
 #ifdef DEBUGAPP
   debugCounter.Begin(2000);
@@ -111,6 +113,14 @@ void setup()
   app2.loadParams(192);
 #endif
 
+// TODO remove after debugging issue
+// while(true)
+// {
+//    ScanI2C(Serial);
+//    TestMCP4728(app2.dac, 1, true);
+//    TestMCP4728(app2.dac, 1, false);
+// }
+
 #ifdef DEBUGAPP
   TestHardware();
 #endif
@@ -120,8 +130,10 @@ void setup()
 void loop() 
 {
     // put your main code here, to run repeatedly:
-//    TestMidiIn();
-//    return;
+    ScanI2C(Serial);
+    TestHardware();
+    //TestMidiIn();
+    return;
 
     const int maxNumBytes = 6;
     int numBytes = 0;

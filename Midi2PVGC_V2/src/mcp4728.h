@@ -62,7 +62,7 @@ public:
                         gain new_gain = MCP4728_GAIN_1X,
                         pd_mode new_pd_mode = MCP4728_PD_MODE_NORMAL); // configure one channel with options
 
-    void SetValue(int channel, int value); // 12 bits!
+    void SetValue(int channel, uint16_t value); // 12 bits!
     void Update();                         // writes/updates all channel values
 
 private:
@@ -70,9 +70,10 @@ private:
                         vref new_vref,
                         gain new_gain,
                         pd_mode new_pd_mode);
+    void WriteBuffer(const uint8_t* buffer, int size); 
 
     uint8_t m_Address;
-    int m_Value[NumChannels];
+    uint16_t m_Value[NumChannels];
 
     bool m_Configured[NumChannels];
     vref m_Vref[NumChannels];
@@ -80,4 +81,4 @@ private:
     pd_mode m_PdMode[NumChannels];
 };
 
-void TestMCP4728(MCP4728Dac& bank, int repeats);
+void TestMCP4728(MCP4728Dac& bank, int repeats, bool internal);

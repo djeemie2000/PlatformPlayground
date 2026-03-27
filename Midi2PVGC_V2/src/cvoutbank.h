@@ -89,6 +89,8 @@ void CVOutBank<Size>::Apply(MCP4728Dac& bank)
             // 0-127 (7 bits) to 0-4095 (12 bits)
             int val = m_Value[channel];
             bank.SetValue(channel, val << 5);
+
+            bank.Update();
         }
         else
         {
@@ -104,6 +106,8 @@ void CVOutBank<Size>::Apply(MCP4728Dac& bank)
                 val = 4095;
             }
             bank.SetValue(channel, val);
+
+            bank.Update();
         }
     }
 }
