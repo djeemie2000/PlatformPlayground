@@ -119,6 +119,14 @@ void MCP4728Dac::WriteBuffer(const uint8_t* output_buffer, int size)
     //Serial.println(tmp, HEX);
 }
 
+void AllOff(MCP4728Dac& bank)
+{
+    for(int channel = 0;channel<MCP4728Dac::NumChannels; ++ channel)
+    {
+        bank.SetValue(channel, 0);
+    }
+    bank.Update();
+}
 
 void TestMCP4728(MCP4728Dac& bank, int repeats, bool internal)
 {

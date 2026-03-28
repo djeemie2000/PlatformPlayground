@@ -64,6 +64,8 @@ void TestHardware()
     delay(1);
   }
   Serial.println(" done");
+
+  AllOff(app2.dac);
 #endif
 }
 
@@ -130,10 +132,10 @@ void setup()
 void loop() 
 {
     // put your main code here, to run repeatedly:
-    ScanI2C(Serial);
-    TestHardware();
+    //ScanI2C(Serial);
+    //TestHardware();
     //TestMidiIn();
-    return;
+    //return;
 
     const int maxNumBytes = 6;
     int numBytes = 0;

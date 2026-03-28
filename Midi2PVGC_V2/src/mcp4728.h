@@ -81,4 +81,5 @@ private:
     pd_mode m_PdMode[NumChannels];
 };
 
+void AllOff(MCP4728Dac& bank);
 void TestMCP4728(MCP4728Dac& bank, int repeats, bool internal);
