@@ -152,7 +152,7 @@ void TestMCP4728(MCP4728Dac& bank, int repeats, bool internal)
                 bank.ConfigureChannel(channel, MCP4728Dac::MCP4728_VREF_VDD, MCP4728Dac::MCP4728_GAIN_1X, MCP4728Dac::MCP4728_PD_MODE_NORMAL);
             }
 
-            for(int value = 0; value < 4096; value += 256)
+            for(int value = 0; value < 4096; value += 512)
             {
                 Serial.print(channel);
                 Serial.print(" ");

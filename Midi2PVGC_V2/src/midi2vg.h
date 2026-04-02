@@ -128,7 +128,7 @@ void Midi2VG<NumGates>::OnMessage(MidiVoiceMessage &message)
                 {
                     m_Gate[gate] = 1;
                     m_Gates->GateOn(gate);
-                    m_Cvs->VelocityOut(m_LearnIndex, velocity);
+                    m_Cvs->VelocityOut(gate, velocity);
                 }
                 else if (IsNoteOff(message))
                 {

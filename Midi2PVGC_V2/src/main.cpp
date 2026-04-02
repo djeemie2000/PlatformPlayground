@@ -20,7 +20,7 @@
 // midi in + test
 // 
 
-#define DEBUGAPP
+//#define DEBUGAPP
 //#define GCAPP
 
 #ifdef DEBUGAPP
@@ -53,8 +53,8 @@ void TestHardware()
   TestDigitalOutBank(app2.ledOutBank, 2);
   TestDigitalOutBank(app2.gateOutBank, 2);
 
-  TestMCP4728(app2.dac, 2, true);
-  TestMCP4728(app2.dac, 2, false);
+  TestMCP4728(app2.dac, 1, true);
+  TestMCP4728(app2.dac, 1, false);
 
   Serial.print("test buttons...");
   for(int repeat = 0; repeat<3000; ++repeat)
@@ -102,6 +102,11 @@ void setup()
   // put your setup code here, to run once:
   Serial.begin(31250);
   Serial.println("Midi2PVGC V2 v0.8...");
+  #ifdef GCAPP
+  Serial.println("8 gates");
+  #else
+  Serial.println("4 gate 4 CV");
+  #endif
 
 #ifdef DEBUGAPP
   debugCounter.Begin(2000);
@@ -174,7 +179,7 @@ void loop()
     app1.CheckSaveParams(128);
 #else
     app2.Update(millies);
-    app2.CheckSaveParams(128);
+    app2.CheckSaveParams(192);
 #endif
 
 #ifdef DEBUGAPP
