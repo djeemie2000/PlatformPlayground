@@ -178,7 +178,7 @@ struct Midi2PVGApp
 
   void CheckSaveParams(int offset)
   {
-    bool isLearning = midi2VG.IsLearning();//TODO or or 
+    bool isLearning = midi2VG.IsLearning() || midi2PG.IsLearning() || midi2PVG.IsLearning(); 
     if(modeChanged)
     {
       int off = offset;
